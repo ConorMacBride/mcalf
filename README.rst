@@ -55,7 +55,7 @@ interested in contributing to it, please contact `Conor MacBride`_.
 License
 -------
 
-MCALF licensed under the terms of the BSD 2-Clause license.
+MCALF is licensed under the terms of the BSD 2-Clause license.
 
 .. |Travis Status| image:: https://img.shields.io/travis/com/ConorMacBride/mcalf
     :target: https://travis-ci.com/ConorMacBride/mcalf
