@@ -13,3 +13,12 @@ install:
   - pip3 install -e .
 script: python3 -m pytest || python -m pytest
 after_script: cd ~
+deploy:
+  provider: pypi
+  user: "__token__"
+  password:
+    secure: "uxdVaVDzDGLC2GzxI1xz4iFqNF1aSM39r1fP3Y5bRx7TTArZka96hoaUD38jNJndebUW/caVv9gkqrEUMdL6YKE6/1orpNNcqBug+mUsglwI8fR7pDaZGqubdf583qNbpWfvzaNR8FX1IQCHc1PQNhp1dPFHGUYkQY6ILX3bltcX1998/4xkkH6SOVuLNn63itW5i5L6sd2kRu4ooBWgQBIKEHQ31RsawkVeZtMcnsh7vi2iJW53sGj5D6PaBjxZ8kphe8bA4On7bIGe44i5JgPAu9ksuH9GbV6xks/0d4l2OrVFa2IrGKs35S8idwFpipXiPmti2u5sDhIhMxHTO2l3/jPYpbgXO/id5lTbUV3xvqaeugoFqiqiB5WkwN+6KHv0gSox3UPoPpkdoWltWBNHTjoxHnt7IKtmawD23Mu9SR4k5QfSET9a3awyzvrFRoFk6S5payBVNlvEdM/2V3c/YTBNDTrWbllXtBRbs2/Ej86GqR+JF3IFPaHi495Yegvdc9cT570m7IHvY/AUxrbm8aBGIsMIOwPXPmdC3+Y1RDDfTTmh+HxJmkHGonox6MoKMwB5YF6CuPHyI9PeKqi7yzK6dZ1bFFi6/GItUAklecHyfDB+cP60HPOhyj18LwkzdYtUPOLc8pYf4jtsjXQfp6INl7IIrLZ9mI0IHV8="
+  skip_existing: true
+  on:
+    tags: true
+    condition: $MCALF_DEPLOY = 1
