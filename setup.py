@@ -10,7 +10,7 @@ def read(file_name):
 
 setup(
     name="mcalf",
-    version="0.2rc1",
+    version="0.1",
     package_dir={"": "src"},
     packages=find_packages("src"),
 
