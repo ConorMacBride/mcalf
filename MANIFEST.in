@@ -1,0 +1,6 @@
+include LICENSE.rst
+include README.rst
+recursive-include examples *
+recursive-include cextern *
+recursive-include tests *
+graft src
