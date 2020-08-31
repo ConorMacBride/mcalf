@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
 
-from mcalf.profiles.voigt import double_voigt, double_voigt_approx
+from mcalf.profiles.voigt import voigt_approx_nobg, voigt_approx, double_voigt_approx_nobg, double_voigt_approx, \
+    voigt_nobg, voigt, double_voigt_nobg, double_voigt
 
 pts1 = np.array([-4.245, -0.324, 0.243, 1.163, 1.739, 99.999])
 params1 = [8.242, 0.20, 0.241, 0.129, 5.348, 1.228, 0.152, 0.213, 6.82]
@@ -47,3 +48,44 @@ def test_voigt_approx():
     res = double_voigt_approx(pts2, *params2)
     truth = [7.28207577, 10.29607126, 11.99513939, 7.63595484, 7.41246856, 7.25005616]
     assert res == pytest.approx(truth)
+
+
+def test_voigt_wrappers():
+
+    for pts, params in ([pts1, params1], [pts2, params2]):
+
+        params_absorption = params[:4]
+        params_emission = params[4:-1]
+        background = params[-1]
+
+        base_absorption = voigt_nobg(pts, *params_absorption)
+        base_emission = voigt_nobg(pts, *params_emission)
+
+        assert all([a == b for a, b in zip(
+            voigt(pts, *params_absorption, background),
+            base_absorption + background
+        )])
+        assert all([a == b for a, b in zip(
+            double_voigt_nobg(pts, *params_absorption, *params_emission),
+            base_absorption + base_emission
+        )])
+        assert all([a == b for a, b in zip(
+            double_voigt(pts, *params_absorption, *params_emission, background),
+            base_absorption + base_emission + background
+        )])
+
+        base_absorption_approx = voigt_approx_nobg(pts, *params_absorption)
+        base_emission_approx = voigt_approx_nobg(pts, *params_emission)
+
+        assert all([a == b for a, b in zip(
+            voigt_approx(pts, *params_absorption, background),
+            base_absorption_approx + background
+        )])
+        assert all([a == b for a, b in zip(
+            double_voigt_approx_nobg(pts, *params_absorption, *params_emission),
+            base_absorption_approx + base_emission_approx
+        )])
+        assert all([a == b for a, b in zip(
+            double_voigt_approx(pts, *params_absorption, *params_emission, background),
+            base_absorption_approx + base_emission_approx + background
+        )])
