@@ -99,12 +99,37 @@ class FitResults:
 
     Attributes
     ----------
-    parameters : ndarray, shape
+    parameters : ndarray of shape (`row`, `column`, `parameter`)
+        Array of fitted parameters.
+    classifications : ndarray of int of shape (`row`, `column`)
+        Array of classifications.
+    profile : ndarray of str of shape (`row`, `column`)
+        Array of profiles.
+    success : ndarray of bool of shape (`row`, `column`)
+        Array of success statuses.
+    chi2 : ndarray of shape (`row`, `column`)
+        Array of chi-squared values.
+    time : int, default = None
+        Time index that the `FitResult` object refers to (if provided).
+    n_parameters : int
+        Number of parameters in the last dimension of `parameters`.
     """
     def __init__(self, shape, n_parameters, time=None):
+        """Initialise a `FitResults` object of a defined shape
 
-        if not isinstance(shape, tuple):
-            raise TypeError("`shape` must be a tuple, got %s" % type(shape))
+        Parameters
+        ----------
+        shape : tuple of int
+            The number of rows and columns to hold data for, e.g. (n_rows, n_columns).
+        n_parameters : int
+            The number of fitted parameters per spectrum that need to be stored.
+        time : int, optional, default = None
+            The time the `FitResults` object will store data for. Optional, but if it is set, only `FitResult` objects
+            with a matching time can be appended.
+        """
+        # TODO Allow multiple time indices to be imported
+        if not isinstance(shape, tuple) or len(shape) != 2:
+            raise TypeError("`shape` must be a tuple of length 2, got %s" % type(shape))
 
         if not isinstance(n_parameters, int) and n_parameters < 1:
             raise ValueError("`n_parameters` must be an integer greater than zero, got %s" % n_parameters)
@@ -123,10 +148,18 @@ class FitResults:
         self.n_parameters = n_parameters
 
     def append(self, result):
+        """Append a `FitResult` object to the `FitResults` object
+
+        Parameters
+        ----------
+        result : FitResult object
+            `FitResult` object to append.
+        """
         time, row, column = result.index
         if self.time is not None and self.time != time:
             raise ValueError("The time index of `result` does not match the time index being filled.")
 
+        # TODO Make the number of parameters and types of profiles general.
         p = result.profile
         if p == 'absorption':
             self.parameters[row, column, :4] = result.parameters

@@ -20,6 +20,27 @@ def make_iter(*args):
     -------
     iterables
         `*args` converted to iterables.
+
+    Examples
+    --------
+    >>> make_iter(1)
+    [[1]]
+
+    >>> make_iter(1, 2, 3)
+    [[1], [2], [3]]
+
+    >>> make_iter(1, [2], 3)
+    [[1], [2], [3]]
+
+    It is intended that a list of arguments be passed to the function for conversion:
+
+    >>> make_iter(*[1, [2], 3])
+    [[1], [2], [3]]
+
+    Remember that strings are already iterable!
+
+    >>> make_iter(*[[1, 2, 3], (4, 5, 6), "a"])
+    [[1, 2, 3], (4, 5, 6), 'a']
     """
     iterables = []  # Holder to return
     for parameter in args:
@@ -39,14 +60,38 @@ def load_parameter(parameter, wl=None):
     Parameters
     ----------
     parameter : str
-        Parameter to load, either string of Python list/number or filename string.
+        Parameter to load, either string of Python list/number or filename string. Supported filename extensions are
+        '.fits', '.fit', '.fts', '.csv', '.txt', '.npy', '.npz', and '.sav'. If the file does not exist, it will assume
+        the string is a Python expression.
     wl : float, optional, default = None
-        Central line core wavelength to replace 'wl' in strings.
+        Central line core wavelength to replace 'wl' in strings. Will only replace occurrences in the `parameter`
+        variable itself or in files with extension ".csv" or ".txt". When using `wl`, also use 'inf' and 'nan' as
+        required.
 
     Returns
     -------
     value : ndarray or list of floats
         Value of parameter in easily computable format (not string)
+
+    Examples
+    --------
+    >>> load_parameter("wl + 4.2", wl=7.1)
+    11.3
+
+    >>> load_parameter("[wl + 4.2, 5.2 - inf, 5 > 3]", wl=7.1)
+    [11.3, -inf, 1.0]
+
+    Filenames are given as follows:
+
+    >>> x = load_parameter("datafile.csv", wl=12.4)
+
+    >>> x = load_parameter("datafile.fits")
+
+    If the file does not exist, the function will assume that the string is a Python expression, possibly leading to an
+    error:
+
+    >>> load_parameter("nonexistant.csv")
+    TypeError: 'NoneType' object is not subscriptable
     """
     if os.path.exists(parameter):  # If the parameter is a real file
 

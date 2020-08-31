@@ -68,11 +68,13 @@ def voigt_approx_nobg(x, a, b, s, g):
 
     Notes
     -----
-    This algorithm is taken from A. B. McLean et al.[1]_.
+    This algorithm is taken from A. B. McLean et al. [1]_.
 
+    References
+    ----------
     .. [1] A. B. McLean, C. E. J. Mitchell and D. M. Swanston, "Implementation of an efficient analytical
-    approximation to the Voigt function for photoemission lineshape analysis," Journal of Electron Spectroscopy and
-    Related Phenomena, vol. 69, pp. 125-132, 1994. https://doi.org/10.1016/0368-2048(94)02189-7
+      approximation to the Voigt function for photoemission lineshape analysis," Journal of Electron Spectroscopy and
+      Related Phenomena, vol. 69, pp. 125-132, 1994. https://doi.org/10.1016/0368-2048(94)02189-7
     """
     fwhm_g = 2 * s * np.sqrt(2 * np.log(2))
     fwhm_l = 2 * g
@@ -240,8 +242,8 @@ def voigt_nobg(x, a, b, s, g, clib=True):
     double_voigt_nobg : Two Voigt functions added together
     double_voigt : Two Voigt function and a background added together
 
-    More Info
-    ---------
+    Notes
+    -----
     More information on the Voigt function can be found here: https://en.wikipedia.org/wiki/Voigt_profile
     """
     warnings.filterwarnings("ignore", category=IntegrationWarning)
@@ -288,8 +290,8 @@ def voigt(x, a, b, s, g, d, clib=True):
     double_voigt_nobg : Two Voigt functions added together
     double_voigt : Two Voigt function and a background added together
 
-    More Info
-    ---------
+    Notes
+    -----
     More information on the Voigt function can be found here: https://en.wikipedia.org/wiki/Voigt_profile
     """
     return voigt_nobg(x, a, b, s, g, clib) + d
@@ -335,8 +337,8 @@ def double_voigt_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2, clib=True):
     voigt : Voigt function with background added
     double_voigt : Two Voigt function and a background added together
 
-    More Info
-    ---------
+    Notes
+    -----
     More information on the Voigt function can be found here: https://en.wikipedia.org/wiki/Voigt_profile
     """
     return voigt_nobg(x, a1, b1, s1, g1, clib) + voigt_nobg(x, a2, b2, s2, g2, clib)
@@ -384,8 +386,8 @@ def double_voigt(x, a1, b1, s1, g1, a2, b2, s2, g2, d, clib=True):
     voigt : Voigt function with background added
     double_voigt_nobg : Two Voigt functions added together
 
-    More Info
-    ---------
+    Notes
+    -----
     More information on the Voigt function can be found here: https://en.wikipedia.org/wiki/Voigt_profile
     """
     return double_voigt_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2, clib) + d
