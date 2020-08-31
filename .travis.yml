@@ -22,3 +22,5 @@ deploy:
   on:
     tags: true
     condition: $MCALF_DEPLOY = 1
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
