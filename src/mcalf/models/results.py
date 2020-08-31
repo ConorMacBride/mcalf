@@ -212,3 +212,57 @@ class FitResults:
         wavelengths = self.parameters[row][:, column][:, :, index]
         stationary_line_core = model.stationary_line_core
         return np.squeeze((wavelengths - stationary_line_core) / stationary_line_core * 300000, axis=2)  # km/s
+
+    def save(self, filename, model=None):
+        """Saves the FitResults object to a FITS file
+
+        Parameters
+        ----------
+        filename : file path, file object or file-like object
+            FITS file to write to. If a file object, must be opened in a writeable mode.
+        model : child class of mcalf.models.base.ModelBase, optional, default = None
+            If provided, use this model to calculate and include both quiescent and active Doppler velocities.
+
+        Notes
+        -----
+        Saves a FITS file to the location specified by `filename`. All the parameters are stored in a separate,
+        named, HDU.
+        """
+        # Compress profile array to integers
+        p_uniq = np.unique(self.profile)
+        p_legend = np.array_str(p_uniq)
+        p = np.full_like(self.profile, -1, dtype=np.int16)
+        for i in range(len(p_uniq)):
+            p[self.profile == p_uniq[i]] = i
+
+        header = fits.Header({
+            'NTIME': 1,
+            'NROWS': self.classifications.shape[-2],
+            'NCOLS': self.classifications.shape[-1],
+            'TIME': self.time,
+        })
+        primary_hdu = fits.PrimaryHDU([], header)
+
+        header = fits.Header({'NPARAMS': self.n_parameters})
+        parameters_hdu = fits.ImageHDU(self.parameters, header, 'PARAMETERS')
+
+        classifications_hdu = fits.ImageHDU(np.asarray(self.classifications, dtype=np.int16), name='CLASSIFICATIONS')
+
+        header = fits.Header({'PROFILES': p_legend})
+        profile_hdu = fits.ImageHDU(p, header, 'PROFILE')
+
+        success_hdu = fits.ImageHDU(np.asarray(self.success, dtype=np.int16), name='SUCCESS')
+
+        chi2_hdu = fits.ImageHDU(self.chi2, name='CHI2')
+
+        hdul = fits.HDUList([primary_hdu, parameters_hdu, classifications_hdu, profile_hdu, success_hdu, chi2_hdu])
+
+        if model is not None:
+            for head, vtype, name in [('ACTIVE', 'active', 'VLOSA'),
+                                      ('QUIESCENT', 'quiescent', 'VLOSQ')]:
+                header = fits.Header({'VTYPE': head, 'UNIT': 'KM/S'})
+                v = self.velocities(model, vtype=vtype)
+                v_hdu = fits.ImageHDU(v, header, name)
+                hdul.append(v_hdu)
+
+        hdul.writeto(filename, checksum=True)
