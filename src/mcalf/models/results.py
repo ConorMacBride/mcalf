@@ -1,4 +1,5 @@
 import numpy as np
+from astropy.io import fits
 
 from mcalf.utils.misc import make_iter
 
@@ -40,10 +41,11 @@ class FitResult:
 
     def __repr__(self):  # Useful string output of the object
         success = 'Successful ' if self.__dict__['success'] else 'Unsuccessful '
-        if self.__dict__['index'] is not None and len(self.__dict__['index']) == 3:
-            index = 'at ({}, {}, {}) '.format(*self.__dict__['index'])
-        else:
-            index = ''
+        index = ''
+        if 'index' in self.__dict__:
+            i = self.__dict__['index']
+            if (isinstance(i, list) or isinstance(i, tuple)) and len(i) == 3 and all([j is not None for j in i]):
+                index = 'at ({}, {}, {}) '.format(*i)
         return success + 'FitResult ' + index + 'with ' + self.__dict__['profile'] \
             + ' profile of classification ' + str(self.__dict__['classification'])
 
@@ -131,14 +133,14 @@ class FitResults:
         if not isinstance(shape, tuple) or len(shape) != 2:
             raise TypeError("`shape` must be a tuple of length 2, got %s" % type(shape))
 
-        if not isinstance(n_parameters, int) and n_parameters < 1:
+        if not isinstance(n_parameters, int) or n_parameters < 1:
             raise ValueError("`n_parameters` must be an integer greater than zero, got %s" % n_parameters)
         parameters_shape = tuple(list(shape) + [n_parameters])
         self.parameters = np.full(parameters_shape, np.nan, dtype=float)
 
         self.classifications = np.full(shape, -1, dtype=int)
 
-        self.profile = np.full(shape, '', dtype=str)
+        self.profile = np.full(shape, '', dtype=object)
 
         self.success = np.full(shape, False, dtype=bool)
 

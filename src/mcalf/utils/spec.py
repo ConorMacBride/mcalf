@@ -63,9 +63,10 @@ def normalise_spectrum(spectrum, original_wavelengths=None, constant_wavelengths
             constant_wavelengths = model.constant_wavelengths
         if prefilter_response is None:
             prefilter_response = model.prefilter_response
-    if original_wavelengths is None or constant_wavelengths is None:
-        raise ValueError("original_wavelengths and constant_wavelengths not found")
-    spectrum = reinterpolate_spectrum(spectrum, original_wavelengths, constant_wavelengths)
+    if original_wavelengths is not None or constant_wavelengths is not None:
+        if original_wavelengths is None or constant_wavelengths is None:
+            raise ValueError("original_wavelengths and constant_wavelengths must be provided")
+        spectrum = reinterpolate_spectrum(spectrum, original_wavelengths, constant_wavelengths)
     if prefilter_response is not None:
         spectrum /= prefilter_response
     spectrum -= min(spectrum)

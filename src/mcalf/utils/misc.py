@@ -106,21 +106,24 @@ def load_parameter(parameter, wl=None):
 
         elif ext.lower() in ['.csv', '.txt']:  # Extension suggests CSV file
 
-            # Read CSV file
-            value = np.loadtxt(parameter, delimiter=',')  # Assumes a delimiter
+            # Read CSV file (assumes a ',' delimiter)
             if wl is not None:  # If `wl` is specified, try a replacement
+                value = str(list(np.loadtxt(parameter, delimiter=',', dtype=object))).replace('\'', '')
                 try:
-                    value = eval(str(value), {'__builtins__': None}, {'wl': wl, 'inf': float('inf')})
+                    value = eval(str(value), {'__builtins__': None},
+                                 {'wl': wl, 'inf': float('inf'), 'nan': float('nan')})
                 except TypeError:  # Only allowed to process `wl` and `inf` variables for security reasons
                     raise SyntaxError("parameter string contains illegal variables")
                 except SyntaxError:
                     raise SyntaxError("parameter string '{}' contains a syntax error".format(parameter))
+            else:
+                value = np.loadtxt(parameter, delimiter=',', dtype=float)
 
         elif ext.lower() in ['.npy', '.npz']:  # Extension suggests NumPy array
 
             value = np.load(parameter)
 
-        elif ext.lower() in ['.sav']:  # Extension suggests IDL SAVE file
+        elif ext.lower() in ['.sav']:  # Extension suggests IDL SAVE file (assumes relevant data in first variable)
 
             value = list(readsav(parameter).values())[0]
 
