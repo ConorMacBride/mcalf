@@ -127,9 +127,9 @@ MCALF is licensed under the terms of the BSD 2-Clause license.
     :alt: DOI
 .. |GitHub License| image:: https://img.shields.io/github/license/ConorMacBride/mcalf
     :target: LICENSE.rst
-    :alt: GitHub
+    :alt: License
 .. |Contributor Covenant| image:: https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg
-    :target: CODE_OF_CONDUCT.md
+    :target: CODE_OF_CONDUCT.rst
     :alt: Code of Conduct
 
 .. _virtual environment: https://docs.python.org/3/tutorial/venv.html
