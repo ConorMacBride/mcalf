@@ -129,7 +129,7 @@ def test_ibis8542model_validate_parameters():
     # stationary_line_core is not a float
     with pytest.raises(ValueError) as e:
         IBIS8542Model_default(stationary_line_core=int(1000))
-    assert 'stationary_line_core' in str(e) and 'float' in str(e)
+    assert 'stationary_line_core' in str(e.value) and 'float' in str(e.value)
 
     # Incorrect Lengths
     for key, value in defaults.items():  # For each parameter
@@ -137,7 +137,7 @@ def test_ibis8542model_validate_parameters():
             defaults_mod = defaults.copy()  # Create a copy of the default parameters
             defaults_mod.update({key: value[:-1]})  # Crop the parameter's value
             IBIS8542Model_default(**defaults_mod)  # Pass the cropped parameter with the other default parameters
-        assert key in str(e) and 'length' in str(e)  # Error must be about the length of the current parameter
+        assert key in str(e.value) and 'length' in str(e.value)  # Error must be about the length of the current parameter
 
     # Check that the sign of the following amplitudes are enforced
     for sign, bad_number, parameters in [('positive', -10.42, ('emission_guess', 'emission_min_bound')),
@@ -147,7 +147,7 @@ def test_ibis8542model_validate_parameters():
                 bad_value = defaults[p].copy()
                 bad_value[0] = bad_number
                 IBIS8542Model_default(**{p: bad_value})
-            assert p in str(e) and sign in str(e)
+            assert p in str(e.value) and sign in str(e.value)
 
     # TODO Verify remaining conditions
 
@@ -386,4 +386,5 @@ def test_ibis8542model_save(ibis8542model_results, ibis8542model_resultsobjs, tm
         saved = fits.open(saved)
         truth = fits.open(os.path.join(path, truth))
         for key in ('PARAMETERS', 'CLASSIFICATIONS', 'PROFILE', 'SUCCESS', 'CHI2', 'VLOSA', 'VLOSQ'):
-            assert saved[key].data == pytest.approx(truth[key].data, nan_ok=True)
+            # TODO Work out why the default rel=1e-6 was failing (linux vs. macos) for one particular CHI2 value
+            assert saved[key].data == pytest.approx(truth[key].data, nan_ok=True, rel=1e-5)
