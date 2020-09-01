@@ -24,3 +24,4 @@ python:
       extra_requirements:
         - docs
         - all
+  system_packages: true
