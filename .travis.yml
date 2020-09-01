@@ -11,7 +11,7 @@ jobs:
 install:
   - pip3 install --upgrade pip
   - pip3 install -e .
-script: python3 -m pytest || python -m pytest
+script: python3 -m pytest --cov=mcalf || python -m pytest --cov=mcalf
 after_script: cd ~
 deploy:
   provider: pypi

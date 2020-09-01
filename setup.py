@@ -17,7 +17,7 @@ setup(
     python_requires=">=3.6",
     install_requires=["docutils>=0.3", "numpy>=1.17", "scipy>=1.3",
                       "pyyaml>=5.1", "pathos>=0.2.5", "scikit-learn>=0.21",
-                      "matplotlib>=3.1", "astropy>=3.2", "pytest"],
+                      "matplotlib>=3.1", "astropy>=3.2", "pytest", "pytest-cov"],
 
     ext_modules=[Extension("mcalf.profiles.ext_voigtlib", ["cextern/voigt.c"])],
 

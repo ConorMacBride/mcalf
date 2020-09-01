@@ -2,7 +2,7 @@
 MCALF: Multi-Component Atmospheric Line Fitting
 ===============================================
 
-|Travis Status| |PyPI Version| |Zenodo DOI| |GitHub License|
+|Travis Status| |Codecov| |PyPI Version| |Zenodo DOI| |GitHub License|
 
 MCALF is an open-source Python package for accurately constraining velocity
 information from spectral imaging observations using machine learning
@@ -119,6 +119,9 @@ MCALF is licensed under the terms of the BSD 2-Clause license.
 .. |Travis Status| image:: https://img.shields.io/travis/com/ConorMacBride/mcalf
     :target: https://travis-ci.com/ConorMacBride/mcalf
     :alt: Travis
+.. |Codecov| image:: https://codecov.io/gh/ConorMacBride/mcalf/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/ConorMacBride/mcalf
+    :alt: Codecov
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/mcalf
     :target: https://pypi.python.org/pypi/mcalf
     :alt: PyPI
