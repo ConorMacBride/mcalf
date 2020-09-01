@@ -11,11 +11,14 @@ import glob
 # gcc -Wall -fPIC -c voigt.c
 # gcc -shared -o libvoigt.so voigt.o
 dllabspath = "{0}{1}".format(os.path.dirname(os.path.abspath(__file__)), os.path.sep)  # Path to libraries directory
-libfile = glob.glob('{}ext_voigtlib.*.so'.format(dllabspath))[0]  # Select first (and only) library in this directory
-lib = ctypes.CDLL(libfile)  # Load the library
-lib.func.restype = ctypes.c_double  # Specify the expected result type
-lib.func.argtypes = (ctypes.c_int, ctypes.c_double)  # Specify the type of the input parameters
-cvoigt = lib.func  # Create alias for the specific function used in functions below
+try:
+    libfile = glob.glob('{}ext_voigtlib.*.so'.format(dllabspath))[0]  # Select first (and only) library in this directory
+    lib = ctypes.CDLL(libfile)  # Load the library
+    lib.func.restype = ctypes.c_double  # Specify the expected result type
+    lib.func.argtypes = (ctypes.c_int, ctypes.c_double)  # Specify the type of the input parameters
+    cvoigt = lib.func  # Create alias for the specific function used in functions below
+except IndexError:  # File does not exist
+    warnings.warn("Could not locate the external C library. Further use of `clib` will fail!")
 
 
 # Parameters for `voigt_approx_nobg` and other approx. Voigt functions
