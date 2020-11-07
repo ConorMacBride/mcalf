@@ -2,6 +2,36 @@
 
 import os.path
 from setuptools import setup, find_packages, Extension
+from distutils.command.build_ext import build_ext
+
+
+class build_ext(build_ext):
+
+    def build_extension(self, ext):
+        self._ctypes = isinstance(ext, CTypes)
+        return super().build_extension(ext)
+
+    def get_export_symbols(self, ext):
+        if self._ctypes:
+            return ext.export_symbols
+        return super().get_export_symbols(ext)
+
+    def get_ext_filename(self, ext_name):
+        if self._ctypes:
+            # Ensure that the extension ends in ".so"
+            # Modified version of parent method
+            from distutils.sysconfig import get_config_var
+            ext_suffix = get_config_var('EXT_SUFFIX')
+            expanded_suffix = ext_suffix.split('.')
+            expanded_suffix[-1] = "so"
+            ext_suffix = ".".join(expanded_suffix)
+            ext_path = ext_name.split('.')
+            return os.path.join(*ext_path) + ext_suffix
+        return super().get_ext_filename(ext_name)
+
+
+class CTypes(Extension):
+    pass
 
 
 def read(file_name):
@@ -19,11 +49,12 @@ setup(
                       "pyyaml>=5.1", "pathos>=0.2.5", "scikit-learn>=0.21",
                       "matplotlib>=3.1", "astropy>=3.2", "pytest", "pytest-cov"],
 
-    ext_modules=[Extension("mcalf.profiles.ext_voigtlib", ["cextern/voigt.c"])],
+    ext_modules=[CTypes("mcalf.profiles.ext_voigtlib", ["cextern/voigt.c"])],
+    cmdclass={'build_ext': build_ext},
 
     author="Conor MacBride",
     author_email="cmacbride01@qub.ac.uk",
-    licence="BSD 2-Clause",
+    license="BSD 2-Clause",
     description="MCALF: Multi-Component Atmospheric Line Fitting",
     keywords="spectrum spectra fitting absorption emission voigt",
     url="https://github.com/ConorMacBride/mcalf/",
