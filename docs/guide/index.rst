@@ -2,7 +2,7 @@
 User Documentation
 ==================
 
-|Travis Status| |Codecov| |PyPI Version| |Zenodo DOI| |GitHub License|
+|Travis Status| |Codecov| |PyPI Version| |Zenodo DOI| |Docs Status| |GitHub License|
 
 MCALF is an open-source Python package for accurately constraining velocity
 information from spectral imaging observations using machine learning
@@ -51,13 +51,29 @@ of being integrated into other Python packages.
 Installation
 ------------
 
+For easier package management we recommend using `Miniconda`_ (or `Anaconda`_)
+and creating a `new conda environment`_ to install MCALF inside.
+To install MCALF using `Miniconda`_, run the following commands in your
+system's command prompt, or if you are using Windows, in the
+'Anaconda Prompt':
+
+.. code:: bash
+
+    $ conda config --add channels conda-forge
+    $ conda config --set channel_priority strict
+    $ conda install mcalf
+
+MCALF is updated to the latest version by running:
+
+.. code:: bash
+
+    $ conda update mcalf
+
+Alternatively, you can install MCALF using ``pip``:
+
 .. code:: bash
 
     $ pip install mcalf
-
-We recommend installing this program inside a `virtual environment`_.
-Alternatively, you can install Anaconda_ (or Miniconda_), and then install
-the package using the above command inside an `new conda environment`_.
 
 Testing
 -------
@@ -70,7 +86,7 @@ your installation,
 
 .. code:: bash
 
-    $ python -m pytest
+    $ python -m pytest --cov=mcalf
 
 Make sure you are inside the virtual environment where it was installed.
 
@@ -138,6 +154,9 @@ MCALF is licensed under the terms of the BSD 2-Clause license.
 .. |Zenodo DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3924527.svg
     :target: https://doi.org/10.5281/zenodo.3924527
     :alt: DOI
+.. |Docs Status| image:: https://readthedocs.org/projects/mcalf/badge/?version=latest&style=flat
+    :target: https://mcalf.macbride.me/
+    :alt: Documentation
 .. |GitHub License| image:: https://img.shields.io/github/license/ConorMacBride/mcalf
     :target: ../license.rst
     :alt: License
@@ -145,7 +164,6 @@ MCALF is licensed under the terms of the BSD 2-Clause license.
     :target: ../code_of_conduct.rst
     :alt: Code of Conduct
 
-.. _virtual environment: https://docs.python.org/3/tutorial/venv.html
 .. _Anaconda: https://www.anaconda.com/products/individual#Downloads
 .. _Miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _new conda environment: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
