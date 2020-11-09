@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os.path
+import os
 from setuptools import setup, find_packages, Extension
 from distutils.command.build_ext import build_ext
 
@@ -38,6 +38,8 @@ def read(file_name):
     return open(os.path.join(os.path.dirname(__file__), file_name)).read()
 
 
+is_nt = '_nt' if os.name == 'nt' else ''
+
 setup(
     name="mcalf",
     version="0.1",
@@ -49,7 +51,7 @@ setup(
                       "pyyaml>=5.1", "pathos>=0.2.5", "scikit-learn>=0.21",
                       "matplotlib>=3.1", "astropy>=3.2", "pytest", "pytest-cov"],
 
-    ext_modules=[CTypes("mcalf.profiles.ext_voigtlib", ["cextern/voigt.c"])],
+    ext_modules=[CTypes("mcalf.profiles.ext_voigtlib", [f"cextern/voigt{is_nt}.c"])],
     cmdclass={'build_ext': build_ext},
 
     author="Conor MacBride",

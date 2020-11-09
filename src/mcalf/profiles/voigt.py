@@ -5,14 +5,14 @@ from scipy.integrate import IntegrationWarning, quad, quad_vec
 
 # Load the C library
 import os.path
+from pathlib import Path
 import ctypes
-import glob
 # # Commands to manually generate
 # gcc -Wall -fPIC -c voigt.c
 # gcc -shared -o libvoigt.so voigt.o
-dllabspath = "{0}{1}".format(os.path.dirname(os.path.abspath(__file__)), os.path.sep)  # Path to libraries directory
+dllabspath = Path(os.path.dirname(os.path.abspath(__file__)))  # Path to libraries directory
 try:
-    libfile = glob.glob('{}ext_voigtlib.*.so'.format(dllabspath))[0]  # Select first (and only) library in this directory
+    libfile = [str(i) for i in dllabspath.glob('ext_voigtlib.*.so')][0]  # Select first (and only) library
     lib = ctypes.CDLL(libfile)  # Load the library
     lib.func.restype = ctypes.c_double  # Specify the expected result type
     lib.func.argtypes = (ctypes.c_int, ctypes.c_double)  # Specify the type of the input parameters
