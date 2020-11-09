@@ -1,0 +1,27 @@
+resources:
+  repositories:
+  - repository: OpenAstronomy
+    type: github
+    endpoint: ConorMacBride
+    name: OpenAstronomy/azure-pipelines-templates
+    ref: master
+jobs:
+- template: publish.yml@OpenAstronomy
+  parameters:
+    ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/v') }}:
+      pypi_connection_name: 'pypi_endpoint'
+      pypi_endpoint_name: 'mcalf'
+    libraries:
+    - libfftw3-dev
+    targets:
+    - sdist
+    - wheels_cp3[6-8]-macosx_x86_64
+    - wheels_cp3[6-8]-manylinux*
+    - wheels_cp3[6-8]-win_amd64
+trigger:
+  branches:
+    include:
+    - '*'
+  tags:
+    include:
+    - 'v*'

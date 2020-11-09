@@ -51,7 +51,7 @@ setup(
                       "pyyaml>=5.1", "pathos>=0.2.5", "scikit-learn>=0.21",
                       "matplotlib>=3.1", "astropy>=3.2", "pytest", "pytest-cov"],
 
-    ext_modules=[CTypes("mcalf.profiles.ext_voigtlib", [f"cextern/voigt{is_nt}.c"])],
+    ext_modules=[CTypes("mcalf.profiles.ext_voigtlib", ["cextern/voigt{}.c".format(is_nt)])],
     cmdclass={'build_ext': build_ext},
 
     author="Conor MacBride",
