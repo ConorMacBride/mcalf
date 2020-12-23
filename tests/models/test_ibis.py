@@ -381,16 +381,16 @@ def test_ibis8542model_save(ibis8542model_results, ibis8542model_resultsobjs, tm
     tmp11 = os.path.join(tmp_path, "ibis8542model_fit_save_results11.fits")
     results11.save(tmp11, m)
 
+    diff_kwargs = {
+        'ignore_keywords': ['CHECKSUM', 'DATASUM'],
+        'atol': 1e-6,
+        'rtol': 1e-5,  # 1e-6 was failing at results10 CHI2[2, 2] on macOS CI env (but nowhere else)
+    }
     for saved, truth in [(tmp10, "ibis8542model_fit_results10.fits"),
                          (tmp11, "ibis8542model_fit_results11.fits")]:
         saved = fits.open(saved)
         truth = fits.open(os.path.join(path, truth))
-        for key in ('PARAMETERS', 'CLASSIFICATIONS', 'PROFILE', 'SUCCESS', 'CHI2', 'VLOSA', 'VLOSQ'):
-            # TODO Work out why the default rel=1e-6 was failing (linux vs. macos) for one particular CHI2 value
-            try:
-                assert saved[key].data == pytest.approx(truth[key].data, nan_ok=True, rel=1e-5)
-            except AssertionError:
-                if os.name == 'nt':
-                    pytest.xfail("known issue running this test on windows")
-                else:
-                    raise
+        diff = fits.FITSDiff(saved, truth, **diff_kwargs)
+        if not diff.identical:  # If this fails tolerances *may* need to be adjusted
+            fits.printdiff(saved, truth, **diff_kwargs)
+            raise ValueError(f"{saved.filename()} and {truth.filename()} differ")
