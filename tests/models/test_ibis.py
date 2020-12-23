@@ -384,7 +384,7 @@ def test_ibis8542model_save(ibis8542model_results, ibis8542model_resultsobjs, tm
     diff_kwargs = {
         'ignore_keywords': ['CHECKSUM', 'DATASUM'],
         'atol': 1e-6,
-        'rtol': 1e-6,
+        'rtol': 1e-5,  # 1e-6 was failing at results10 CHI2[2, 2] on macOS CI env (but nowhere else)
     }
     for saved, truth in [(tmp10, "ibis8542model_fit_results10.fits"),
                          (tmp11, "ibis8542model_fit_results11.fits")]:
