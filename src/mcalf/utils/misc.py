@@ -317,9 +317,9 @@ def _false_test(x):
 
     Notes
     -----
-    Already in correct format so passes through.
+    Converts to bool dtype as integer could have been given.
     """
-    return x  # == True
+    return x.astype(bool)
 
 
 def _minus_one_test(x):
