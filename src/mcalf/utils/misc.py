@@ -1,6 +1,5 @@
 import os
 from shutil import copyfile
-import warnings
 
 import numpy as np
 from astropy.io import fits
