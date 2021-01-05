@@ -134,7 +134,15 @@ Citation
 If you have used this package in work that leads to a publication, we would
 be very grateful if you could acknowledge your use of this package in the
 main text of the publication.
-Please cite the `Zenodo DOI`_ for the package version you used.
+Please cite,
+
+    MacBride CD, Jess DB, Grant SDT, Khomenko E, Keys PH, Stangalini M. 2020
+    Accurately constraining velocity information from spectral imaging
+    observations using machine learning techniques.
+    *Philosophical Transactions of the Royal Society A*. **379**, 2190.
+    (`doi:10.1098/rsta.2020.0171 <https://doi.org/10.1098/rsta.2020.0171>`_)
+
+Please also cite the `Zenodo DOI`_ for the package version you used.
 Please also consider integrating your code and examples into the package.
 
 License
