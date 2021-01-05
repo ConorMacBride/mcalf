@@ -382,7 +382,7 @@ class IBIS8542Model(ModelBase):
             else:
                 return self.sigma[1]
         else:
-            if isinstance(sigma, int):
+            if isinstance(sigma, (int, np.integer)):
                 return self.sigma[sigma]
             else:
                 return np.asarray(sigma, dtype=np.float64)
@@ -479,7 +479,7 @@ class IBIS8542Model(ModelBase):
                 profile = 'absorption'
             elif classification is None:
                 raise ValueError("classification must be specified if profile is not specified")
-            elif not isinstance(classification, int):
+            elif not isinstance(classification, (int, np.integer)):
                 raise TypeError("classification must be an integer")
             else:
                 raise ValueError("unexpected classification, got %s" % classification)
@@ -597,13 +597,14 @@ class IBIS8542Model(ModelBase):
                 raise ValueError("number of spectra, number of recorded indices and number of classifications"
                                  "are not the same (impossible error)")
 
-            if n_pools is None or (isinstance(n_pools, int) and n_pools <= 0):  # Multiprocessing not required
+            # Multiprocessing not required
+            if n_pools is None or (isinstance(n_pools, (int, np.integer)) and n_pools <= 0):
 
                 print("Processing {} spectra".format(n_valid))
                 results = [self._fit(spectra[i], profile=profile, sigma=sigma, classification=classifications[i],
                                      spectrum_index=indices[i]) for i in range(len(spectra))]
 
-            elif isinstance(n_pools, int) and n_pools >= 1:  # Use multiprocessing
+            elif isinstance(n_pools, (int, np.integer)) and n_pools >= 1:  # Use multiprocessing
 
                 # Define single argument function that can be evaluated in the pools
                 def func(data, profile=profile, sigma=sigma):
@@ -711,7 +712,7 @@ class IBIS8542Model(ModelBase):
         if background is None and fit is not None:
             if not explicit_spectrum:  # Take from loaded background if using indices
                 time, row, column = self._get_time_row_column(time=time, row=row, column=column)
-                if sum([isinstance(i, (int, np.int64, np.int32, np.int16, np.int8)) for i in [time, row, column]]) != 3:
+                if sum([isinstance(i, (int, np.integer)) for i in [time, row, column]]) != 3:
                     raise TypeError("plot only accepts integer values for time, row and column")
                 background = self.background[time, row, column]
             else:  # Otherwise assume to be zero

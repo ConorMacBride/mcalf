@@ -133,7 +133,7 @@ class FitResults:
         if not isinstance(shape, tuple) or len(shape) != 2:
             raise TypeError("`shape` must be a tuple of length 2, got %s" % type(shape))
 
-        if not isinstance(n_parameters, int) or n_parameters < 1:
+        if not isinstance(n_parameters, (int, np.integer)) or n_parameters < 1:
             raise ValueError("`n_parameters` must be an integer greater than zero, got %s" % n_parameters)
         parameters_shape = tuple(list(shape) + [n_parameters])
         self.parameters = np.full(parameters_shape, np.nan, dtype=float)
