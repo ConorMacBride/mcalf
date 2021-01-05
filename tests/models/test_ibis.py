@@ -275,6 +275,54 @@ def assert_results_equal(res1, res2):
         assert np.array_equal(res1[i].index, res2[i].index)
 
 
+def test_ibis8542model_wrong_length_of_classifications(ibis8542model_spectra):
+
+    # Load model with random spectra loaded
+    m, classifications = ibis8542model_spectra
+
+    assert classifications.shape == (2, 3, 4)  # This is what the test needs to work (verifies fixture)
+
+    # Test with too few classifications
+    c1 = classifications[:, :, [0, 1]]
+    assert c1.shape == (2, 3, 2)
+    c2 = classifications[:, [0, 1]]
+    assert c2.shape == (2, 2, 4)
+    c3 = classifications[[1]]
+    assert c3.shape == (1, 3, 4)
+    c_wrong_shape = np.transpose(classifications)  # ...but correct size so would not fail otherwise
+    assert c_wrong_shape.shape == (4, 3, 2)
+    for c in [c1, c2, c3, c_wrong_shape]:
+        with pytest.raises(ValueError) as e:
+            result = m.fit(time=range(2), row=range(3), column=range(4), classifications=c)
+        assert 'classifications do not match' in str(e.value)
+
+    # Test with too many classifications
+    for t, r, c in [
+        # (range(2), range(3), range(4)),  # Correct values
+        (1, range(3), range(4)),
+        (range(2), range(1, 3), range(4)),
+        (range(2), range(3), range(2, 4)),
+        (range(2), range(3), 3),
+        (0, 1, 2),
+    ]:
+        with pytest.raises(ValueError) as e:
+            result = m.fit(time=t, row=r, column=c, classifications=classifications)
+        assert 'classifications do not match' in str(e.value)
+
+    # Test with dimensions of length 1 removed (res1 and res2 should be equivalent)
+
+    c = classifications[:, np.newaxis, 0]
+    assert c.shape == (2, 1, 4)
+    res1 = m.fit(time=range(2), row=range(1), column=range(4), classifications=c)
+
+    c = classifications[:, 0]
+    assert c.shape == (2, 4)
+    res2 = m.fit(time=range(2), row=range(1), column=range(4), classifications=c)
+
+    assert len(res1) == len(res2) == 2 * 1 * 4
+    assert_results_equal(res1, res2)
+
+
 @pytest.fixture()
 def ibis8542model_resultsobjs(ibis8542model_results):
 

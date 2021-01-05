@@ -539,9 +539,10 @@ class IBIS8542Model(ModelBase):
             The profile to fit. (Will infer profile from `classifications` if omitted.)
         sigma : int or array_like, optional, default = None
             Explicit sigma index or profile. See `_get_sigma` for details.
-        classifications : int, optional, default = None
+        classifications : int or array_like, optional, default = None
             Classifications to determine the fitted profile to use (if profile not explicitly given). Will use
-            neural network to classify them if not.
+            neural network to classify them if not. If a multidimensional array, must have the same shape as
+            [`time`, `row`, `column`]. Dimensions that would have length of 1 can be excluded.
         background : float, optional, default = None
             If provided, this value will be subtracted from the explicit spectrum provided in `spectrum`. Will
             not be applied to spectra found from the indices, use the `load_background` method instead.
@@ -581,6 +582,18 @@ class IBIS8542Model(ModelBase):
             # Create the array of indices that the spectra represent
             time, row, column = make_iter(*self._get_time_row_column(time=time, row=row, column=column))
             indices = np.transpose(np.array(np.meshgrid(time, row, column, indexing='ij')), axes=[1, 2, 3, 0])
+
+            # Ensure that length of arrays match
+            spectra_indices_shape_mismatch = spectra.shape[:-1] != indices.shape[:-1]
+            spectra_class_size_mismatch = np.size(spectra[..., 0]) != np.size(classifications)
+            spectra_class_shape_mismatch = False  # Only test this if appropriate
+            if isinstance(classifications, np.ndarray) and classifications.ndim != 1:
+                # If a multidimensional array of classifications are given, make sure it matches the indices layout
+                # Allow for dimensions of length 1 to be excluded
+                if np.squeeze(spectra[..., 0]).shape != np.squeeze(classifications).shape:
+                    spectra_class_shape_mismatch = True
+            if spectra_indices_shape_mismatch or spectra_class_size_mismatch or spectra_class_shape_mismatch:
+                raise ValueError("number classifications do not match number of spectra and associated indices")
 
             # Make shape (n_spectra, n_features) so can process in a list
             spectra = spectra.reshape(-1, spectra.shape[-1])
