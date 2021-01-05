@@ -258,9 +258,9 @@ def merge_results(filenames, output):
                     test_function = _nan_test
                 elif isinstance(invalid, bool) and not invalid:  # bool (can only overwrite False)
                     test_function = _false_test
-                elif isinstance(invalid, int) and invalid == -1:
+                elif isinstance(invalid, (int, np.integer)) and invalid == -1:
                     test_function = _minus_one_test
-                elif isinstance(invalid, int) and invalid == 0:
+                elif isinstance(invalid, (int, np.integer)) and invalid == 0:
                     test_function = _zero_test
                 else:
                     raise ValueError(f"Unexpected invalid value {invalid}.")

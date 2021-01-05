@@ -40,7 +40,7 @@ def moving_average(array, width):
     array([1. , 1.5, 2.5, 3.5, 4.5])
     """
 
-    if not isinstance(width, int) or width <= 0 or width > len(array):
+    if not isinstance(width, (int, np.integer)) or width <= 0 or width > len(array):
         raise ValueError("`width` must be a positive integer less than the length of `array`, got %s." % width)
 
     kernel = np.ones(width) / width
