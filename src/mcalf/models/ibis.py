@@ -585,6 +585,7 @@ class IBIS8542Model(ModelBase):
             # Make shape (n_spectra, n_features) so can process in a list
             spectra = spectra.reshape(-1, spectra.shape[-1])
             indices = indices.reshape(-1, indices.shape[-1])
+            classifications = np.asarray(classifications)  # Make sure ndarray methods are available
             classifications = classifications.reshape(-1)
 
             # Remove spectra that are invalid (this allows for masking of the loaded data to constrain a region to fit)
