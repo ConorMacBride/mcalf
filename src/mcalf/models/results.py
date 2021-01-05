@@ -15,7 +15,7 @@ class FitResult:
     fitted_parameters : ndarray
         The parameters fitted.
     fit_info : dict
-        Additional information on the fit including at least 'classification', 'profile', 'success' and 'index'.
+        Additional information on the fit including at least 'classification', 'profile', 'success', 'chi2' and 'index'.
 
     Attributes
     ----------
@@ -27,6 +27,8 @@ class FitResult:
         Profile of the fitted spectrum.
     success : bool
         Whether the fit was completed successfully.
+    chi2 : float
+        Chi-squared value for the fit.
     index : list
         Index ([<time>, <row>, <column>]) of the spectrum in the spectral array.
     __dict__
