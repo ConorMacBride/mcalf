@@ -30,7 +30,7 @@ class IBIS8542Model(ModelBase):
     ----------
     original_wavelengths : array_like
         One-dimensional array of wavelengths that correspond to the uncorrected spectral data.
-    stationary_line_core : float, optional, default = 8542.104320687517
+    stationary_line_core : float, optional, default = 8542.099145376844
         Wavelength of the stationary line core.
     absorption_guess : array_like, length=4, optional, default = [-1000, stationary_line_core, 0.2, 0.1]
         Initial guess to take when fitting the absorption Voigt profile.
@@ -38,20 +38,21 @@ class IBIS8542Model(ModelBase):
         Initial guess to take when fitting the emission Voigt profile.
     absorption_min_bound : array_like, length=4, optional, default = [-np.inf, stationary_line_core-0.15, 1e-6, 1e-6]
         Minimum bounds for all the absorption Voigt profile parameters in order of the function's arguments.
-    emission_min_bound : array_like, length=4, optional, default = [0, stationary_line_core-0.15, 1e-6, 1e-6]
+    emission_min_bound : array_like, length=4, optional, default = [0, -np.inf, 1e-6, 1e-6]
         Minimum bounds for all the emission Voigt profile parameters in order of the function's arguments.
     absorption_max_bound : array_like, length=4, optional, default = [0, stationary_line_core+0.15, 1, 1]
         Maximum bounds for all the absorption Voigt profile parameters in order of the function's arguments.
-    emission_max_bound : array_like, length=4, optional, default = [np.inf, stationary_line_core+0.15, 1, 1]
+    emission_max_bound : array_like, length=4, optional, default = [np.inf, np.inf, 1, 1]
         Maximum bounds for all the emission Voigt profile parameters in order of the function's arguments.
     absorption_x_scale : array_like, length=4, optional, default = [1500, 0.2, 0.3, 0.5]
         Characteristic scale for all the absorption Voigt profile parameters in order of the function's arguments.
     emission_x_scale : array_like, length=4, optional, default = [1500, 0.2, 0.3, 0.5]
         Characteristic scale for all the emission Voigt profile parameters in order of the function's arguments.
     neural_network : sklearn.neural_network.MLPClassifier, optional, default = see description
-        The MLPClassifier object that will be used to classify the spectra. Its default value is
-        `MLPClassifier(solver='lbfgs', alpha=1e-3, hidden_layer_sizes=(10, 4), random_state=1)`.
-    constant_wavelengths : array_like, length same as `original_wavelengths`, optional, default = see description
+        The MLPClassifier object (or similar) that will be used to classify the spectra. Defaults to a `GridSearchCV`
+        with `MLPClassifier(solver='lbfgs', hidden_layer_sizes=(40,), max_iter=1000)`
+        for best `alpha` selected from `[1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5]`.
+    constant_wavelengths : array_like, ndim=1, optional, default = see description
         The desired set of wavelengths that the spectral data should be rescaled to represent. It is assumed
         that these have constant spacing, but that may not be a requirement if you specify your own array.
         The default value is an array from the minimum to the maximum wavelength of `original_wavelengths` in
@@ -67,7 +68,7 @@ class IBIS8542Model(ModelBase):
         it.
     prefilter_response : array_like, length=n_wavelengths, optional, default = see note
         Each constant wavelength scaled spectrum will be corrected by dividing it by this array. If `prefilter_response`
-        is not give, and `prefilter_ref_main` and `prefilter_ref_wvscl` are not given, `prefilter_response` will have a
+        is not given, and `prefilter_ref_main` and `prefilter_ref_wvscl` are not given, `prefilter_response` will have a
         default value of `None`.
     prefilter_ref_main : array_like, optional, default = None
         If `prefilter_response` is not specified, this will be used along with `prefilter_ref_wvscl` to generate the
@@ -114,7 +115,7 @@ class IBIS8542Model(ModelBase):
         The MLPClassifier object (or similar) that will be used to classify the spectra. Defaults to a `GridSearchCV`
         with `MLPClassifier(solver='lbfgs', hidden_layer_sizes=(40,), max_iter=1000)`
         for best `alpha` selected from `[1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5]`.
-    constant_wavelengths : array_like, length same as `original_wavelengths`, optional, default = see description
+    constant_wavelengths : array_like, ndim=1, optional, default = see description
         The desired set of wavelengths that the spectral data should be rescaled to represent. It is assumed
         that these have constant spacing, but that may not be a requirement if you specify your own array.
         The default value is an array from the minimum to the maximum wavelength of `original_wavelengths` in
@@ -126,7 +127,7 @@ class IBIS8542Model(ModelBase):
         See `utils.generate_sigma()` for more information.
     prefilter_response : array_like, length=n_wavelengths, optional, default = see note
         Each constant wavelength scaled spectrum will be corrected by dividing it by this array. If `prefilter_response`
-        is not give, and `prefilter_ref_main` and `prefilter_ref_wvscl` are not given, `prefilter_response` will have a
+        is not given, and `prefilter_ref_main` and `prefilter_ref_wvscl` are not given, `prefilter_response` will have a
         default value of `None`.
     output : str, optional, default = None
         If the program wants to output data, it will place it relative to the location specified by this parameter.
