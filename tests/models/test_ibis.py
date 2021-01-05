@@ -266,6 +266,15 @@ def ibis8542model_results(ibis8542model_spectra):
     return result, m, classifications
 
 
+def assert_results_equal(res1, res2):
+    for i in range(len(res1)):
+        assert np.array_equal(res1[i].parameters, res2[i].parameters)
+        assert res1[i].classification == res2[i].classification
+        assert res1[i].profile == res2[i].profile
+        assert res1[i].success == res2[i].success
+        assert np.array_equal(res1[i].index, res2[i].index)
+
+
 @pytest.fixture()
 def ibis8542model_resultsobjs(ibis8542model_results):
 
@@ -298,13 +307,7 @@ def test_ibis8542model_fit(ibis8542model_results, ibis8542model_resultsobjs):
     res2 = m.fit(time=range(2), row=range(3), column=range(4))
 
     assert len(res1) == len(res2) == 2*3*4
-
-    for i in range(len(res1)):
-        assert np.array_equal(res1[i].parameters, res2[i].parameters)
-        assert res1[i].classification == res2[i].classification
-        assert res1[i].profile == res2[i].profile
-        assert res1[i].success == res2[i].success
-        assert np.array_equal(res1[i].index, res2[i].index)
+    assert_results_equal(res1, res2)
 
     # # METHOD 3: Test over 4 processing pools
     res3 = m.fit(time=range(2), row=range(3), column=range(4), n_pools=4)
