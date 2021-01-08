@@ -12,6 +12,7 @@
 #
 import os
 import sys
+import datetime
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../src'))
 
@@ -19,8 +20,8 @@ sys.path.insert(0, os.path.abspath('../src'))
 # -- Project information -----------------------------------------------------
 
 project = 'MCALF'
-copyright = '2020, Conor D. MacBride & David B. Jess'
 author = 'Conor D. MacBride & David B. Jess'
+copyright = '{}, {}'.format(datetime.datetime.now().year, author)
 
 # The full version, including alpha/beta/rc tags
 release = 'v0.1.1'
