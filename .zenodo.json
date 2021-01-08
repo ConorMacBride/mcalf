@@ -1,0 +1,21 @@
+{
+    "language": "eng", 
+    "license": "BSD-2-Clause", 
+    "title": "MCALF", 
+    "upload_type": "software", 
+    "creators": [
+        {
+            "orcid": "0000-0002-9901-8723", 
+            "affiliation": "Astrophysics Research Centre, School of Mathematics and Physics, Queen's University Belfast, Belfast, BT7 1NN, UK", 
+            "name": "Conor D. MacBride"
+        }, 
+        {
+            "orcid": "0000-0002-9155-8039", 
+            "affiliation": "Astrophysics Research Centre, School of Mathematics and Physics, Queen's University Belfast, Belfast, BT7 1NN, UK", 
+            "name": "David B. Jess"
+        }
+    ], 
+    "access_right": "open", 
+    "description": "<p>MCALF is an open-source Python package for accurately constraining velocity information from spectral imaging observations using machine learning techniques.</p>\n\n<p>This software package provides a &lsquo;toolkit&rsquo; that can be used to define a spectral model optimised for a particular dataset. A sample model is provided for an IBIS Ca II 8542 &Aring; spectral imaging sunspot dataset. This dataset typically contains spectra with multiple atmospheric components and this package supports the isolation of the individual components such that velocity information can be constrained for each component. Using this sample model, as well as the separate base (template) model it is built upon, a custom model can easily be built for a specific dataset.</p>"
+}
+
