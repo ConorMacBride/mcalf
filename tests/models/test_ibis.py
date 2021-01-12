@@ -45,7 +45,7 @@ class DummyClassifier:
 def test_ibis8542model_default():
     # Test default parameters
     with pytest.raises(ValueError) as e:
-        m = IBIS8542Model()
+        IBIS8542Model()
     assert 'original_wavelengths' in str(e.value)
 
 
@@ -79,17 +79,17 @@ def test_ibis8542model_configfile():
     os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
 
     # Test with config file
-    m1 = IBIS8542Model(config="ibis8542model_config.yml")
+    IBIS8542Model(config="ibis8542model_config.yml")
 
     # Turn off sigma
-    m2 = IBIS8542Model(config="ibis8542model_config.yml", sigma=False)
+    IBIS8542Model(config="ibis8542model_config.yml", sigma=False)
 
     # Test with defined prefilter
-    m3 = IBIS8542Model(config="ibis8542model_config_prefilter.yml")
+    IBIS8542Model(config="ibis8542model_config_prefilter.yml")
 
     # Test with no prefilter
     with pytest.warns(UserWarning, match='prefilter_response'):
-        m4 = IBIS8542Model(config="ibis8542model_config_noprefilter.yml")
+        IBIS8542Model(config="ibis8542model_config_noprefilter.yml")
 
     # TODO Check that the parameters were imported correctly
 
@@ -137,7 +137,7 @@ def test_ibis8542model_validate_parameters():
             defaults_mod = defaults.copy()  # Create a copy of the default parameters
             defaults_mod.update({key: value[:-1]})  # Crop the parameter's value
             IBIS8542Model_default(**defaults_mod)  # Pass the cropped parameter with the other default parameters
-        assert key in str(e.value) and 'length' in str(e.value)  # Error must be about the length of the current parameter
+        assert key in str(e.value) and 'length' in str(e.value)  # Error must be about length of current parameter
 
     # Check that the sign of the following amplitudes are enforced
     for sign, bad_number, parameters in [('positive', -10.42, ('emission_guess', 'emission_min_bound')),
@@ -293,7 +293,7 @@ def test_ibis8542model_wrong_length_of_classifications(ibis8542model_spectra):
     assert c_wrong_shape.shape == (4, 3, 2)
     for c in [c1, c2, c3, c_wrong_shape]:
         with pytest.raises(ValueError) as e:
-            result = m.fit(time=range(2), row=range(3), column=range(4), classifications=c)
+            m.fit(time=range(2), row=range(3), column=range(4), classifications=c)
         assert 'classifications do not match' in str(e.value)
 
     # Test with too many classifications
@@ -306,7 +306,7 @@ def test_ibis8542model_wrong_length_of_classifications(ibis8542model_spectra):
         (0, 1, 2),
     ]:
         with pytest.raises(ValueError) as e:
-            result = m.fit(time=t, row=r, column=c, classifications=classifications)
+            m.fit(time=t, row=r, column=c, classifications=classifications)
         assert 'classifications do not match' in str(e.value)
 
     # Test with dimensions of length 1 removed (res1 and res2 should be equivalent)
