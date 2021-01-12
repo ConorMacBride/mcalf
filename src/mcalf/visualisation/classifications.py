@@ -251,8 +251,8 @@ def plot_class_map(class_map, overall_classes=None, classes=None, time_index=Non
 
 
 def plot_averaged_class_map(class_map, classes=None, continuous=False,
-                   xticks=(0, 15, 2), yticks=(0, 15, 2), xscale=0.725 * 0.097, yscale=0.725 * 0.097,
-                   output=None, figsize=None, dpi=600, fontfamily=None):
+                            xticks=(0, 15, 2), yticks=(0, 15, 2), xscale=0.725 * 0.097, yscale=0.725 * 0.097,
+                            output=None, figsize=None, dpi=600, fontfamily=None):
     """Plot an image of the time averaged classifications
 
     Parameters

@@ -155,7 +155,7 @@ def test_fitresults_velocities():
     result_active = fits.velocities(m, vtype='active')
 
     with pytest.raises(ValueError):
-        unknown_vtype = fits.velocities(m, vtype='unknown-vtype')
+        fits.velocities(m, vtype='unknown-vtype')
 
     assert result_quiescent == pytest.approx(truth_quiescent)
     assert result_active == pytest.approx(truth_active)

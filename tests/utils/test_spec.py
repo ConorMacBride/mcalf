@@ -31,9 +31,9 @@ def test_normalise_spectrum():
     assert res == pytest.approx(truth)
 
     with pytest.raises(ValueError):
-        fail = normalise_spectrum(y, original_wavelengths=x_orig)
+        normalise_spectrum(y, original_wavelengths=x_orig)
     with pytest.raises(ValueError):
-        fail = normalise_spectrum(y, constant_wavelengths=x_const)
+        normalise_spectrum(y, constant_wavelengths=x_const)
 
 
 def test_normalise_spectrum_model():
