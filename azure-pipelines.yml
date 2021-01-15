@@ -9,8 +9,7 @@ resources:
 trigger:
   branches:
     include:
-    - main
-    - master  # Delete after default branch rename https://github.com/github/renaming
+    - '*'
   tags:
     include:
     - 'v*'
