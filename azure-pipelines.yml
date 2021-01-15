@@ -50,6 +50,13 @@ stages:
         # Test that the oldest dependency versions with on the latest supported Python version
         - linux: py38-oldestdeps
 
+        - linux: build_docs
+          posargs: " "
+          pytest: false
+          libraries:
+            apt:
+            - pandoc
+
   # RELEASING A VERSION: Run more detailed tests if releasing a version (or if triggered manually)
   - ${{ if or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.Reason'], 'Manual')) }}:
     - stage: PreReleaseTests
@@ -75,10 +82,6 @@ stages:
           - windows: py36
           - windows: py37
 #          - windows: py38
-
-          - linux: build_docs
-            posargs: " "
-            pytest: false
 
           - linux: py36-oldestdeps
           - linux: py37-oldestdeps
