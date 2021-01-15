@@ -5,23 +5,107 @@ resources:
     endpoint: ConorMacBride
     name: OpenAstronomy/azure-pipelines-templates
     ref: master
-jobs:
-- template: publish.yml@OpenAstronomy
-  parameters:
-    ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/v') }}:
-      pypi_connection_name: 'pypi_endpoint'
-      pypi_endpoint_name: 'mcalf'
-    libraries:
-    - libfftw3-dev
-    targets:
-    - sdist
-    - wheels_cp3[6-8]-macosx_x86_64
-    - wheels_cp3[6-8]-manylinux*
-    - wheels_cp3[6-8]-win_amd64
+
 trigger:
   branches:
     include:
-    - '*'
+    - main
+    - master  # Delete after default branch rename https://github.com/github/renaming
   tags:
     include:
     - 'v*'
+
+stages:
+  - stage: StageOneTests
+    displayName: Basic Tests
+    jobs:
+    - template: run-tox-env.yml@OpenAstronomy
+      parameters:
+        default_python: '3.8'
+        coverage: codecov
+        posargs: -n=4
+
+        envs:
+        - linux: py38
+
+  - stage: StageTwoTests
+    displayName: Detailed Tests
+    condition: or(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+    - template: run-tox-env.yml@OpenAstronomy
+      parameters:
+        default_python: '3.8'
+        coverage: codecov
+        posargs: -n=4
+
+        envs:
+
+        - linux: py36
+        - linux: py37
+
+        - macos: py38
+
+        - windows: py38
+
+        # Test that the oldest dependency versions with on the latest supported Python version
+        - linux: py38-oldestdeps
+
+  # RELEASING A VERSION: Run more detailed tests if releasing a version (or if triggered manually)
+  - ${{ if or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.Reason'], 'Manual')) }}:
+    - stage: PreReleaseTests
+      displayName: Pre-release Tests
+      condition: or(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+      - template: run-tox-env.yml@OpenAstronomy
+        parameters:
+          default_python: '3.8'
+          coverage: codecov
+          posargs: -n=4
+
+          envs:
+
+#          - linux: py36
+#          - linux: py37
+#          - linux: py38
+
+          - macos: py36
+          - macos: py37
+#          - macos: py38
+
+          - windows: py36
+          - windows: py37
+#          - windows: py38
+
+          - linux: build_docs
+            posargs: " "
+            pytest: false
+
+          - linux: py36-oldestdeps
+          - linux: py37-oldestdeps
+#          - linux: py38-oldestdeps
+
+          - macos: py36-oldestdeps
+          - macos: py37-oldestdeps
+          - macos: py38-oldestdeps
+
+          - windows: py36-oldestdeps
+          - windows: py37-oldestdeps
+          - windows: py38-oldestdeps
+
+  # Don't build sdist and wheels for PRs
+  # Note: cannot run tests in this job as tests are outside package
+  - ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    - stage: Release
+      condition: or(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+      jobs:
+      - template: publish.yml@OpenAstronomy
+        parameters:
+          ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/v') }}:
+            pypi_connection_name: 'pypi_endpoint'
+            pypi_endpoint_name: 'mcalf'
+          libraries:
+          - libfftw3-dev
+          targets:
+          - sdist
+          - wheels_cp3[6-8]-macosx_x86_64
+          - wheels_cp3[6-8]-manylinux*
+          - wheels_cp3[6-8]-win_amd64
