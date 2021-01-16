@@ -38,24 +38,30 @@ stages:
         coverage: codecov
         posargs: -n=4
 
+        libraries:
+          apt:
+            - pandoc
+
         envs:
 
         - linux: py36
+          libraries: {}
         - linux: py37
+          libraries: {}
 
         - macos: py38
+          libraries: {}
 
         - windows: py38
+          libraries: {}
 
         # Test that the oldest dependency versions with on the latest supported Python version
         - linux: py38-oldestdeps
+          libraries: {}
 
         - linux: build_docs
           posargs: " "
           pytest: false
-          libraries:
-            apt:
-            - pandoc
 
   # RELEASING A VERSION: Run more detailed tests if releasing a version (or if triggered manually)
   - ${{ if or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.Reason'], 'Manual')) }}:
