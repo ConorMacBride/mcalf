@@ -24,7 +24,8 @@ author = 'Conor D. MacBride & David B. Jess'
 copyright = '{}, {}'.format(datetime.datetime.now().year, author)
 
 # The full version, including alpha/beta/rc tags
-release = 'v0.1.1'
+from pkg_resources import get_distribution
+release = get_distribution('mcalf').version
 
 
 # -- General configuration ---------------------------------------------------

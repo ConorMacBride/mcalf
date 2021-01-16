@@ -16,7 +16,7 @@ jobs:
       env: PATH=/c/Python38:/c/Python38/Scripts:$PATH
 install:
   - pip3 install --upgrade pip
-  - pip3 install -e .
+  - pip3 install -e .[tests]
 script: python3 -m pytest --cov=mcalf || python -m pytest --cov=mcalf
 after_script: cd ~
 after_success:
