@@ -1,6 +1,7 @@
-include LICENSE.rst
-include README.rst
-recursive-include examples *
-recursive-include cextern *
-recursive-include tests *
-graft src
+# setuptools_scm includes all files tracked by git so need to exclude some
+exclude .gitignore
+exclude .readthedocs.yml
+exclude .travis.yml
+exclude .zenodo.json
+exclude azure-pipelines.yml
+prune examples
