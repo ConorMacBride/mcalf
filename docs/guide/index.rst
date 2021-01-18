@@ -78,17 +78,69 @@ Alternatively, you can install MCALF using ``pip``:
 Testing
 -------
 
-First, install the package as usual, and then download the code
-associated with your installed MCALF version.
-Unzip the file and navigate to it in the terminal.
-Run the following command (in the same directory as ``setup.py``) to test
+A test suite is included with the package. The package is tested on
+multiple platforms, however you may wish to run the tests on your
+system also.
+
+Installing Dependencies
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Using MCALF with pip
+====================
+
+To run the tests you need a number of extra packages installed. If you
+installed MCALF using pip, you can run ``pip install mcalf[tests]`` to
+install the additional testing dependencies (and MCALF if it's not
+already installed).
+
+Using MCALF with conda
+======================
+
+If you want to use MCALF inside a conda environment you should first
+follow the conda installation instructions above. Once MCALF is
+installed in a conda environment, ask conda to install each of MCALF's
+testing dependencies using the following command.
+(See `setup.cfg`_ for an up-to-date list of dependencies.)
+
+.. code:: bash
+
+    $ conda install pytest pytest-cov tox
+
+Running Tests
+~~~~~~~~~~~~~
+
+Tests should be run within the virtual environment where MCALF and its
+testing dependencies were installed. Run the following command to test
 your installation,
 
 .. code:: bash
 
-    $ python -m pytest --cov=mcalf
+    $ pytest --pyargs mcalf
 
-Make sure you are inside the virtual environment where it was installed.
+Editing the Code
+~~~~~~~~~~~~~~~~
+
+If you are planning on making changes to your local version of the code,
+it is recommended to run the test suite to help ensure that the changes
+do not introduce problems elsewhere.
+
+Before making changes, you'll need to set up a development environment.
+The SunPy Community have compiled an excellent set of instructions and
+is available in their `documentation`_. You can mostly replace
+``sunpy`` with ``mcalf``, and install with
+
+.. code:: bash
+
+    $ pip install -e .[tests,docs]
+
+After making changes to the MCALF source, run the MCALF test suite with
+the following command (while in the same directory as ``setup.py``),
+
+.. code:: bash
+
+    $ pytest --pyargs mcalf --cov
+
+The tox package has also been configured to run the MCALF test suite.
 
 Getting Started
 ---------------
@@ -175,6 +227,8 @@ MCALF is licensed under the terms of the BSD 2-Clause license.
 .. _Anaconda: https://www.anaconda.com/products/individual#Downloads
 .. _Miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _new conda environment: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+.. _setup.cfg: https://github.com/ConorMacBride/mcalf/blob/master/setup.cfg
+.. _documentation: https://docs.sunpy.org/en/latest/dev_guide/contents/newcomers.html#setting-up-a-development-environment
 
 .. _Conor MacBride: https://macbride.me/
 
