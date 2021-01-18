@@ -78,17 +78,10 @@ Alternatively, you can install MCALF using ``pip``:
 Testing
 -------
 
-First, install the package as usual, and then download the code
-associated with your installed MCALF version.
-Unzip the file and navigate to it in the terminal.
-Run the following command (in the same directory as ``setup.py``) to test
-your installation,
-
-.. code:: bash
-
-    $ python -m pytest --cov=mcalf
-
-Make sure you are inside the virtual environment where it was installed.
+A test suite is included with the package. The package is tested on
+multiple platforms, however you may wish to run the tests on your
+system also. More details on running our tox/pytest test suite are
+available in our `documentation`_.
 
 Getting Started
 ---------------
@@ -166,6 +159,7 @@ MCALF is licensed under the terms of the BSD 2-Clause license.
 .. _Anaconda: https://www.anaconda.com/products/individual#Downloads
 .. _Miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _new conda environment: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+.. _documentation: https://mcalf.macbride.me/en/latest/guide/index.html#testing
 
 .. _Conor MacBride: https://macbride.me/
 
