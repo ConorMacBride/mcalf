@@ -19,13 +19,13 @@ install:
   - pip3 install -e .[tests]
 script:
   - >
-    python3 -m pytest
-        -vvv -s -ra
-        --pyargs mcalf
-        --cov-report=xml --cov=mcalf --cov-config=setup.cfg ||
-    python -m pytest
-        -vvv -s -ra
-        --pyargs mcalf
+    python3 -m pytest \
+        -vvv -s -ra \
+        --pyargs mcalf \
+        --cov-report=xml --cov=mcalf --cov-config=setup.cfg || \
+    python -m pytest \
+        -vvv -s -ra \
+        --pyargs mcalf \
         --cov-report=xml --cov=mcalf --cov-config=setup.cfg
 after_script: cd ~
 after_success:
