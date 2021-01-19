@@ -114,8 +114,8 @@ stages:
             pypi_endpoint_name: 'mcalf'
           libraries:
           - libfftw3-dev
-          #test_extras: "tests"
-          #test_command: pytest --pyargs mcalf
+          test_extras: "tests"
+          test_command: pytest --pyargs mcalf
           targets:
           - sdist
           - wheels_cp3[6-8]-macosx_x86_64
