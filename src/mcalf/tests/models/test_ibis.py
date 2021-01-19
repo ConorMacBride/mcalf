@@ -1,6 +1,5 @@
 import pytest
 import os
-import pkg_resources
 import numpy as np
 from astropy.io import fits
 from sklearn.exceptions import NotFittedError
@@ -9,9 +8,34 @@ from mcalf.models.ibis import IBIS8542Model
 from mcalf.models.results import FitResults
 from mcalf.profiles.voigt import voigt, double_voigt
 
+from ..helpers import data_path_function
+data_path = data_path_function('models')
 
-def data_path(*args, module='models'):
-    return pkg_resources.resource_filename('mcalf', os.path.join('tests', module, 'data', *args))
+
+def test_models_data_present():
+    files = [
+        'ibis8542model_config.yml',
+        'ibis8542model_config_noprefilter.yml',
+        'ibis8542model_config_prefilter.yml',
+        'ibis8542model_fit_results10.fits',
+        'ibis8542model_fit_results11.fits',
+        'ibis8542model_init_config.yml',
+        'ibis8542model_prefilter.csv',
+        'ibis8542model_prefilter_ref_main.csv',
+        'ibis8542model_prefilter_ref_wvscl.csv',
+        'ibis8542model_sigma.csv',
+        'ibis8542model_sigma25.csv',
+        'ibis8542model_wavelengths_constant.csv',
+        'ibis8542model_wavelengths_original.csv',
+    ]
+    for f in files:
+        p = data_path(f)
+        if not os.path.exists(p):
+            print(f"cwd: {os.getcwd()}")
+            print(f"__file__: {__file__}")
+            for i in os.walk(os.getcwd()):
+                print(i)
+            raise OSError(f"Path {p} does not exist.")
 
 
 class DummyClassifier:

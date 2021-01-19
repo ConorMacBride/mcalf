@@ -1,14 +1,12 @@
 import pytest
 import os
-import pkg_resources
 import numpy as np
 from astropy.io import fits
 
 from mcalf.utils.misc import make_iter, load_parameter, merge_results
 
-
-def data_path(*args, module='utils'):
-    return pkg_resources.resource_filename('mcalf', os.path.join('tests', module, 'data', *args))
+from ..helpers import data_path_function
+data_path = data_path_function('utils')
 
 
 def test_make_iter():
