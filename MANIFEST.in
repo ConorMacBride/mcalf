@@ -5,3 +5,6 @@ exclude .travis.yml
 exclude .zenodo.json
 exclude azure-pipelines.yml
 prune examples
+# not being included automatically in win-py36
+include src/mcalf/tests/models/data/*
+include src/mcalf/tests/utils/data/*

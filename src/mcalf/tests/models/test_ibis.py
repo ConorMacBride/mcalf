@@ -8,6 +8,9 @@ from mcalf.models.ibis import IBIS8542Model
 from mcalf.models.results import FitResults
 from mcalf.profiles.voigt import voigt, double_voigt
 
+from ..helpers import data_path_function
+data_path = data_path_function('models')
+
 
 class DummyClassifier:
 
@@ -76,7 +79,7 @@ def test_ibis8542model_basic():
 
 def test_ibis8542model_configfile():
     # Enter the data directory (needed to find the files referenced in the config files)
-    os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
+    os.chdir(data_path())
 
     # Test with config file
     IBIS8542Model(config="ibis8542model_config.yml")
@@ -100,7 +103,7 @@ def test_ibis8542model_validate_parameters():
     x_orig = np.linspace(stationary_line_core - 2, stationary_line_core + 2, num=25)
     x_const = np.linspace(stationary_line_core - 1.7, stationary_line_core + 1.7, num=30)
     prefilter = np.loadtxt(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "ibis8542model_prefilter.csv"),
+        data_path('ibis8542model_prefilter.csv'),
         delimiter=','
     )
     defaults = {
@@ -154,7 +157,7 @@ def test_ibis8542model_validate_parameters():
 
 def test_ibis8542model_get_sigma():
     # Enter the data directory (needed to find the files referenced in the config files)
-    os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
+    os.chdir(data_path())
 
     m = IBIS8542Model(config="ibis8542model_config.yml")
     sigma = np.loadtxt("ibis8542model_sigma.csv", delimiter=',')
@@ -174,7 +177,7 @@ def test_ibis8542model_get_sigma():
 @pytest.fixture()
 def ibis8542model_init():
     # Enter the data directory (needed to find the files referenced in the config files)
-    os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
+    os.chdir(data_path())
 
     x_orig = np.loadtxt("ibis8542model_wavelengths_original.csv")
 
@@ -377,8 +380,7 @@ def test_ibis8542model_fit(ibis8542model_results, ibis8542model_resultsobjs):
 
     # # Test current values against expected values
 
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-    truth10, truth11 = [fits.open(os.path.join(path, f)) for f in
+    truth10, truth11 = [fits.open(data_path(f)) for f in
                         ("ibis8542model_fit_results10.fits", "ibis8542model_fit_results11.fits")]
 
     for results, truth in [(results10, truth10), (results11, truth11)]:
@@ -425,8 +427,6 @@ def test_ibis8542model_save(ibis8542model_results, ibis8542model_resultsobjs, tm
     res1, m = ibis8542model_results[:2]
     results10, results11 = ibis8542model_resultsobjs(res1)
 
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-
     tmp10 = os.path.join(tmp_path, "ibis8542model_fit_save_results10.fits")
     results10.save(tmp10, m)
     tmp11 = os.path.join(tmp_path, "ibis8542model_fit_save_results11.fits")
@@ -440,7 +440,7 @@ def test_ibis8542model_save(ibis8542model_results, ibis8542model_resultsobjs, tm
     for saved, truth in [(tmp10, "ibis8542model_fit_results10.fits"),
                          (tmp11, "ibis8542model_fit_results11.fits")]:
         saved = fits.open(saved)
-        truth = fits.open(os.path.join(path, truth))
+        truth = fits.open(data_path(truth))
         diff = fits.FITSDiff(saved, truth, **diff_kwargs)
         if not diff.identical:  # If this fails tolerances *may* need to be adjusted
             fits.printdiff(saved, truth, **diff_kwargs)
