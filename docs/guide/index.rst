@@ -2,7 +2,7 @@
 User Documentation
 ==================
 
-|Travis Status| |Codecov| |PyPI Version| |Zenodo DOI| |Docs Status| |GitHub License|
+|Azure Pipelines Status| |Codecov| |PyPI Version| |Zenodo DOI| |Docs Status| |GitHub License|
 
 MCALF is an open-source Python package for accurately constraining velocity
 information from spectral imaging observations using machine learning
@@ -202,9 +202,9 @@ License
 
 MCALF is licensed under the terms of the BSD 2-Clause license.
 
-.. |Travis Status| image:: https://img.shields.io/travis/com/ConorMacBride/mcalf
-    :target: https://travis-ci.com/ConorMacBride/mcalf
-    :alt: Travis
+.. |Azure Pipelines Status| image:: https://dev.azure.com/ConorMacBride/mcalf/_apis/build/status/ConorMacBride.mcalf?repoName=ConorMacBride%2Fmcalf&branchName=master
+    :target: https://dev.azure.com/ConorMacBride/mcalf/_build?definitionId=2
+    :alt: Azure Pipelines
 .. |Codecov| image:: https://codecov.io/gh/ConorMacBride/mcalf/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/ConorMacBride/mcalf
     :alt: Codecov
