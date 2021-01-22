@@ -1,16 +1,24 @@
 import os
 import warnings
+import collections
+import copy
 
 import numpy as np
 from scipy.optimize import curve_fit
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import classification_report
 
+from yaml import load
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
+
 from mcalf.utils.spec import reinterpolate_spectrum
-from mcalf.utils.misc import make_iter
+from mcalf.utils.misc import load_parameter, make_iter
 
 
-__all__ = ['ModelBase']
+__all__ = ['ModelBase', 'BASE_PARAMETERS', 'BASE_ATTRIBUTES']
 
 
 class ModelBase:
@@ -18,17 +26,140 @@ class ModelBase:
 
     Warning: This class should not be used directly.
     Use derived classes instead.
-
-    Attributes
-    ----------
-    array : ndarray, dimensions are ['time', 'row', 'column', 'spectra']
-        Array holding spectra.
-    background : ndarray, dimensions are ['time', 'row', 'column']
-        Array holding spectral backgrounds.
     """
-    def __init__(self):
+    def __init__(self, config=None, **kwargs):
+
+        # STAGE 1: Define dictionary of default attribute values
+        defaults = {
+            'stationary_line_core': None,
+            'original_wavelengths': None,
+            'constant_wavelengths': None,
+            'delta_lambda': 0.05,
+            'sigma': None,
+            'prefilter_response': None,
+            'prefilter_ref_main': None,
+            'prefilter_ref_wvscl': None,
+            'output': None,
+        }
+
+        # STAGE 2: Update defaults with any values specified in a config file
+        self.config = {}  # Dictionary of parameters from the config file
+        if config is not None:  # Process config file if one is specified
+
+            with open(config, 'r') as stream:  # Load YAML file
+                self.config = load(stream, Loader=Loader)
+
+            # Extract the BaseModel attributes from the config file
+            class_defaults = {k: self.config[k] for k in self.config.keys() if k in defaults.keys()}
+            for k in class_defaults.keys():
+                if k not in ['output']:  # Keep string as is (don't pass through `load_parameter`)
+                    class_defaults[k] = load_parameter(class_defaults[k])
+                self.config.pop(k)  # Remove copied parameter
+
+            # Update the defaults with the config file
+            defaults.update(class_defaults)
+
+        # STAGE 3: Update defaults with the keyword arguments passed into the class initialisation
+        # Verify that only expected kwargs are passed
+        for k in kwargs.keys():
+            if k not in defaults.keys():
+                raise TypeError(f"ModelBase() got an unexpected keyword argument '{k}'")
+        defaults.update(kwargs)  # Update the defaults
+
+        # Load default values of any parameters that haven't been given yet
+        if defaults['original_wavelengths'] is None:
+            raise ValueError("original_wavelengths must be specified")
+        if defaults['constant_wavelengths'] is None:
+            defaults['constant_wavelengths'] = np.arange(min(defaults['original_wavelengths']),
+                                                         (max(defaults['original_wavelengths'])
+                                                         + defaults['delta_lambda']),
+                                                         defaults['delta_lambda'])
+
+        # STAGE 4: Set the object attributes (with some type enforcing)
+        # values in the defaults dict
+        self.original_wavelengths = np.asarray(defaults['original_wavelengths'], dtype=np.float64)
+        self.constant_wavelengths = np.asarray(defaults['constant_wavelengths'], dtype=np.float64)
+        if defaults['stationary_line_core'] is None:  # Allow to be None by default
+            self.__stationary_line_core = None  # Override setter
+        else:
+            self.stationary_line_core = defaults['stationary_line_core']
+        self.__delta_lambda = defaults['delta_lambda']
+        self.sigma = defaults['sigma']
+        self.prefilter_response = defaults['prefilter_response']
+        self.__prefilter_ref_main = defaults['prefilter_ref_main']
+        self.__prefilter_ref_wvscl = defaults['prefilter_ref_wvscl']
+        self.output = defaults['output']
+        # attributes whose default value cannot be changed during initialisation
+        self.neural_network = None  # Must be set in a child class initialisation or after initialisation
         self.array = None  # Array that will hold any loaded spectra
         self.background = None  # Array holding constant background values for `self.array`
+
+        # STAGE 5: Validate the loaded attributes
+        self._validate_base_attributes()
+
+    @property
+    def stationary_line_core(self):
+        return self.__stationary_line_core
+
+    @stationary_line_core.setter
+    def stationary_line_core(self, wavelength):
+
+        # Verify that stationary_line_core is a float
+        if not isinstance(wavelength, float):
+            raise ValueError("stationary_line_core must be a float, got %s" % type(wavelength))
+
+        # Stationary wavelength must be within wavelength range
+        original_diff = self.original_wavelengths - wavelength
+        constant_diff = self.constant_wavelengths - wavelength
+        for n, i in [['original_wavelengths', original_diff], ['constant_wavelengths', constant_diff]]:
+            if min(i) > 1e-6 or max(i) < -1e-6:
+                raise ValueError("`stationary_line_core` is not within `{}`".format(n))
+
+        # Verification passed; set value
+        self.__stationary_line_core = wavelength
+
+    def _set_prefilter(self):
+        """Set the `prefilter_response` parameter
+
+        This method should be called in a child class once `stationary_line_core` has been set.
+        """
+        if self.prefilter_response is None:
+            if self.__prefilter_ref_main is not None and self.__prefilter_ref_wvscl is not None:
+                self.prefilter_response = reinterpolate_spectrum(self.__prefilter_ref_main,
+                                                                 self.__prefilter_ref_wvscl + self.stationary_line_core,
+                                                                 self.constant_wavelengths)
+            else:
+                # TODO: Remove this warning and possibly all prefilter code
+                warnings.warn("prefilter_response will not be applied to spectra")
+        else:  # Make sure it is a numpy array so that division works as expected when doing array operations
+            self.prefilter_response = np.asarray(self.prefilter_response, dtype=np.float64)
+
+        # If a prefilter response is given it must be a compatible length
+        if self.prefilter_response is not None:
+            if len(self.prefilter_response) != len(self.constant_wavelengths):
+                raise ValueError("prefilter_response array must be the same length as constant_wavelengths array")
+
+    def _validate_base_attributes(self):
+        """Validate some of the object's attributes
+
+        Raises
+        ------
+        ValueError
+            To signal that an attribute is not valid.
+        """
+        # Wavelength arrays must be sorted ascending
+        if np.sum(np.diff(self.original_wavelengths) > 0) < len(self.original_wavelengths) - 1:
+            raise ValueError("original_wavelength array must be sorted ascending")
+        if np.sum(np.diff(self.constant_wavelengths) > 0) < len(self.constant_wavelengths) - 1:
+            raise ValueError("constant_wavelength array must be sorted ascending")
+
+        # Warn if the constant wavelengths extrapolate the original wavelengths
+        if min(self.constant_wavelengths) - min(self.original_wavelengths) < -1e-6:
+            # If lower-bound of constant wavelengths is more than 1e-6 outside of the original wavelengths
+            warnings.warn("Lower bound of `constant_wavelengths` is outside of `original_wavelengths` range.")
+        if max(self.constant_wavelengths) - max(self.original_wavelengths) - self.__delta_lambda > 1e-6:
+            # If upper-bound of constant wavelengths is more than 1e-6 ouside the original wavelengths
+            warnings.warn("Upper bound of `constant_wavelengths` is outside of `original_wavelengths` range.")
 
     def _load_data(self, array, names=None, target=None):
         """Load a specified array into the model object.
@@ -460,3 +591,94 @@ class ModelBase:
                 fitted_parameters = np.full_like(guess, np.nan)
 
         return fitted_parameters, success
+
+
+# Define each parameter and attribute in an ordered dictionary so definitions can be passed to child objects
+DOCS = collections.OrderedDict()
+DOCS['original_wavelengths'] = """
+    original_wavelengths : array_like
+        One-dimensional array of wavelengths that correspond to the uncorrected spectral data."""
+DOCS['stationary_line_core'] = """
+    stationary_line_core : float, optional, default = None
+        Wavelength of the stationary line core."""
+DOCS['neural_network'] = """
+    neural_network : optional, default = None
+        The neural network classifier object that is used to classify spectra. This attribute should be set by a
+        child class of `mcalf.models.base.ModelBase`."""
+DOCS['constant_wavelengths'] = """
+    constant_wavelengths : array_like, ndim=1, optional, default = see description
+        The desired set of wavelengths that the spectral data should be rescaled to represent. It is assumed
+        that these have constant spacing, but that may not be a requirement if you specify your own array.
+        The default value is an array from the minimum to the maximum wavelength of `original_wavelengths` in
+        constant steps of `delta_lambda`, overshooting the upper bound if the maximum wavelength has not been 
+        reached."""
+DOCS['delta_lambda'] = """
+    delta_lambda : float, optional, default = 0.05
+        The step used between each value of `constant_wavelengths` when its default value has to be calculated."""
+DOCS['sigma'] = """
+    sigma : optional, default = None
+        Sigma values used to weight the fit. This attribute should be set by a child class of 
+        `mcalf.models.base.ModelBase`."""
+DOCS['prefilter_response'] = """
+    prefilter_response : array_like, length=n_wavelengths, optional, default = see note
+        Each constant wavelength scaled spectrum will be corrected by dividing it by this array. If `prefilter_response`
+        is not given, and `prefilter_ref_main` and `prefilter_ref_wvscl` are not given, `prefilter_response` will have a
+        default value of `None`."""
+DOCS['prefilter_ref_main'] = """
+    prefilter_ref_main : array_like, optional, default = None
+        If `prefilter_response` is not specified, this will be used along with `prefilter_ref_wvscl` to generate the
+        default value of `prefilter_response`."""
+DOCS['prefilter_ref_wvscl'] = """
+    prefilter_ref_wvscl : array_like, optional, default = None
+        If `prefilter_response` is not specified, this will be used along with `prefilter_ref_main` to generate the
+        default value of `prefilter_response`."""
+DOCS['config'] = """
+    config : str, optional, default = None
+        Filename of a `.yml` file (relative to current directory) containing the initialising parameters for this
+        object. Parameters provided explicitly to the object upon initialisation will override any provided in this
+        file. All (or some) parameters that this object accepts can be specified in this file, except `neural_network`
+        and `config`. Each line of the file should specify a different parameter and be formatted like
+        `emission_guess: '[-inf, wl-0.15, 1e-6, 1e-6]'` or `original_wavelengths: 'original.fits'` for example.
+        When specifying a string, use 'inf' to represent `np.inf` and 'wl' to represent `stationary_line_core` as shown.
+        If the string matches a file, `utils.load_parameter()` is used to load the contents of the file."""
+DOCS['output'] = """
+    output : str, optional, default = None
+        If the program wants to output data, it will place it relative to the location specified by this parameter.
+        Some methods will only save data to a file if this parameter is not `None`. Such cases will be documented
+        where relevant."""
+DOCS['array'] = """
+    array: ndarray, dimensions are['time', 'row', 'column', 'spectra']
+        Array holding spectra."""
+DOCS['background'] = """
+    background: ndarray, dimensions are['time', 'row', 'column']
+        Array holding spectral backgrounds."""
+
+# Form the parameter list
+BASE_PARAMETERS = copy.deepcopy(DOCS)
+for k in [  # Remove some entries
+    'neural_network',
+    'array',
+    'background',
+]:
+    del BASE_PARAMETERS[k]
+BASE_PARAMETERS_STR = ''.join(BASE_PARAMETERS[i] for i in BASE_PARAMETERS)
+
+# Form the attribute list
+BASE_ATTRIBUTES = copy.deepcopy(DOCS)
+for k in [  # Remove some entries
+    'delta_lambda',
+    'prefilter_ref_main',
+    'prefilter_ref_wvscl',
+    'config',
+]:
+    del BASE_ATTRIBUTES[k]
+BASE_ATTRIBUTES_STR = ''.join(BASE_ATTRIBUTES[i] for i in BASE_ATTRIBUTES)
+
+# Set the docstring
+ModelBase.__doc__ += """
+    Parameters
+    ----------""" + BASE_PARAMETERS_STR + """
+
+    Attributes
+    ----------""" + BASE_ATTRIBUTES_STR + """
+"""

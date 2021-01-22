@@ -26,7 +26,7 @@ def test_fitresult_passthrough():
 
 
 def test_fitresult_velocity():
-    m = DummyModel()
+    m = DummyModel(original_wavelengths=[1000.4, 1000.6])
     m.stationary_line_core = 1000.5
     m.quiescent_wavelength = 2
     m.active_wavelength = 3
@@ -129,7 +129,7 @@ def test_fitresults_append():
 
 
 def test_fitresults_velocities():
-    m = DummyModel()
+    m = DummyModel(original_wavelengths=[1000.4, 1000.6])
     m.stationary_line_core = 1000.5
     m.quiescent_wavelength = 0
     m.active_wavelength = 1

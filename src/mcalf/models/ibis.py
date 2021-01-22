@@ -1,4 +1,4 @@
-import warnings
+import copy
 
 import numpy as np
 from pathos.multiprocessing import ProcessPool as Pool
@@ -6,16 +6,10 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPClassifier
 
-from yaml import load
-try:
-    from yaml import CLoader as Loader
-except ImportError:
-    from yaml import Loader
-
 from mcalf.models.results import FitResult
-from mcalf.models.base import ModelBase
+from mcalf.models.base import *
 from mcalf.profiles.voigt import voigt_nobg, double_voigt_nobg
-from mcalf.utils.spec import reinterpolate_spectrum, generate_sigma
+from mcalf.utils.spec import generate_sigma
 from mcalf.utils.misc import load_parameter, make_iter
 from mcalf.visualisation.spec import plot_ibis8542
 
@@ -25,258 +19,93 @@ __all__ = ['IBIS8542Model']
 
 class IBIS8542Model(ModelBase):
     """Class for working with IBIS 8542 Å calcium II spectral imaging observations
-
-    Parameters
-    ----------
-    original_wavelengths : array_like
-        One-dimensional array of wavelengths that correspond to the uncorrected spectral data.
-    stationary_line_core : float, optional, default = 8542.099145376844
-        Wavelength of the stationary line core.
-    absorption_guess : array_like, length=4, optional, default = [-1000, stationary_line_core, 0.2, 0.1]
-        Initial guess to take when fitting the absorption Voigt profile.
-    emission_guess : array_like, length=4, optional, default = [1000, stationary_line_core, 0.2, 0.1]
-        Initial guess to take when fitting the emission Voigt profile.
-    absorption_min_bound : array_like, length=4, optional, default = [-np.inf, stationary_line_core-0.15, 1e-6, 1e-6]
-        Minimum bounds for all the absorption Voigt profile parameters in order of the function's arguments.
-    emission_min_bound : array_like, length=4, optional, default = [0, -np.inf, 1e-6, 1e-6]
-        Minimum bounds for all the emission Voigt profile parameters in order of the function's arguments.
-    absorption_max_bound : array_like, length=4, optional, default = [0, stationary_line_core+0.15, 1, 1]
-        Maximum bounds for all the absorption Voigt profile parameters in order of the function's arguments.
-    emission_max_bound : array_like, length=4, optional, default = [np.inf, np.inf, 1, 1]
-        Maximum bounds for all the emission Voigt profile parameters in order of the function's arguments.
-    absorption_x_scale : array_like, length=4, optional, default = [1500, 0.2, 0.3, 0.5]
-        Characteristic scale for all the absorption Voigt profile parameters in order of the function's arguments.
-    emission_x_scale : array_like, length=4, optional, default = [1500, 0.2, 0.3, 0.5]
-        Characteristic scale for all the emission Voigt profile parameters in order of the function's arguments.
-    neural_network : sklearn.neural_network.MLPClassifier, optional, default = see description
-        The MLPClassifier object (or similar) that will be used to classify the spectra. Defaults to a `GridSearchCV`
-        with `MLPClassifier(solver='lbfgs', hidden_layer_sizes=(40,), max_iter=1000)`
-        for best `alpha` selected from `[1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5]`.
-    constant_wavelengths : array_like, ndim=1, optional, default = see description
-        The desired set of wavelengths that the spectral data should be rescaled to represent. It is assumed
-        that these have constant spacing, but that may not be a requirement if you specify your own array.
-        The default value is an array from the minimum to the maximum wavelength of `original_wavelengths` in
-        constant steps of `delta_lambda`, overshooting the upper bound if the maximum wavelength has not been reached.
-    delta_lambda : float, optional, default = 0.05
-        The step used between each value of `constant_wavelengths` when its default value has to be calculated.
-    sigma : list of array_like or bool, length=(2, n_wavelengths), optional, default = [type1, type2]
-        A list of different sigma that are used to weight particular wavelengths along the spectra when fitting. The
-        fitting method will expect to be able to choose a sigma array from this list at a specific index. It's default
-        value is `[generate_sigma(i, constant_wavelengths, stationary_line_core) for i in [1, 2]]`.
-        See `utils.generate_sigma()` for more information. If bool, True will generate the default sigma value
-        regardless of the value specified in `config`, and False will set `sigma` to be all ones, effectively disabling
-        it.
-    prefilter_response : array_like, length=n_wavelengths, optional, default = see note
-        Each constant wavelength scaled spectrum will be corrected by dividing it by this array. If `prefilter_response`
-        is not given, and `prefilter_ref_main` and `prefilter_ref_wvscl` are not given, `prefilter_response` will have a
-        default value of `None`.
-    prefilter_ref_main : array_like, optional, default = None
-        If `prefilter_response` is not specified, this will be used along with `prefilter_ref_wvscl` to generate the
-        default value of `prefilter_response`.
-    prefilter_ref_wvscl : array_like, optional, default = None
-        If `prefilter_response` is not specified, this will be used along with `prefilter_ref_main` to generate the
-        default value of `prefilter_response`.
-    config : str, optional, default = None
-        Filename of a `.yml` file (relative to current directory) containing the initialising parameters for this
-        object. Parameters provided explicitly to the object upon initialisation will override any provided in this
-        file. All (or some) parameters that this object accepts can be specified in this file, except `neural_network`
-        and `config`. Each line of the file should specify a different parameter and be formatted like
-        `emission_guess: '[-inf, wl-0.15, 1e-6, 1e-6]'` or `original_wavelengths: 'original.fits'` for example.
-        When specifying a string, use 'inf' to represent `np.inf` and 'wl' to represent `stationary_line_core` as shown.
-        If the string matches a file, `utils.load_parameter()` is used to load the contents of the file.
-    output : str, optional, default = None
-        If the program wants to output data, it will place it relative to the location specified by this parameter.
-        Some methods will only save data to a file if this parameter is not `None`. Such cases will be documented
-        where relevant.
-
-    Attributes
-    ----------
-    original_wavelengths : array_like
-        One-dimensional array of wavelengths that correspond to the uncorrected spectral data.
-    stationary_line_core : float, optional, default = 8542.099145376844
-        Wavelength of the stationary line core.
-    absorption_guess : array_like, length=4, optional, default = [-1000, stationary_line_core, 0.2, 0.1]
-        Initial guess to take when fitting the absorption Voigt profile.
-    emission_guess : array_like, length=4, optional, default = [1000, stationary_line_core, 0.2, 0.1]
-        Initial guess to take when fitting the emission Voigt profile.
-    absorption_min_bound : array_like, length=4, optional, default = [-np.inf, stationary_line_core-0.15, 1e-6, 1e-6]
-        Minimum bounds for all the absorption Voigt profile parameters in order of the function's arguments.
-    emission_min_bound : array_like, length=4, optional, default = [0, -np.inf, 1e-6, 1e-6]
-        Minimum bounds for all the emission Voigt profile parameters in order of the function's arguments.
-    absorption_max_bound : array_like, length=4, optional, default = [0, stationary_line_core+0.15, 1, 1]
-        Maximum bounds for all the absorption Voigt profile parameters in order of the function's arguments.
-    emission_max_bound : array_like, length=4, optional, default = [np.inf, np.inf, 1, 1]
-        Maximum bounds for all the emission Voigt profile parameters in order of the function's arguments.
-    absorption_x_scale : array_like, length=4, optional, default = [1500, 0.2, 0.3, 0.5]
-        Characteristic scale for all the absorption Voigt profile parameters in order of the function's arguments.
-    emission_x_scale : array_like, length=4, optional, default = [1500, 0.2, 0.3, 0.5]
-        Characteristic scale for all the emission Voigt profile parameters in order of the function's arguments.
-    neural_network : sklearn.neural_network.MLPClassifier, optional, default = see description
-        The MLPClassifier object (or similar) that will be used to classify the spectra. Defaults to a `GridSearchCV`
-        with `MLPClassifier(solver='lbfgs', hidden_layer_sizes=(40,), max_iter=1000)`
-        for best `alpha` selected from `[1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5]`.
-    constant_wavelengths : array_like, ndim=1, optional, default = see description
-        The desired set of wavelengths that the spectral data should be rescaled to represent. It is assumed
-        that these have constant spacing, but that may not be a requirement if you specify your own array.
-        The default value is an array from the minimum to the maximum wavelength of `original_wavelengths` in
-        constant steps of `delta_lambda`, overshooting the upper bound if the maximum wavelength has not been reached.
-    sigma : list of array_like, length=(2, n_wavelengths), optional, default = [type1, type2]
-        A list of different sigma that are used to weight particular wavelengths along the spectra when fitting. The
-        fitting method will expect to be able to choose a sigma array from this list at a specific index. It's default
-        value is `[generate_sigma(i, constant_wavelengths, stationary_line_core) for i in [1, 2]]`.
-        See `utils.generate_sigma()` for more information.
-    prefilter_response : array_like, length=n_wavelengths, optional, default = see note
-        Each constant wavelength scaled spectrum will be corrected by dividing it by this array. If `prefilter_response`
-        is not given, and `prefilter_ref_main` and `prefilter_ref_wvscl` are not given, `prefilter_response` will have a
-        default value of `None`.
-    output : str, optional, default = None
-        If the program wants to output data, it will place it relative to the location specified by this parameter.
-        Some methods will only save data to a file if this parameter is not `None`. Such cases will be documented
-        where relevant.
-    quiescent_wavelength : int, default = 1
-        The index within the fitted parameters of the absorption Voigt line core wavelength.
-    active_wavelength : int, default = 5
-        The index within the fitted parameters of the emission Voigt line core wavelength.
     """
-    def __init__(self, stationary_line_core=None,
-                 absorption_guess=None, emission_guess=None,
-                 absorption_min_bound=None, emission_min_bound=None,
-                 absorption_max_bound=None, emission_max_bound=None,
-                 absorption_x_scale=None, emission_x_scale=None,
-                 neural_network=None,
-                 original_wavelengths=None, constant_wavelengths=None,
-                 delta_lambda=None, sigma=None, prefilter_response=None,
-                 prefilter_ref_main=None, prefilter_ref_wvscl=None,
-                 config=None, output=None):
+    def __init__(self, **kwargs):
 
-        super().__init__()  # Initialise the parent class `ModelBase` also
+        # STAGE 0A: Initialise the parent class `ModelBase`
+        class_keys = [  # Keys that should not be passed to parent class's kwargs
+            'absorption_guess',
+            'emission_guess',
+            'absorption_min_bound',
+            'emission_min_bound',
+            'absorption_max_bound',
+            'emission_max_bound',
+            'absorption_x_scale',
+            'emission_x_scale',
+        ]  # These must match dictionary in STAGE 1 (defined there as stationary_line_core needs to be set)
+        base_kwargs = {k: kwargs[k] for k in kwargs.keys() if k not in class_keys}
+        super().__init__(**base_kwargs)
 
-        if config is not None:  # Process config file if one is specified
-
-            with open(config, 'r') as stream:  # Load YAML file
-                parameters = load(stream, Loader=Loader)
-
-            # Load each parameter if it exists in the file and is not already given
-            if 'stationary_line_core' in parameters and stationary_line_core is None:
-                stationary_line_core = load_parameter(parameters['stationary_line_core'])
-            if 'absorption_guess' in parameters and absorption_guess is None:
-                absorption_guess = load_parameter(parameters['absorption_guess'], wl=stationary_line_core)
-            if 'emission_guess' in parameters and emission_guess is None:
-                emission_guess = load_parameter(parameters['emission_guess'], wl=stationary_line_core)
-            if 'absorption_min_bound' in parameters and absorption_min_bound is None:
-                absorption_min_bound = load_parameter(parameters['absorption_min_bound'], wl=stationary_line_core)
-            if 'emission_min_bound' in parameters and emission_min_bound is None:
-                emission_min_bound = load_parameter(parameters['emission_min_bound'], wl=stationary_line_core)
-            if 'absorption_max_bound' in parameters and absorption_max_bound is None:
-                absorption_max_bound = load_parameter(parameters['absorption_max_bound'], wl=stationary_line_core)
-            if 'emission_max_bound' in parameters and emission_max_bound is None:
-                emission_max_bound = load_parameter(parameters['emission_max_bound'], wl=stationary_line_core)
-            if 'absorption_x_scale' in parameters and absorption_x_scale is None:
-                absorption_x_scale = load_parameter(parameters['absorption_x_scale'])
-            if 'emission_x_scale' in parameters and emission_x_scale is None:
-                emission_x_scale = load_parameter(parameters['emission_x_scale'])
-            if 'original_wavelengths' in parameters and original_wavelengths is None:
-                original_wavelengths = load_parameter(parameters['original_wavelengths'])
-            if 'constant_wavelengths' in parameters and constant_wavelengths is None:
-                constant_wavelengths = load_parameter(parameters['constant_wavelengths'])
-            if 'delta_lambda' in parameters and delta_lambda is None:
-                delta_lambda = load_parameter(parameters['delta_lambda'])
-            if 'sigma' in parameters and sigma is None:
-                sigma = load_parameter(parameters['sigma'])
-            if 'prefilter_response' in parameters and prefilter_response is None:
-                prefilter_response = load_parameter(parameters['prefilter_response'])
-            if 'prefilter_ref_main' in parameters and prefilter_ref_main is None:
-                prefilter_ref_main = load_parameter(parameters['prefilter_ref_main'])
-            if 'prefilter_ref_wvscl' in parameters and prefilter_ref_wvscl is None:
-                prefilter_ref_wvscl = load_parameter(parameters['prefilter_ref_wvscl'])
-            if 'output' in parameters and output is None:
-                output = parameters['output']
-
-        # Load default values of any parameters that haven't been given yet
-        if stationary_line_core is None:
-            stationary_line_core = 8542.099145376844
-        if absorption_guess is None:
-            absorption_guess = [-1000, stationary_line_core, 0.2, 0.1]
-        if emission_guess is None:
-            emission_guess = [1000, stationary_line_core, 0.2, 0.1]
-        if absorption_min_bound is None:
-            absorption_min_bound = [-np.inf, stationary_line_core-0.15, 1e-6, 1e-6]
-        if emission_min_bound is None:
-            emission_min_bound = [0, -np.inf, 1e-6, 1e-6]
-        if absorption_max_bound is None:
-            absorption_max_bound = [0, stationary_line_core+0.15, 1, 1]
-        if emission_max_bound is None:
-            emission_max_bound = [np.inf, np.inf, 1, 1]
-        if absorption_x_scale is None:
-            absorption_x_scale = [1500, 0.2, 0.3, 0.5]
-        if emission_x_scale is None:
-            emission_x_scale = [1500, 0.2, 0.3, 0.5]
-        if neural_network is None:
+        # STAGE 0B: Load child default values for parent class attributes
+        # stationary_line_core
+        if self.stationary_line_core is None:
+            self.stationary_line_core = 8542.099145376844
+        # prefilter_response
+        self._set_prefilter()  # Update the prefilter using stationary_line_core
+        # neural_network
+        if self.neural_network is None:
             mlp = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(40,), max_iter=1000)
             parameter_space = {'alpha': [1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5]}  # Search region
-            neural_network = GridSearchCV(mlp, parameter_space, cv=5, n_jobs=-1)  # Set GridSearchCV to find best alpha
-        if original_wavelengths is None:
-            raise ValueError("original_wavelengths must be specified")
-        if delta_lambda is None:
-            delta_lambda = 0.05
-        if constant_wavelengths is None:
-            constant_wavelengths = np.arange(min(original_wavelengths), max(original_wavelengths)+delta_lambda,
-                                             delta_lambda)
-        if prefilter_response is None:
-            if prefilter_ref_main is not None and prefilter_ref_wvscl is not None:
-                prefilter_response = reinterpolate_spectrum(prefilter_ref_main,
-                                                            prefilter_ref_wvscl + stationary_line_core,
-                                                            constant_wavelengths)
+            # Set GridSearchCV to find best alpha
+            self.neural_network = GridSearchCV(mlp, parameter_space, cv=5, n_jobs=-1)
+        # sigma
+        if self.sigma is None or (isinstance(self.sigma, bool) and self.sigma):
+            self.sigma = [generate_sigma(i, self.constant_wavelengths, self.stationary_line_core) for i in [1, 2]]
+        elif isinstance(self.sigma, bool) and not self.sigma:
+            self.sigma = [np.ones(len(self.constant_wavelengths)) for i in [1, 2]]
+
+        # STAGE 1: Define dictionary of default attribute values
+        defaults = {
+            'absorption_guess': [-1000, self.stationary_line_core, 0.2, 0.1],
+            'emission_guess': [1000, self.stationary_line_core, 0.2, 0.1],
+            'absorption_min_bound': [-np.inf, self.stationary_line_core - 0.15, 1e-6, 1e-6],
+            'emission_min_bound': [0, -np.inf, 1e-6, 1e-6],
+            'absorption_max_bound': [0, self.stationary_line_core + 0.15, 1, 1],
+            'emission_max_bound': [np.inf, np.inf, 1, 1],
+            'absorption_x_scale': [1500, 0.2, 0.3, 0.5],
+            'emission_x_scale': [1500, 0.2, 0.3, 0.5],
+        }
+        assert defaults.keys() == {k: None for k in class_keys}.keys()  # keys of `defaults` must match `class_keys`
+
+        # STAGE 2: Update defaults with any values specified in a config file
+        class_defaults = {k: self.config[k] for k in self.config.keys() if k in defaults.keys()}
+        for k in class_defaults.keys():
+            if k in ['absorption_x_scale', 'emission_x_scale']:  # These should not need the stationary line core
+                class_defaults[k] = load_parameter(class_defaults[k])
             else:
-                warnings.warn("prefilter_response will not be applied to spectra")
-        else:  # Make sure it is a numpy array so that division works as expected when doing array operations
-            prefilter_response = np.asarray(prefilter_response, dtype=np.float64)
+                class_defaults[k] = load_parameter(class_defaults[k], wl=self.stationary_line_core)
+            self.config.pop(k)  # Remove copied parameter
+        defaults.update(class_defaults)  # Update the defaults with the config file
 
-        # Set the object attributes (with some type enforcing)
-        self.stationary_line_core = stationary_line_core
-        self.absorption_guess = list(absorption_guess)
-        self.emission_guess = list(emission_guess)
-        self.absorption_min_bound = list(absorption_min_bound)
-        self.emission_min_bound = list(emission_min_bound)
-        self.absorption_max_bound = list(absorption_max_bound)
-        self.emission_max_bound = list(emission_max_bound)
-        self.absorption_x_scale = list(absorption_x_scale)
-        self.emission_x_scale = list(emission_x_scale)
-        self.neural_network = neural_network
-        self.original_wavelengths = np.asarray(original_wavelengths, dtype=np.float64)
-        self.constant_wavelengths = np.asarray(constant_wavelengths, dtype=np.float64)
-        self.prefilter_response = prefilter_response
-        self.output = output
+        # STAGE 3: Update defaults with the keyword arguments passed into the class initialisation
+        class_kwargs = {k: kwargs[k] for k in defaults.keys() if k in kwargs.keys()}
+        defaults.update(class_kwargs)  # Update the defaults
 
-        self.__delta_lambda = delta_lambda
+        # STAGE 4: Set the object attributes (with some type enforcing)
+        # values in the defaults dict
+        self.absorption_guess = list(defaults['absorption_guess'])
+        self.emission_guess = list(defaults['emission_guess'])
+        self.absorption_min_bound = list(defaults['absorption_min_bound'])
+        self.emission_min_bound = list(defaults['emission_min_bound'])
+        self.absorption_max_bound = list(defaults['absorption_max_bound'])
+        self.emission_max_bound = list(defaults['emission_max_bound'])
+        self.absorption_x_scale = list(defaults['absorption_x_scale'])
+        self.emission_x_scale = list(defaults['emission_x_scale'])
+        # attributes whose default value cannot be changed during initialisation
+        self.quiescent_wavelength = 1  # Index of quiescent wavelength in the fitted_parameters
+        self.active_wavelength = 5  # Index of active wavelength in the fitted_parameters
 
-        # Index of wavelength in the fitted_parameters
-        self.quiescent_wavelength = 1
-        self.active_wavelength = 5
+        # STAGE 5: Validate the loaded attributes
+        self._validate_attributes()
 
-        # Run some checks to make sure the specified parameters are valid
-        self._validate_parameters()
-
-        # Generate default sigma profiles for weighting fit (validate dependent parameters first)
-        if sigma is None or (isinstance(sigma, bool) and sigma):
-            sigma = [generate_sigma(i, self.constant_wavelengths, self.stationary_line_core) for i in [1, 2]]
-        elif isinstance(sigma, bool) and not sigma:
-            sigma = [np.ones(len(constant_wavelengths)) for i in [1, 2]]
-
-        self.sigma = sigma  # Set the sigma parameter
-
-    def _validate_parameters(self):
-        """Validate some of the object's parameters
+    def _validate_attributes(self):
+        """Validate some of the object's attributes
 
         Raises
         ------
         ValueError
-            To signal that a parameter is not valid.
+            To signal that an attribute is not valid.
         """
-        # Stationary line core must be a float
-        if not isinstance(self.stationary_line_core, float):
-            raise ValueError("stationary_line_core must be a float, got %s" % type(self.stationary_line_core))
-
         # Arrays must be of length 4
         if len(self.absorption_guess) != 4:
             raise ValueError("absorption_guess should be an array of length 4, got %s" %
@@ -326,32 +155,6 @@ class IBIS8542Model(ModelBase):
                 len(self.emission_max_bound):
             raise ValueError("values of emission_max_bound must be greater than their "
                              "corresponding values in emission_min_bound")
-
-        # Wavelength arrays must be sorted ascending
-        if np.sum(np.diff(self.original_wavelengths) > 0) < len(self.original_wavelengths) - 1:
-            raise ValueError("original_wavelength array must be sorted ascending")
-        if np.sum(np.diff(self.constant_wavelengths) > 0) < len(self.constant_wavelengths) - 1:
-            raise ValueError("constant_wavelength array must be sorted ascending")
-
-        # Warn if the constant wavelengths extrapolate the original wavelengths
-        if min(self.constant_wavelengths) - min(self.original_wavelengths) < -1e-6:
-            # If lower-bound of constant wavelengths is more than 1e-6 outside of the original wavelengths
-            warnings.warn("Lower bound of `constant_wavelengths` is outside of `original_wavelengths` range.")
-        if max(self.constant_wavelengths) - max(self.original_wavelengths) - self.__delta_lambda > 1e-6:
-            # If upper-bound of constant wavelengths is more than 1e-6 ouside the original wavelengths
-            warnings.warn("Upper bound of `constant_wavelengths` is outside of `original_wavelengths` range.")
-
-        # Stationary wavelength must be within wavelength range
-        original_diff = self.original_wavelengths - self.stationary_line_core
-        constant_diff = self.constant_wavelengths - self.stationary_line_core
-        for n, i in [['original_wavelengths', original_diff], ['constant_wavelengths', constant_diff]]:
-            if min(i) > 1e-6 or max(i) < -1e-6:
-                raise ValueError("`stationary_line_core` is not within `{}`".format(n))
-
-        # If a prefilter response is given it must be a compatible length
-        if self.prefilter_response is not None:
-            if len(self.prefilter_response) != len(self.constant_wavelengths):
-                raise ValueError("prefilter_response array must be the same length as constant_wavelengths array")
 
     def _get_sigma(self, classification=None, sigma=None):
         """Infer a sigma profile from the parameters provided
@@ -776,3 +579,58 @@ class IBIS8542Model(ModelBase):
         FitResult.plot : Plotting method on the fit result
         """
         self.plot(*args, subtraction=True, **kwargs)
+
+
+IBIS8542_PARAMETERS = copy.deepcopy(BASE_PARAMETERS)
+IBIS8542_ATTRIBUTES = copy.deepcopy(BASE_ATTRIBUTES)
+
+for d in [IBIS8542_PARAMETERS, IBIS8542_ATTRIBUTES]:
+    d['stationary_line_core'] = """
+    stationary_line_core : float, optional, default = 8542.099145376844
+        Wavelength of the stationary line core."""
+    d['sigma'] = """
+    sigma : list of array_like or bool, length=(2, n_wavelengths), optional, default = [type1, type2]
+        A list of different sigma that are used to weight particular wavelengths along the spectra when fitting. The
+        fitting method will expect to be able to choose a sigma array from this list at a specific index. It's default
+        value is `[generate_sigma(i, constant_wavelengths, stationary_line_core) for i in [1, 2]]`.
+        See `utils.generate_sigma()` for more information. If bool, True will generate the default sigma value
+        regardless of the value specified in `config`, and False will set `sigma` to be all ones, effectively disabling
+        it."""
+
+IBIS8542_ATTRIBUTES['neural_network'] = """
+    neural_network : sklearn.neural_network.MLPClassifier, optional, default = see description
+        The MLPClassifier object (or similar) that will be used to classify the spectra. Defaults to a `GridSearchCV`
+        with `MLPClassifier(solver='lbfgs', hidden_layer_sizes=(40,), max_iter=1000)`
+        for best `alpha` selected from `[1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5]`."""
+
+IBIS8542_DOCS = """        
+    absorption_guess : array_like, length=4, optional, default = [-1000, stationary_line_core, 0.2, 0.1]
+        Initial guess to take when fitting the absorption Voigt profile.
+    emission_guess : array_like, length=4, optional, default = [1000, stationary_line_core, 0.2, 0.1]
+        Initial guess to take when fitting the emission Voigt profile.
+    absorption_min_bound : array_like, length=4, optional, default = [-np.inf, stationary_line_core-0.15, 1e-6, 1e-6]
+        Minimum bounds for all the absorption Voigt profile parameters in order of the function's arguments.
+    emission_min_bound : array_like, length=4, optional, default = [0, -np.inf, 1e-6, 1e-6]
+        Minimum bounds for all the emission Voigt profile parameters in order of the function's arguments.
+    absorption_max_bound : array_like, length=4, optional, default = [0, stationary_line_core+0.15, 1, 1]
+        Maximum bounds for all the absorption Voigt profile parameters in order of the function's arguments.
+    emission_max_bound : array_like, length=4, optional, default = [np.inf, np.inf, 1, 1]
+        Maximum bounds for all the emission Voigt profile parameters in order of the function's arguments.
+    absorption_x_scale : array_like, length=4, optional, default = [1500, 0.2, 0.3, 0.5]
+        Characteristic scale for all the absorption Voigt profile parameters in order of the function's arguments.
+    emission_x_scale : array_like, length=4, optional, default = [1500, 0.2, 0.3, 0.5]
+        Characteristic scale for all the emission Voigt profile parameters in order of the function's arguments."""
+
+IBIS8542_PARAMETERS_STR = ''.join(IBIS8542_PARAMETERS[i] for i in IBIS8542_PARAMETERS)
+IBIS8542_ATTRIBUTES_STR = ''.join(IBIS8542_ATTRIBUTES[i] for i in IBIS8542_ATTRIBUTES)
+
+IBIS8542Model.__doc__ += """
+    Parameters
+    ----------""" + IBIS8542_DOCS + IBIS8542_PARAMETERS_STR + """
+
+    Attributes
+    ----------""" + IBIS8542_DOCS + """
+    quiescent_wavelength : int, default = 1
+        The index within the fitted parameters of the absorption Voigt line core wavelength.
+    active_wavelength : int, default = 5
+        The index within the fitted parameters of the emission Voigt line core wavelength.""" + IBIS8542_ATTRIBUTES_STR
