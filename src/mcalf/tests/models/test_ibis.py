@@ -1,9 +1,11 @@
 import pytest
 import os
+
 import numpy as np
 from astropy.io import fits
 from sklearn.exceptions import NotFittedError
 
+from mcalf.models.base import ModelBase
 from mcalf.models.ibis import IBIS8542Model
 from mcalf.models.results import FitResults
 from mcalf.profiles.voigt import voigt, double_voigt
@@ -45,10 +47,11 @@ class DummyClassifier:
         return np.asarray(X[:, -1] * 100, dtype=int)
 
 
-def test_ibis8542model_default():
+@pytest.mark.parametrize('model', (ModelBase, IBIS8542Model))
+def test_default_parameters(model):
     # Test default parameters
     with pytest.raises(ValueError) as e:
-        IBIS8542Model()
+        model()
     assert 'original_wavelengths' in str(e.value)
 
 
@@ -97,15 +100,197 @@ def test_ibis8542model_configfile():
     # TODO Check that the parameters were imported correctly
 
 
-def test_ibis8542model_validate_parameters():
-
+@pytest.fixture
+def valid_kwargs():
     stationary_line_core = 8542.099145376844
-    x_orig = np.linspace(stationary_line_core - 2, stationary_line_core + 2, num=25)
-    x_const = np.linspace(stationary_line_core - 1.7, stationary_line_core + 1.7, num=30)
-    prefilter = np.loadtxt(
-        data_path('ibis8542model_prefilter.csv'),
-        delimiter=','
-    )
+    defaults = {
+        'stationary_line_core': stationary_line_core,
+        'original_wavelengths': np.linspace(stationary_line_core - 2, stationary_line_core + 2, num=25),
+        'constant_wavelengths': np.linspace(stationary_line_core - 1.7, stationary_line_core + 1.7, num=30),
+        'prefilter_response': np.loadtxt(data_path('ibis8542model_prefilter.csv'), delimiter=','),
+    }
+    return defaults
+
+
+@pytest.mark.parametrize('model', (ModelBase, IBIS8542Model))
+def test_validate_parameters(model, valid_kwargs):
+
+    # Default parameters should work
+    model(**valid_kwargs)
+
+    # original_wavelengths or constant_wavelengths not sorted
+    for wavelengths in ('original_wavelengths', 'constant_wavelengths'):
+        with pytest.raises(ValueError) as e:
+            defaults_mod = valid_kwargs.copy()
+            unsorted = defaults_mod[wavelengths].copy()  # Copy the numpy array before shuffling
+            unsorted[10] = unsorted[12]  # Copy the 12th element to the 10th (now out of order)
+            defaults_mod[wavelengths] = unsorted  # Replace the sorted array with the unsorted
+            model(**defaults_mod)  # Initialise the model
+        assert wavelengths in str(e.value) and 'must be sorted ascending' in str(e.value)
+
+    # assert warning when constant_wavelengths extrapolates original_wavelengths (1e-5 over below and above)
+    delta_lambda = 0.05
+    for match, i, delta in [
+        ("Upper bound of `constant_wavelengths` is outside of `original_wavelengths` range.", -1, delta_lambda + 1e-5),
+        ("Lower bound of `constant_wavelengths` is outside of `original_wavelengths` range.", 0, -1e-5)
+    ]:
+        with pytest.warns(Warning, match=match):
+            defaults_mod = valid_kwargs.copy()
+            extrapolate = defaults_mod['constant_wavelengths'].copy()
+            extrapolate[i] = defaults_mod['original_wavelengths'][i] + delta
+            defaults_mod['constant_wavelengths'] = extrapolate
+            model(**defaults_mod, delta_lambda=delta_lambda)  # Initialise the model
+
+    # stationary_line_core is not a float
+    with pytest.raises(ValueError) as e:
+        defaults_mod = valid_kwargs.copy()
+        defaults_mod.update({'stationary_line_core': int(8542)})
+        model(**defaults_mod)
+    assert 'stationary_line_core' in str(e.value) and 'float' in str(e.value)
+
+    # stationary_line_core out of wavelength range
+    with pytest.raises(ValueError) as e:
+        defaults_mod = valid_kwargs.copy()
+        defaults_mod.update({'stationary_line_core': float(1000)})
+        model(**defaults_mod)
+    assert 'stationary_line_core' in str(e.value) and 'is not within' in str(e.value)
+
+    # Check that length of prefilter response is enforced
+    with pytest.raises(ValueError) as e:
+        defaults_mod = valid_kwargs.copy()
+        defaults_mod.update({'prefilter_response': valid_kwargs['prefilter_response'][:-1]})
+        m = model(**defaults_mod)
+        m._set_prefilter()
+    assert 'prefilter_response' in str(e.value) and 'must be the same length' in str(e.value)
+
+    # Check that unexpected kwargs raise an error
+    with pytest.raises(TypeError) as e:
+        model(**valid_kwargs, qheysnfebsy=None)
+    assert 'got an unexpected keyword argument' in str(e.value) and 'qheysnfebsy' in str(e.value)
+
+    # TODO Verify remaining conditions
+
+
+@pytest.mark.parametrize('model', (ModelBase, IBIS8542Model))
+def test_load_data(model, valid_kwargs):
+
+    # Initialise model
+    m = model(**valid_kwargs)
+
+    # Unknown target
+    array = np.random.rand(5, 10, 15, 30)
+    with pytest.raises(ValueError) as e:
+        m._load_data(array, names=['time', 'row', 'column', 'wavelength'], target='arrrrray')
+    assert 'array target must be' in str(e.value) and 'arrrrray' in str(e.value)
+
+    # Ensure a single spectrum array cannot be loaded (not supported)
+    for target, names, array in [('array', ['wavelength'], np.random.rand(30)), ('background', [], 723.23)]:
+        with pytest.raises(ValueError) as e:
+            m._load_data(array, names=names, target=target)
+        assert 'cannot load an array containing one spectrum' in str(e.value)
+
+    # Ensure dimension names are validated
+    for meth in (m.load_array, m.load_background):
+
+        array = np.random.rand(5, 10, 15, 30)
+        with pytest.raises(ValueError) as e:
+            meth(array)
+        assert 'dimension names must be specified' in str(e.value)
+
+        array = np.random.rand(5, 10, 15, 30)
+        with pytest.raises(ValueError) as e:
+            meth(array, names=['row', 'column', 'wavelength'])
+        assert 'number of dimension names do not match number of columns' in str(e.value)
+
+        array = np.random.rand(5, 10, 15, 30)
+        with pytest.raises(ValueError) as e:
+            meth(array, names=['wavelength', 'row', 'column', 'wavelength'])
+        assert 'duplicate dimension names found' in str(e.value)
+
+    array = np.random.rand(5, 10, 15)
+    with pytest.raises(ValueError) as e:
+        m.load_array(array, names=['time', 'row', 'column'])
+    assert 'array must contain a wavelength dimension' in str(e.value)
+
+    # 'wavelengths' not valid background dimension
+    array = np.random.rand(5, 10, 15)
+    with pytest.raises(ValueError) as e:
+        m.load_background(array, names=['row', 'column', 'wavelength'])
+    assert "name 'wavelength' is not a valid dimension name" in str(e.value)
+
+    # 'rows' should be 'row' etc.
+    array = np.random.rand(5, 10, 15, 30)
+    with pytest.raises(ValueError) as e:
+        m.load_array(array, names=['time', 'rows', 'column', 'wavelength'])
+    assert "name 'rows' is not a valid dimension name" in str(e.value)
+    array = np.random.rand(5, 10, 15)
+    with pytest.raises(ValueError) as e:
+        m.load_background(array, names=['time', 'rows', 'column'])
+    assert "name 'rows' is not a valid dimension name" in str(e.value)
+
+    array = np.random.rand(5, 10, 15, 30)
+    with pytest.raises(ValueError) as e:
+        m.load_array(array, names=['time', 'row', 'column', 'wavelength'])
+    assert 'length of wavelength dimension not equal length of original_wavelengths' in str(e.value)
+
+    array = np.random.rand(5, 10, 15)
+    m.load_background(array, names=['time', 'row', 'column'])
+    array = np.random.rand(5, 7, 15, 25)
+    with pytest.warns(UserWarning, match="shape of spectrum array indices does not match shape of background array"):
+        m.load_array(array, names=['time', 'row', 'column', 'wavelength'])
+
+
+@pytest.mark.parametrize('model', (ModelBase, IBIS8542Model))
+def test_get_time_row_column(model, valid_kwargs):
+
+    # Initialise model
+    m = model(**valid_kwargs)
+    array = np.random.rand(4, 5, 6, 25)
+    names = ['time', 'row', 'column', 'wavelength']
+    m.load_array(array.copy(), names=names)
+
+    # (test get_spectra with multiple spectra -- only supports a single spectrum)
+    with pytest.raises(ValueError) as e:
+        m.get_spectra(spectrum=np.random.rand(10, 30))
+    assert 'explicit spectrum must have one dimension' in str(e.value)
+
+    # All dimensions loaded so make sure all dimensions required
+    for dim in names[:-1]:
+        with pytest.raises(ValueError) as e:
+            drop_a_name = names[:-1].copy()
+            drop_a_name.remove(dim)
+            m._get_time_row_column(**{k: 2 for k in drop_a_name})
+        assert f"{dim} index must be specified as multiple indices exist" == str(e.value)
+
+    # Drop a dimension and don't specify it
+    array = array[0]  # Drop one (arbitrary) dimension
+    for dim in names[:-1]:
+        drop_a_name = names.copy()
+        drop_a_name.remove(dim)
+        m.load_array(array.copy(), names=drop_a_name)
+        m._get_time_row_column(**{k: 2 for k in drop_a_name[:-1]})
+
+
+def test_modelbase_fit(valid_kwargs):
+    m = ModelBase(**valid_kwargs)
+    array = np.random.rand(4, 5, 6, 25)
+    array[0] = np.nan  # For testing no spectra given
+    names = ['time', 'row', 'column', 'wavelength']
+    m.load_array(array.copy(), names=names)
+
+    # `_fit` method must be implemented in a subclass
+    with pytest.raises(NotImplementedError):
+        m._fit(np.random.rand(30))
+
+    # Must raise exception if no spectra presented for fitting
+    with pytest.raises(ValueError) as e:
+        m.fit(time=0, row=range(5), column=range(6))
+    assert 'no valid spectra given' in str(e.value)
+
+
+def test_ibis8542model_validate_parameters(valid_kwargs):
+
+    stationary_line_core = valid_kwargs['stationary_line_core']
     defaults = {
         'absorption_guess': [-1000, stationary_line_core, 0.2, 0.1],
         'emission_guess': [1000, stationary_line_core, 0.2, 0.1],
@@ -117,29 +302,12 @@ def test_ibis8542model_validate_parameters():
         'emission_x_scale': [1500, 0.2, 0.3, 0.5]
     }
 
-    def IBIS8542Model_default(stationary_line_core=stationary_line_core,
-                              original_wavelengths=x_orig, constant_wavelengths=x_const,
-                              prefilter=prefilter, **kwargs):
-        local_defaults = defaults.copy()
-        local_defaults.update(kwargs)
-        IBIS8542Model(stationary_line_core=stationary_line_core,
-                      original_wavelengths=original_wavelengths, constant_wavelengths=constant_wavelengths,
-                      prefilter_response=prefilter, **local_defaults)
-
-    # Default parameters should work
-    IBIS8542Model_default()
-
-    # stationary_line_core is not a float
-    with pytest.raises(ValueError) as e:
-        IBIS8542Model_default(stationary_line_core=int(1000))
-    assert 'stationary_line_core' in str(e.value) and 'float' in str(e.value)
-
     # Incorrect Lengths
     for key, value in defaults.items():  # For each parameter
         with pytest.raises(ValueError) as e:  # Catch ValueErrors
             defaults_mod = defaults.copy()  # Create a copy of the default parameters
             defaults_mod.update({key: value[:-1]})  # Crop the parameter's value
-            IBIS8542Model_default(**defaults_mod)  # Pass the cropped parameter with the other default parameters
+            IBIS8542Model(**valid_kwargs, **defaults_mod)  # Pass the cropped parameter with the other default params
         assert key in str(e.value) and 'length' in str(e.value)  # Error must be about length of current parameter
 
     # Check that the sign of the following amplitudes are enforced
@@ -149,7 +317,9 @@ def test_ibis8542model_validate_parameters():
             with pytest.raises(ValueError) as e:
                 bad_value = defaults[p].copy()
                 bad_value[0] = bad_number
-                IBIS8542Model_default(**{p: bad_value})
+                defaults_mod = defaults.copy()
+                defaults_mod.update({p: bad_value})
+                IBIS8542Model(**valid_kwargs, **defaults_mod)
             assert p in str(e.value) and sign in str(e.value)
 
     # TODO Verify remaining conditions
@@ -362,6 +532,10 @@ def test_ibis8542model_fit(ibis8542model_results, ibis8542model_resultsobjs):
 
     # # METHOD 3: Test over 4 processing pools
     res3 = m.fit(time=range(2), row=range(3), column=range(4), n_pools=4)
+    # (n_pools must be an integer)
+    with pytest.raises(TypeError) as e:
+        m.fit(time=range(2), row=range(3), column=range(4), n_pools=float(4))
+    assert 'n_pools must be an integer' in str(e.value)
 
     # # Test that FitResults objects can be created consistently for all of the methods
 

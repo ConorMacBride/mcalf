@@ -150,9 +150,9 @@ class ModelBase:
         """
         # Wavelength arrays must be sorted ascending
         if np.sum(np.diff(self.original_wavelengths) > 0) < len(self.original_wavelengths) - 1:
-            raise ValueError("original_wavelength array must be sorted ascending")
+            raise ValueError("original_wavelengths array must be sorted ascending")
         if np.sum(np.diff(self.constant_wavelengths) > 0) < len(self.constant_wavelengths) - 1:
-            raise ValueError("constant_wavelength array must be sorted ascending")
+            raise ValueError("constant_wavelengths array must be sorted ascending")
 
         # Warn if the constant wavelengths extrapolate the original wavelengths
         if min(self.constant_wavelengths) - min(self.original_wavelengths) < -1e-6:
@@ -248,8 +248,6 @@ class ModelBase:
             self.array = ordered_array
         elif target == 'background':
             self.background = ordered_array
-        else:  # This should not happen
-            raise ValueError("unknown target (impossible error)")
 
         # If "the other array" has been loaded, warn the user if their dimensions are not compatible
         if self.array is not None and self.background is not None and \
@@ -668,9 +666,7 @@ class ModelBase:
             indices = indices[valid_spectra_i]
             classifications = classifications[valid_spectra_i]
 
-            if len(spectra) != len(indices) != len(classifications):  # Postprocessing sanity check
-                raise ValueError("number of spectra, number of recorded indices and number of classifications"
-                                 "are not the same (impossible error)")
+            assert len(spectra) == len(indices) == len(classifications)  # Postprocessing sanity check
 
             # Multiprocessing not required
             if n_pools is None or (isinstance(n_pools, (int, np.integer)) and n_pools <= 0):
@@ -685,8 +681,10 @@ class ModelBase:
 
                 # Define single argument function that can be evaluated in the pools
                 def func(data, kwargs=kwargs):
-                    spectrum, index, classification = data  # Extract data and pass to `_fit` method
-                    return self._fit(spectrum, classification=classification, spectrum_index=list(index), **kwargs)
+                    # Extract data and pass to `_fit` method
+                    spectrum, index, classification = data  # pragma: no cover
+                    return self._fit(spectrum, classification=classification,
+                                     spectrum_index=list(index), **kwargs)  # pragma: no cover
 
                 # Sort the arrays in descending classification order
                 s = np.argsort(classifications)[::-1]  # Classifications indices sorted in descending order
