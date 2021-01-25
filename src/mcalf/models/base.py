@@ -5,6 +5,7 @@ import copy
 
 import numpy as np
 from scipy.optimize import curve_fit
+from pathos.multiprocessing import ProcessPool as Pool
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import classification_report
 
@@ -543,6 +544,142 @@ class ModelBase:
             spectra = np.transpose(spectra, axes=backwards_transpose)  # Revert to original shape
 
         return spectra
+
+    def fit(self, time=None, row=None, column=None, spectrum=None, profile=None, sigma=None, classifications=None,
+            background=None, n_pools=None):
+        """Fits the model to specified spectra
+
+        Fits the model to an array of spectra using multiprocessing if requested.
+
+        Parameters
+        ----------
+        time : int or iterable, optional, default=None
+            The time index. The index can be either a single integer index or an iterable. E.g. a list, a NumPy
+            array, a Python range, etc. can be used.
+        row : int or iterable, optional, default=None
+            The row index. See comment for `time` parameter.
+        column : int or iterable, optional, default=None
+            The column index. See comment for `time` parameter.
+        spectrum : ndarray, ndim=1, optional, default=None
+            The explicit spectrum to fit the model to.
+        profile : str, optional, default = None
+            The profile to fit. (Will infer profile from `classifications` if omitted.)
+        sigma : int or array_like, optional, default = None
+            Explicit sigma index or profile. See `_get_sigma` for details.
+        classifications : int or array_like, optional, default = None
+            Classifications to determine the fitted profile to use (if profile not explicitly given). Will use
+            neural network to classify them if not. If a multidimensional array, must have the same shape as
+            [`time`, `row`, `column`]. Dimensions that would have length of 1 can be excluded.
+        background : float, optional, default = None
+            If provided, this value will be subtracted from the explicit spectrum provided in `spectrum`. Will
+            not be applied to spectra found from the indices, use the `load_background` method instead.
+        n_pools : int, optional, default = None
+            The number of processing pools to calculate the fitting over. This allocates the fitting of different
+            spectra to `n_pools` separate worker processes. When processing a large number of spectra this will make
+            the fitting process take less time overall. It also distributes such that each worker process has the
+            same ratio of classifications to process. This should balance out the workload between workers.
+            If few spectra are being fitted, performance may decrease due to the overhead associated with splitting
+            the evaluation over separate processes. If `n_pools` is not an integer greater than zero, it will fit
+            the spectrum with a for loop.
+
+        Returns
+        -------
+        result : list of FitResult, length=n_spectra
+            Outcome of the fits returned as a list of FitResult objects
+        """
+        # Specific fitting algorithm for IBIS Ca II 8542 Å
+
+        # Only include the background is using an explicit spectrum; remove for indices
+        include_background = False if spectrum is None else True
+        spectra = self.get_spectra(time=time, row=row, column=column, spectrum=spectrum, background=include_background)
+
+        # At least one valid spectrum must be given
+        n_valid = np.sum(~np.isnan(spectra[..., 0]))
+        if np.sum(~np.isnan(spectra[..., 0])) == 0:
+            raise ValueError("no valid spectra given")
+
+        if spectrum is not None and background is not None:  # remove explicit background of explicit spectrum
+            spectra -= background
+
+        if classifications is None:  # Classify if not already specified
+            classifications = self.classify_spectra(spectra=spectra, only_normalise=True)
+
+        if spectrum is None:  # No explicit spectrum given
+
+            # Create the array of indices that the spectra represent
+            time, row, column = make_iter(*self._get_time_row_column(time=time, row=row, column=column))
+            indices = np.transpose(np.array(np.meshgrid(time, row, column, indexing='ij')), axes=[1, 2, 3, 0])
+
+            # Ensure that length of arrays match
+            spectra_indices_shape_mismatch = spectra.shape[:-1] != indices.shape[:-1]
+            spectra_class_size_mismatch = np.size(spectra[..., 0]) != np.size(classifications)
+            spectra_class_shape_mismatch = False  # Only test this if appropriate
+            if isinstance(classifications, np.ndarray) and classifications.ndim != 1:
+                # If a multidimensional array of classifications are given, make sure it matches the indices layout
+                # Allow for dimensions of length 1 to be excluded
+                if np.squeeze(spectra[..., 0]).shape != np.squeeze(classifications).shape:
+                    spectra_class_shape_mismatch = True
+            if spectra_indices_shape_mismatch or spectra_class_size_mismatch or spectra_class_shape_mismatch:
+                raise ValueError("number classifications do not match number of spectra and associated indices")
+
+            # Make shape (n_spectra, n_features) so can process in a list
+            spectra = spectra.reshape(-1, spectra.shape[-1])
+            indices = indices.reshape(-1, indices.shape[-1])
+            classifications = np.asarray(classifications)  # Make sure ndarray methods are available
+            classifications = classifications.reshape(-1)
+
+            # Remove spectra that are invalid (this allows for masking of the loaded data to constrain a region to fit)
+            valid_spectra_i = np.where(~np.isnan(spectra[:, 0]))  # Where the first item of the spectrum is not NaN
+            spectra = spectra[valid_spectra_i]
+            indices = indices[valid_spectra_i]
+            classifications = classifications[valid_spectra_i]
+
+            if len(spectra) != len(indices) != len(classifications):  # Postprocessing sanity check
+                raise ValueError("number of spectra, number of recorded indices and number of classifications"
+                                 "are not the same (impossible error)")
+
+            # Multiprocessing not required
+            if n_pools is None or (isinstance(n_pools, (int, np.integer)) and n_pools <= 0):
+
+                print("Processing {} spectra".format(n_valid))
+                results = [self._fit(spectra[i], profile=profile, sigma=sigma, classification=classifications[i],
+                                     spectrum_index=indices[i]) for i in range(len(spectra))]
+
+            elif isinstance(n_pools, (int, np.integer)) and n_pools >= 1:  # Use multiprocessing
+
+                # Define single argument function that can be evaluated in the pools
+                def func(data, profile=profile, sigma=sigma):
+                    spectrum, index, classification = data  # Extract data and pass to `_fit` method
+                    return self._fit(spectrum, profile=profile, sigma=sigma, classification=classification,
+                                     spectrum_index=list(index))
+
+                # Sort the arrays in descending classification order
+                s = np.argsort(classifications)[::-1]  # Classifications indices sorted in descending order
+                spectra = spectra[s]
+                indices = indices[s]
+                classifications = classifications[s]
+
+                # Distribute the sorted spectra to each of `n_pools` in turn to ensure even workload
+                data = []
+                for pool in range(n_pools):
+                    data += [[spectra[i], indices[i], classifications[i]] for i in range(pool, len(spectra), n_pools)]
+
+                print("Processing {} spectra over {} pools".format(n_valid, n_pools))
+
+                with Pool(n_pools) as p:  # Send the job to the `n_pools` pools
+                    results = p.map(func, data)  # Map each element of `data` to the first argument of `func`
+                    p.close()  # Finished, so no more jobs to come
+                    p.join()  # Clean up the closed pools
+                    p.clear()  # Remove the server so it can be created again
+
+            else:
+                raise TypeError("n_pools must be an integer, got %s" % type(n_pools))
+
+        else:  # Explicit spectrum must be 1D so no loop needed
+            results = self._fit(spectra, profile=profile, sigma=sigma, classification=classifications,
+                                spectrum_index=None)
+
+        return results
 
     def fit_spectrum(self, spectrum, **kwargs):
         """Fits the specified spectrum array
