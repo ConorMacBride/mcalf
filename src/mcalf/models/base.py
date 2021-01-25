@@ -545,31 +545,63 @@ class ModelBase:
 
         return spectra
 
-    def fit(self, time=None, row=None, column=None, spectrum=None, profile=None, sigma=None, classifications=None,
-            background=None, n_pools=None):
+    def _fit(self, spectrum, classification=None, spectrum_index=None):
+        """Fit a single spectrum for the given profile or classification
+
+        This call signature and docstring specifies how the `_fit` method must be implemented in
+        each subclass of `ModelBase`.
+
+        Parameters
+        ----------
+        spectrum : numpy.ndarray, ndim=1, length=n_constant_wavelengths
+            The spectrum to be fitted.
+        classification : int, optional, default = None
+            Classification to determine the fitted profile to use.
+        spectrum_index : array_like or list or tuple, length=3, optional, default = None
+            The [time, row, column] index of the `spectrum` provided. Only used for error reporting.
+
+        Returns
+        -------
+        result : FitResult
+            Outcome of the fit returned in a FitResult object
+
+        See Also
+        --------
+        fit : The recommended method for fitting spectra
+        FitResult : The object that the fit method returns
+
+        Notes
+        -----
+        This method is called for each requested spectrum by the `models.ModelBase.fit` method.
+        This is where most of the adjustments to the fitting method should be made. See other
+        subclasses of `models.ModelBase` for examples of how to implement this method in a
+        new subclass. See `models.ModelBase.fit` for more information on how this method is
+        called.
+        """
+        raise NotImplementedError("The `_fit` method must be implemented in a subclass of `ModelBase`."
+                                  "See `models.ModelBase._fit` for more details.")
+
+    def fit(self, time=None, row=None, column=None, spectrum=None, classifications=None,
+            background=None, n_pools=None, **kwargs):
         """Fits the model to specified spectra
 
         Fits the model to an array of spectra using multiprocessing if requested.
 
         Parameters
         ----------
-        time : int or iterable, optional, default=None
+        time : int or iterable, optional, default = None
             The time index. The index can be either a single integer index or an iterable. E.g. a list, a NumPy
             array, a Python range, etc. can be used.
-        row : int or iterable, optional, default=None
+        row : int or iterable, optional, default = None
             The row index. See comment for `time` parameter.
-        column : int or iterable, optional, default=None
+        column : int or iterable, optional, default = None
             The column index. See comment for `time` parameter.
-        spectrum : ndarray, ndim=1, optional, default=None
+        spectrum : numpy.ndarray, ndim=1, optional, default = None
             The explicit spectrum to fit the model to.
-        profile : str, optional, default = None
-            The profile to fit. (Will infer profile from `classifications` if omitted.)
-        sigma : int or array_like, optional, default = None
-            Explicit sigma index or profile. See `_get_sigma` for details.
         classifications : int or array_like, optional, default = None
-            Classifications to determine the fitted profile to use (if profile not explicitly given). Will use
-            neural network to classify them if not. If a multidimensional array, must have the same shape as
-            [`time`, `row`, `column`]. Dimensions that would have length of 1 can be excluded.
+            Classifications to determine the fitted profile to use. Will use neural network to classify them if not.
+            If a multidimensional array, must have the same shape as [`time`, `row`, `column`].
+            Dimensions that would have length of 1 can be excluded.
         background : float, optional, default = None
             If provided, this value will be subtracted from the explicit spectrum provided in `spectrum`. Will
             not be applied to spectra found from the indices, use the `load_background` method instead.
@@ -581,6 +613,8 @@ class ModelBase:
             If few spectra are being fitted, performance may decrease due to the overhead associated with splitting
             the evaluation over separate processes. If `n_pools` is not an integer greater than zero, it will fit
             the spectrum with a for loop.
+        **kwargs : dictionary, optional
+            Extra keyword arguments to pass to `_fit`.
 
         Returns
         -------
@@ -642,16 +676,17 @@ class ModelBase:
             if n_pools is None or (isinstance(n_pools, (int, np.integer)) and n_pools <= 0):
 
                 print("Processing {} spectra".format(n_valid))
-                results = [self._fit(spectra[i], profile=profile, sigma=sigma, classification=classifications[i],
-                                     spectrum_index=indices[i]) for i in range(len(spectra))]
+                results = [
+                    self._fit(spectra[i], classification=classifications[i], spectrum_index=indices[i], **kwargs)
+                    for i in range(len(spectra))
+                ]
 
             elif isinstance(n_pools, (int, np.integer)) and n_pools >= 1:  # Use multiprocessing
 
                 # Define single argument function that can be evaluated in the pools
-                def func(data, profile=profile, sigma=sigma):
+                def func(data, kwargs=kwargs):
                     spectrum, index, classification = data  # Extract data and pass to `_fit` method
-                    return self._fit(spectrum, profile=profile, sigma=sigma, classification=classification,
-                                     spectrum_index=list(index))
+                    return self._fit(spectrum, classification=classification, spectrum_index=list(index), **kwargs)
 
                 # Sort the arrays in descending classification order
                 s = np.argsort(classifications)[::-1]  # Classifications indices sorted in descending order
@@ -676,8 +711,7 @@ class ModelBase:
                 raise TypeError("n_pools must be an integer, got %s" % type(n_pools))
 
         else:  # Explicit spectrum must be 1D so no loop needed
-            results = self._fit(spectra, profile=profile, sigma=sigma, classification=classifications,
-                                spectrum_index=None)
+            results = self._fit(spectra, classification=classifications, spectrum_index=None, **kwargs)
 
         return results
 

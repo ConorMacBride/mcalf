@@ -189,7 +189,7 @@ class IBIS8542Model(ModelBase):
             else:
                 return np.asarray(sigma, dtype=np.float64)
 
-    def _fit(self, spectrum, profile=None, sigma=None, classification=None, spectrum_index=None):
+    def _fit(self, spectrum, classification=None, spectrum_index=None, profile=None, sigma=None):
         """Fit a single spectrum for the given profile or classification
 
         Warning: Using this method directly will skip the corrections that are applied to spectra by the `get_spectra`
@@ -197,16 +197,16 @@ class IBIS8542Model(ModelBase):
 
         Parameters
         ----------
-        spectrum : ndarray, ndim=1, length=n_constant_wavelengths
+        spectrum : numpy.ndarray, ndim=1, length=n_constant_wavelengths
             The spectrum to be fitted.
-        profile : str, optional, default = None
-            The profile to fit. (Will infer profile from classification if omitted.)
-        sigma : ndarray, ndim=1, length=n_constant_wavelengths
-            The sigma array with weights for each spectral wavelength.
         classification : int, optional, default = None
             Classification to determine the fitted profile to use (if profile not explicitly given).
         spectrum_index : array_like or list or tuple, length=3, optional, default = None
             The [time, row, column] index of the `spectrum` provided. Only used for error reporting.
+        profile : str, optional, default = None
+            The profile to fit. (Will infer profile from classification if omitted.)
+        sigma : int or array_like, optional, default = None
+            Explicit sigma index or profile. See `_get_sigma` for details.
 
         Returns
         -------
