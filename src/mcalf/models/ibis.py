@@ -191,60 +191,6 @@ class IBIS8542Model(ModelBase):
             else:
                 return np.asarray(sigma, dtype=np.float64)
 
-    def classify_spectra(self, time=None, row=None, column=None, spectra=None, only_normalise=False):
-        """Classify the specified spectra
-
-        Will also normalise each spectrum such that its intensity will range from zero to one.
-
-        Parameters
-        ----------
-        time : int or iterable, optional, default=None
-            The time index. The index can be either a single integer index or an iterable. E.g. a list, a NumPy
-            array, a Python range, etc. can be used.
-        row : int or iterable, optional, default=None
-            The row index. See comment for `time` parameter.
-        column : int or iterable, optional, default=None
-            The column index. See comment for `time` parameter.
-        spectra : ndarray, optional, default=None
-            The explicit spectra to classify. If `only_normalise` is False, this must be 1D.
-        only_normalise : bool, optional, default = False
-            Whether the single spectrum given  in `spectra` should not be interpolated and corrected.
-
-        Returns
-        -------
-        classifications : ndarray
-            Array of classifications with the same time, row and column indices as `spectra`.
-
-        See Also
-        --------
-        train : Train the neural network
-        test : Test the accuracy of the neural network
-        get_spectra : Get processed spectra from the objects `array` attribute
-        """
-        if not only_normalise:  # Get the spectrum, otherwise use the provided one directly
-            spectra = self.get_spectra(time=time, row=row, column=column, spectrum=spectra)
-
-        # Vectorised normalisation for all spectra such that intensities for each spectrum is in range [0, 1]
-        spectra_list = spectra.reshape(-1, spectra.shape[-1]).T  # Reshape & transpose to (n_wavelengths, n_spectra)
-        spectra_list = spectra_list - spectra_list.min(axis=0)  # Subtract each spectrum's min value from itself (min 0)
-        spectra_list = spectra_list / spectra_list.max(axis=0)  # Divide each spectrum by its max value (min 0, max 1)
-        spectra_list = spectra_list.T  # Transpose to (n_spectra, n_wavelengths)
-
-        # Create the empty classifications array
-        classifications = np.full(len(spectra_list), -1, dtype=int)  # -1 reserved for invalid
-        valid_spectra_i = np.where(~np.isnan(spectra_list[:, 0]))  # Only predict the valid spectra
-        # Note: Spectra that have indices in the data but were masked or outside the field of view should be np.nan
-        try:
-            classifications[valid_spectra_i] = self.neural_network.predict(spectra_list[valid_spectra_i])
-        except NotFittedError:
-            raise NotFittedError("Neural network has not been trained yet. Call 'train' on the model class first.")
-        try:  # Try to give the classifications array the same indices as the spectral array
-            classifications = classifications.reshape(*spectra.shape[:-1])
-        except TypeError:  # 1D spectra array given
-            assert classifications.size == 1  # Verify
-
-        return classifications
-
     def _fit(self, spectrum, profile=None, sigma=None, classification=None, spectrum_index=None):
         """Fit a single spectrum for the given profile or classification
 
