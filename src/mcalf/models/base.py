@@ -27,6 +27,14 @@ class ModelBase:
 
     Warning: This class should not be used directly.
     Use derived classes instead.
+
+    Parameters
+    ----------
+    ${PARAMETERS}
+
+    Attributes
+    ----------
+    ${ATTRIBUTES}
     """
     def __init__(self, config=None, **kwargs):
 
@@ -897,11 +905,12 @@ for k in [  # Remove some entries
     del BASE_ATTRIBUTES[k]
 BASE_ATTRIBUTES_STR = ''.join(BASE_ATTRIBUTES[i] for i in BASE_ATTRIBUTES)
 
-# Set the docstring
-ModelBase.__doc__ += """
-    Parameters
-    ----------""" + BASE_PARAMETERS_STR + """
-
-    Attributes
-    ----------""" + BASE_ATTRIBUTES_STR + """
-"""
+# Update the docstring with the generated strings
+ModelBase.__doc__ = ModelBase.__doc__.replace(
+    '${PARAMETERS}',
+    BASE_PARAMETERS_STR.lstrip()
+)
+ModelBase.__doc__ = ModelBase.__doc__.replace(
+    '${ATTRIBUTES}',
+    BASE_ATTRIBUTES_STR.lstrip()
+)

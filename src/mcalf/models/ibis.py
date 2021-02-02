@@ -17,6 +17,19 @@ __all__ = ['IBIS8542Model']
 
 class IBIS8542Model(ModelBase):
     """Class for working with IBIS 8542 Å calcium II spectral imaging observations
+    
+    Parameters
+    ----------
+    ${PARAMETERS}
+
+    Attributes
+    ----------
+    ${ATTRIBUTES}
+    quiescent_wavelength : int, default = 1
+        The index within the fitted parameters of the absorption Voigt line core wavelength.
+    active_wavelength : int, default = 5
+        The index within the fitted parameters of the emission Voigt line core wavelength.
+    ${ATTRIBUTES_EXTRA}
     """
     def __init__(self, **kwargs):
 
@@ -389,9 +402,11 @@ class IBIS8542Model(ModelBase):
         self.plot(*args, subtraction=True, **kwargs)
 
 
+# Copy documentation from base class
 IBIS8542_PARAMETERS = copy.deepcopy(BASE_PARAMETERS)
 IBIS8542_ATTRIBUTES = copy.deepcopy(BASE_ATTRIBUTES)
 
+# Update documentation from base class (include new defaults)
 for d in [IBIS8542_PARAMETERS, IBIS8542_ATTRIBUTES]:
     d['stationary_line_core'] = """
     stationary_line_core : float, optional, default = 8542.099145376844
@@ -404,13 +419,13 @@ for d in [IBIS8542_PARAMETERS, IBIS8542_ATTRIBUTES]:
         See `utils.generate_sigma()` for more information. If bool, True will generate the default sigma value
         regardless of the value specified in `config`, and False will set `sigma` to be all ones, effectively disabling
         it."""
-
 IBIS8542_ATTRIBUTES['neural_network'] = """
     neural_network : sklearn.neural_network.MLPClassifier, optional, default = see description
         The MLPClassifier object (or similar) that will be used to classify the spectra. Defaults to a `GridSearchCV`
         with `MLPClassifier(solver='lbfgs', hidden_layer_sizes=(40,), max_iter=1000)`
         for best `alpha` selected from `[1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5]`."""
 
+# Add documentation for new parameters and attributes
 IBIS8542_DOCS = """        
     absorption_guess : array_like, length=4, optional, default = [-1000, stationary_line_core, 0.2, 0.1]
         Initial guess to take when fitting the absorption Voigt profile.
@@ -429,16 +444,18 @@ IBIS8542_DOCS = """
     emission_x_scale : array_like, length=4, optional, default = [1500, 0.2, 0.3, 0.5]
         Characteristic scale for all the emission Voigt profile parameters in order of the function's arguments."""
 
+# Form the docstring and do the replacements
 IBIS8542_PARAMETERS_STR = ''.join(IBIS8542_PARAMETERS[i] for i in IBIS8542_PARAMETERS)
 IBIS8542_ATTRIBUTES_STR = ''.join(IBIS8542_ATTRIBUTES[i] for i in IBIS8542_ATTRIBUTES)
-
-IBIS8542Model.__doc__ += """
-    Parameters
-    ----------""" + IBIS8542_DOCS + IBIS8542_PARAMETERS_STR + """
-
-    Attributes
-    ----------""" + IBIS8542_DOCS + """
-    quiescent_wavelength : int, default = 1
-        The index within the fitted parameters of the absorption Voigt line core wavelength.
-    active_wavelength : int, default = 5
-        The index within the fitted parameters of the emission Voigt line core wavelength.""" + IBIS8542_ATTRIBUTES_STR
+IBIS8542Model.__doc__ = IBIS8542Model.__doc__.replace(
+    '${PARAMETERS}',
+    (IBIS8542_DOCS + IBIS8542_PARAMETERS_STR).lstrip()
+)
+IBIS8542Model.__doc__ = IBIS8542Model.__doc__.replace(
+    '${ATTRIBUTES}',
+    IBIS8542_DOCS.lstrip()
+)
+IBIS8542Model.__doc__ = IBIS8542Model.__doc__.replace(
+    '${ATTRIBUTES_EXTRA}',
+    IBIS8542_ATTRIBUTES_STR.lstrip()
+)
