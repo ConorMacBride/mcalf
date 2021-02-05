@@ -25,8 +25,9 @@ __all__ = ['ModelBase', 'BASE_PARAMETERS', 'BASE_ATTRIBUTES']
 class ModelBase:
     """Base class for spectral line model fitting.
 
-    Warning: This class should not be used directly.
-    Use derived classes instead.
+    .. warning::
+        This class should not be used directly.
+        Use derived classes instead.
 
     Parameters
     ----------
@@ -128,7 +129,7 @@ class ModelBase:
         self.__stationary_line_core = wavelength
 
     def _set_prefilter(self):
-        """Set the `prefilter_response` parameter
+        """Set the `prefilter_response` parameter.
 
         This method should be called in a child class once `stationary_line_core` has been set.
         """
@@ -149,7 +150,7 @@ class ModelBase:
                 raise ValueError("prefilter_response array must be the same length as constant_wavelengths array")
 
     def _validate_base_attributes(self):
-        """Validate some of the object's attributes
+        """Validate some of the object's attributes.
 
         Raises
         ------
@@ -173,22 +174,23 @@ class ModelBase:
     def _load_data(self, array, names=None, target=None):
         """Load a specified array into the model object.
 
-        Load `array` with dimension names `names` into the parameter specified by `target`.
+        Load `array` with dimension names `names` into the attribute specified by `target`.
 
         Parameters
         ----------
-        array : ndarray
+        array : numpy.ndarray
             The array to load.
 
-        names : list of str, length = `array.ndims`
+        names : list of str, length=`array.ndim`
             List of dimension names for `array`. Valid dimension names depend on `target`.
 
         target : {'array', 'background'}
+            The attribute to load the `array` into.
 
         See Also
         --------
-        load_array : Load and array of spectra
-        load_background : Load an array of spectral backgrounds
+        load_array : Load and array of spectra.
+        load_background : Load an array of spectral backgrounds.
         """
 
         # Validate specified `target`
@@ -216,7 +218,7 @@ class ModelBase:
 
         # Define the transposition on the input array to get the dimensions in order
         #     ['time', 'row', 'column'(, 'wavelength')]
-        n_dims = 4 if target == 'array' else 3  # ndims of (padded) array to load data into
+        n_dims = 4 if target == 'array' else 3  # ndim of (padded) array to load data into
         transposition = [None] * n_dims
         for i in range(len(names)):
             if names[i] == 'time':
@@ -270,16 +272,16 @@ class ModelBase:
 
         Parameters
         ----------
-        array : ndarray of ndims > 1
+        array : numpy.ndarray, ndim>1
             An array containing at least two spectra.
 
-        names : list of str, length = `array.ndims`
+        names : list of str, length=`array.ndim`
             List of dimension names for `array`. Valid dimension names are 'time', 'row', 'column' and 'wavelength'.
             'wavelength' is a required dimension.
 
         See Also
         --------
-        load_background : Load an array of spectral backgrounds
+        load_background : Load an array of spectral backgrounds.
         """
         self._load_data(array, names=names, target='array')
 
@@ -290,33 +292,33 @@ class ModelBase:
 
         Parameters
         ----------
-        array : ndarray of ndim>0
+        array : numpy.ndarray, ndim>0
             An array containing at least two backgrounds.
 
-        names : list of str, length = `array.ndims`
+        names : list of str, length=`array.ndim`
             List of dimension names for `array`. Valid dimension names are 'time', 'row' and 'column'.
 
         See Also
         --------
-        load_array : Load and array of spectra
+        load_array : Load and array of spectra.
         """
         self._load_data(array, names=names, target='background')
 
     def train(self, X, y):
         """Fit the neural network model to spectra matrix X and spectra labels y.
 
-        Calls the `fit` method on the `neural_network` parameter of the model object.
+        Calls the :meth:`fit` method on the `neural_network` parameter of the model object.
 
         Parameters
         ----------
-        X : ndarray or sparse matrix of shape (n_spectra, n_wavelengths)
+        X : numpy.ndarray or sparse matrix, shape=(n_spectra, n_wavelengths)
             The input spectra.
-        y : ndarray of shape (n_spectra,) or (n_spectra, n_outputs)
+        y : numpy.ndarray, shape= (n_spectra,) or (n_spectra, n_outputs)
             The target class labels.
 
         See Also
         --------
-        test : Test how well the neural network has been trained
+        test : Test how well the neural network has been trained.
         """
         self.neural_network.fit(X, y)
 
@@ -324,23 +326,25 @@ class ModelBase:
         """Test the accuracy of the trained neural network.
 
         Prints a table of results showing:
-            1) the percentage of predictions that equal the target labels;
-            2) the average classification deviation and standard deviation from the ground truth classification
-                for each labelled classification;
-            3) the average classification deviation and standard deviation overall.
-        If the model object has an output parameter, it will create a CSV file (`self.output`/neural_network/test.csv)
+
+        1) the percentage of predictions that equal the target labels;
+        2) the average classification deviation and standard deviation from the ground truth classification
+           for each labelled classification;
+        3) the average classification deviation and standard deviation overall.
+
+        If the model object has an output parameter, it will create a CSV file (``output``/neural_network/test.csv)
         listing the predictions and ground truth data.
 
         Parameters
         ----------
-        X : ndarray or sparse matrix of shape (n_spectra, n_wavelengths)
+        X : numpy.ndarray or sparse matrix, shape=(n_spectra, n_wavelengths)
             The input spectra.
-        y : ndarray of shape (n_spectra,) or (n_spectra, n_outputs)
+        y : numpy.ndarray, shape= (n_spectra,) or (n_spectra, n_outputs)
             The target class labels.
 
         See Also
         --------
-        train : Train the neural network
+        train : Train the neural network.
         """
         # Predict the labels
         try:
@@ -391,34 +395,34 @@ class ModelBase:
                        fmt='%3d', delimiter=',', header='ground_truth, prediction')
 
     def classify_spectra(self, time=None, row=None, column=None, spectra=None, only_normalise=False):
-        """Classify the specified spectra
+        """Classify the specified spectra.
 
         Will also normalise each spectrum such that its intensity will range from zero to one.
 
         Parameters
         ----------
         time : int or iterable, optional, default=None
-            The time index. The index can be either a single integer index or an iterable. E.g. a list, a NumPy
-            array, a Python range, etc. can be used.
+            The time index. The index can be either a single integer index or an iterable. E.g. a list,
+            a :class:`numpy.ndarray`, a Python range, etc. can be used.
         row : int or iterable, optional, default=None
             The row index. See comment for `time` parameter.
         column : int or iterable, optional, default=None
             The column index. See comment for `time` parameter.
-        spectra : ndarray, optional, default=None
+        spectra : numpy.ndarray, optional, default=None
             The explicit spectra to classify. If `only_normalise` is False, this must be 1D.
-        only_normalise : bool, optional, default = False
+        only_normalise : bool, optional, default=False
             Whether the single spectrum given  in `spectra` should not be interpolated and corrected.
 
         Returns
         -------
-        classifications : ndarray
+        classifications : numpy.ndarray
             Array of classifications with the same time, row and column indices as `spectra`.
 
         See Also
         --------
-        train : Train the neural network
-        test : Test the accuracy of the neural network
-        get_spectra : Get processed spectra from the objects `array` attribute
+        train : Train the neural network.
+        test : Test the accuracy of the neural network.
+        get_spectra : Get processed spectra from the objects `array` attribute.
         """
         if not only_normalise:  # Get the spectrum, otherwise use the provided one directly
             spectra = self.get_spectra(time=time, row=row, column=column, spectrum=spectra)
@@ -445,7 +449,7 @@ class ModelBase:
         return classifications
 
     def _get_time_row_column(self, time=None, row=None, column=None):
-        """Validate and infer the time, row and column index
+        """Validate and infer the time, row and column index.
 
         Takes any time, row and column index given and if any are not specified, they are returned as 0 if the
         spectral array only has one value at its dimension. If there are multiple and no index is specified,
@@ -471,12 +475,12 @@ class ModelBase:
 
         See Also
         --------
-        utils.make_iter : Make a variable iterable
+        mcalf.utils.make_iter : Make a variable iterable.
 
         Notes
         -----
         No type checking is done on the input indices so it can be anything but in most cases will need to be
-        either an integer or iterable. The `utils.make_iter` function can be used to make indices iterable.
+        either an integer or iterable. The :func:`mcalf.utils.make_iter` function can be used to make indices iterable.
         """
         array_shape = np.shape(self.array)
         if time is None:
@@ -498,7 +502,7 @@ class ModelBase:
         return time, row, column
 
     def get_spectra(self, time=None, row=None, column=None, spectrum=None, correct=True, background=False):
-        """Gets corrected spectra from the spectral array
+        """Gets corrected spectra from the spectral array.
 
         Takes either a set of indices or an explicit spectrum and optionally applied corrections and background
         removal.
@@ -506,8 +510,8 @@ class ModelBase:
         Parameters
         ----------
         time : int or iterable, optional, default=None
-            The time index. The index can be either a single integer index or an iterable. E.g. a list, a NumPy
-            array, a Python range, etc. can be used.
+            The time index. The index can be either a single integer index or an iterable. E.g. a list,
+            a :class:`numpy.ndarray`, a Python range, etc. can be used.
         row : int or iterable, optional, default=None
             The row index. See comment for `time` parameter.
         column : int or iterable, optional, default=None
@@ -552,36 +556,37 @@ class ModelBase:
         return spectra
 
     def _fit(self, spectrum, classification=None, spectrum_index=None):
-        """Fit a single spectrum for the given profile or classification
+        """Fit a single spectrum for the given profile or classification.
 
-        This call signature and docstring specifies how the `_fit` method must be implemented in
-        each subclass of `ModelBase`.
+        .. warning::
+            This call signature and docstring specify how the `_fit` method must be implemented in
+            each subclass of `ModelBase`. **It is not implemented in this class.**
 
         Parameters
         ----------
         spectrum : numpy.ndarray, ndim=1, length=n_constant_wavelengths
             The spectrum to be fitted.
-        classification : int, optional, default = None
+        classification : int, optional, default=None
             Classification to determine the fitted profile to use.
-        spectrum_index : array_like or list or tuple, length=3, optional, default = None
+        spectrum_index : array_like or list or tuple, length=3, optional, default=None
             The [time, row, column] index of the `spectrum` provided. Only used for error reporting.
 
         Returns
         -------
-        result : FitResult
-            Outcome of the fit returned in a FitResult object
+        result : mcalf.models.FitResult
+            Outcome of the fit returned in a :class:`mcalf.models.FitResult` object.
 
         See Also
         --------
-        fit : The recommended method for fitting spectra
-        FitResult : The object that the fit method returns
+        fit : The recommended method for fitting spectra.
+        mcalf.models.FitResult : The object that the fit method returns.
 
         Notes
         -----
-        This method is called for each requested spectrum by the `models.ModelBase.fit` method.
+        This method is called for each requested spectrum by the :meth:`models.ModelBase.fit` method.
         This is where most of the adjustments to the fitting method should be made. See other
         subclasses of `models.ModelBase` for examples of how to implement this method in a
-        new subclass. See `models.ModelBase.fit` for more information on how this method is
+        new subclass. See :meth:`models.ModelBase.fit` for more information on how this method is
         called.
         """
         raise NotImplementedError("The `_fit` method must be implemented in a subclass of `ModelBase`."
@@ -589,29 +594,30 @@ class ModelBase:
 
     def fit(self, time=None, row=None, column=None, spectrum=None, classifications=None,
             background=None, n_pools=None, **kwargs):
-        """Fits the model to specified spectra
+        """Fits the model to specified spectra.
 
         Fits the model to an array of spectra using multiprocessing if requested.
 
         Parameters
         ----------
-        time : int or iterable, optional, default = None
-            The time index. The index can be either a single integer index or an iterable. E.g. a list, a NumPy
-            array, a Python range, etc. can be used.
-        row : int or iterable, optional, default = None
+        time : int or iterable, optional, default=None
+            The time index. The index can be either a single integer index or an iterable. E.g. a list,
+            :class:`numpy.ndarray`, a Python range, etc. can be used.
+        row : int or iterable, optional, default=None
             The row index. See comment for `time` parameter.
-        column : int or iterable, optional, default = None
+        column : int or iterable, optional, default=None
             The column index. See comment for `time` parameter.
-        spectrum : numpy.ndarray, ndim=1, optional, default = None
+        spectrum : numpy.ndarray, ndim=1, optional, default=None
             The explicit spectrum to fit the model to.
-        classifications : int or array_like, optional, default = None
+        classifications : int or array_like, optional, default=None
             Classifications to determine the fitted profile to use. Will use neural network to classify them if not.
             If a multidimensional array, must have the same shape as [`time`, `row`, `column`].
             Dimensions that would have length of 1 can be excluded.
-        background : float, optional, default = None
+        background : float, optional, default=None
             If provided, this value will be subtracted from the explicit spectrum provided in `spectrum`. Will
-            not be applied to spectra found from the indices, use the `load_background` method instead.
-        n_pools : int, optional, default = None
+            not be applied to spectra found from the indices, use the :meth:`~mcalf.models.ModelBase.load_background`
+            method instead.
+        n_pools : int, optional, default=None
             The number of processing pools to calculate the fitting over. This allocates the fitting of different
             spectra to `n_pools` separate worker processes. When processing a large number of spectra this will make
             the fitting process take less time overall. It also distributes such that each worker process has the
@@ -620,12 +626,12 @@ class ModelBase:
             the evaluation over separate processes. If `n_pools` is not an integer greater than zero, it will fit
             the spectrum with a for loop.
         **kwargs : dictionary, optional
-            Extra keyword arguments to pass to `_fit`.
+            Extra keyword arguments to pass to :meth:`~mcalf.models.ModelBase._fit`.
 
         Returns
         -------
-        result : list of FitResult, length=n_spectra
-            Outcome of the fits returned as a list of FitResult objects
+        result : list of :class:`~mcalf.models.FitResult`, length=n_spectra
+            Outcome of the fits returned as a list of :class:`~mcalf.models.FitResult` objects.
         """
         # Specific fitting algorithm for IBIS Ca II 8542 Å
 
@@ -722,41 +728,42 @@ class ModelBase:
         return results
 
     def fit_spectrum(self, spectrum, **kwargs):
-        """Fits the specified spectrum array
+        """Fits the specified spectrum array.
 
-        Passes the spectrum argument to the fit method. For easily iterating over a list of spectra.
+        Passes the spectrum argument to the :meth:`~mcalf.models.ModelBase.fit` method.
+        For easily iterating over a list of spectra.
 
         Parameters
         ----------
-        spectrum : ndarray of ndim=1
+        spectrum : numpy.ndarray, ndim=1
             The explicit spectrum.
-        **kwargs : dictionary, optional
-            Extra keyword arguments to pass to fit.
+        **kwargs : dict, optional
+            Extra keyword arguments to pass to :meth:`~mcalf.models.ModelBase.fit`.
 
         Returns
         -------
-        result : FitResult
+        result : :class:`~mcalf.models.FitResult`
             Result of the fit.
 
         See Also
         --------
-        fit : General fitting method
+        fit : General fitting method.
         """
         return self.fit(spectrum=spectrum, **kwargs)
 
     def _curve_fit(self, model, spectrum, guess, sigma, bounds, x_scale, time=None, row=None, column=None):
-        """scipy.optimize.curve_fit wrapper with error handling
+        """:func:`scipy.optimize.curve_fit` wrapper with error handling.
 
-        Passes a certain set of parameters to the scipy.optimize.curve_fit function and catches some typical
+        Passes a certain set of parameters to the :func:`scipy.optimize.curve_fit` function and catches some typical
         errors, presenting a more specific warning message.
 
         Parameters
         ----------
         model : callable
-            The model function, f(x, …). It must take the `self.constant_wavelenghts` as the first argument and the
-            parameters to fit as separate remaining arguments.
+            The model function, f(x, …). It must take the `ModelBase.constant_wavelenghts` attribute
+            as the first argument and the parameters to fit as separate remaining arguments.
         spectrum : array_like
-            The dependent data, with length equal to that of `self.constant_wavelengths`.
+            The dependent data, with length equal to that of the `ModelBase.constant_wavelengths` attribute.
         guess : array_like, optional
             Initial guess for the parameters to fit.
         sigma : array_like
@@ -774,19 +781,20 @@ class ModelBase:
 
         Returns
         -------
-        fitted_parameters : ndarray, length=n_parameters
+        fitted_parameters : numpy.ndarray, length=n_parameters
             The parameters that recreate the model fitted to the spectrum.
         success : bool
             Whether the fit was successful or an error had to be handled.
 
         See Also
         --------
-        fit : General fitting method
-        fit_spectrum : Explicit spectrum fitting method
+        fit : General fitting method.
+        fit_spectrum : Explicit spectrum fitting method.
 
         Notes
         -----
-        More details can be found in the documentation for scipy.optimize.curve_fit and scipy.optimize.least_squares.
+        More details can be found in the documentation for :func:`scipy.optimize.curve_fit`
+        and :func:`scipy.optimize.least_squares`.
         """
         try:  # TODO Investigate if there is a performance gain to setting `check_finite` to False
 
@@ -830,58 +838,58 @@ DOCS['original_wavelengths'] = """
     original_wavelengths : array_like
         One-dimensional array of wavelengths that correspond to the uncorrected spectral data."""
 DOCS['stationary_line_core'] = """
-    stationary_line_core : float, optional, default = None
+    stationary_line_core : float, optional, default=None
         Wavelength of the stationary line core."""
 DOCS['neural_network'] = """
-    neural_network : optional, default = None
+    neural_network : optional, default=None
         The neural network classifier object that is used to classify spectra. This attribute should be set by a
-        child class of `mcalf.models.base.ModelBase`."""
+        child class of :class:`~mcalf.models.base.ModelBase`."""
 DOCS['constant_wavelengths'] = """
-    constant_wavelengths : array_like, ndim=1, optional, default = see description
+    constant_wavelengths : array_like, ndim=1, optional, default= see description
         The desired set of wavelengths that the spectral data should be rescaled to represent. It is assumed
         that these have constant spacing, but that may not be a requirement if you specify your own array.
         The default value is an array from the minimum to the maximum wavelength of `original_wavelengths` in
         constant steps of `delta_lambda`, overshooting the upper bound if the maximum wavelength has not been 
         reached."""
 DOCS['delta_lambda'] = """
-    delta_lambda : float, optional, default = 0.05
+    delta_lambda : float, optional, default=0.05
         The step used between each value of `constant_wavelengths` when its default value has to be calculated."""
 DOCS['sigma'] = """
-    sigma : optional, default = None
+    sigma : optional, default=None
         Sigma values used to weight the fit. This attribute should be set by a child class of 
-        `mcalf.models.base.ModelBase`."""
+        :class:`~mcalf.models.base.ModelBase`."""
 DOCS['prefilter_response'] = """
-    prefilter_response : array_like, length=n_wavelengths, optional, default = see note
+    prefilter_response : array_like, length=n_wavelengths, optional, default= see note
         Each constant wavelength scaled spectrum will be corrected by dividing it by this array. If `prefilter_response`
         is not given, and `prefilter_ref_main` and `prefilter_ref_wvscl` are not given, `prefilter_response` will have a
         default value of `None`."""
 DOCS['prefilter_ref_main'] = """
-    prefilter_ref_main : array_like, optional, default = None
+    prefilter_ref_main : array_like, optional, default= None
         If `prefilter_response` is not specified, this will be used along with `prefilter_ref_wvscl` to generate the
         default value of `prefilter_response`."""
 DOCS['prefilter_ref_wvscl'] = """
-    prefilter_ref_wvscl : array_like, optional, default = None
+    prefilter_ref_wvscl : array_like, optional, default=None
         If `prefilter_response` is not specified, this will be used along with `prefilter_ref_main` to generate the
         default value of `prefilter_response`."""
 DOCS['config'] = """
-    config : str, optional, default = None
+    config : str, optional, default=None
         Filename of a `.yml` file (relative to current directory) containing the initialising parameters for this
         object. Parameters provided explicitly to the object upon initialisation will override any provided in this
         file. All (or some) parameters that this object accepts can be specified in this file, except `neural_network`
         and `config`. Each line of the file should specify a different parameter and be formatted like
         `emission_guess: '[-inf, wl-0.15, 1e-6, 1e-6]'` or `original_wavelengths: 'original.fits'` for example.
         When specifying a string, use 'inf' to represent `np.inf` and 'wl' to represent `stationary_line_core` as shown.
-        If the string matches a file, `utils.load_parameter()` is used to load the contents of the file."""
+        If the string matches a file, :func:`mcalf.utils.load_parameter()` is used to load the contents of the file."""
 DOCS['output'] = """
-    output : str, optional, default = None
+    output : str, optional, default=None
         If the program wants to output data, it will place it relative to the location specified by this parameter.
         Some methods will only save data to a file if this parameter is not `None`. Such cases will be documented
         where relevant."""
 DOCS['array'] = """
-    array: ndarray, dimensions are['time', 'row', 'column', 'spectra']
+    array: numpy.ndarray, dimensions are ['time', 'row', 'column', 'spectra']
         Array holding spectra."""
 DOCS['background'] = """
-    background: ndarray, dimensions are['time', 'row', 'column']
+    background: numpy.ndarray, dimensions are ['time', 'row', 'column']
         Array holding spectral backgrounds."""
 
 # Form the parameter list

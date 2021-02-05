@@ -16,7 +16,7 @@ __all__ = ['IBIS8542Model']
 
 
 class IBIS8542Model(ModelBase):
-    """Class for working with IBIS 8542 Å calcium II spectral imaging observations
+    """Class for working with IBIS 8542 Å calcium II spectral imaging observations.
     
     Parameters
     ----------
@@ -25,9 +25,9 @@ class IBIS8542Model(ModelBase):
     Attributes
     ----------
     ${ATTRIBUTES}
-    quiescent_wavelength : int, default = 1
+    quiescent_wavelength : int, default=1
         The index within the fitted parameters of the absorption Voigt line core wavelength.
-    active_wavelength : int, default = 5
+    active_wavelength : int, default=5
         The index within the fitted parameters of the emission Voigt line core wavelength.
     ${ATTRIBUTES_EXTRA}
     """
@@ -110,7 +110,7 @@ class IBIS8542Model(ModelBase):
         self._validate_attributes()
 
     def _validate_attributes(self):
-        """Validate some of the object's attributes
+        """Validate some of the object's attributes.
 
         Raises
         ------
@@ -168,27 +168,27 @@ class IBIS8542Model(ModelBase):
                              "corresponding values in emission_min_bound")
 
     def _get_sigma(self, classification=None, sigma=None):
-        """Infer a sigma profile from the parameters provided
+        """Infer a sigma profile from the parameters provided.
 
         If no sigma is provided, use classification to take from the model object's sigma attribute.
         If sigma is provided and is an integer, take from the model object's sigma attribute at that index,
-        otherwise, return sigma as a NumPy array.
+        otherwise, return sigma as a :class:`numpy.ndarray`.
 
         Parameters
         ----------
-        classification : int, optional, default = None
+        classification : int, optional, default=None
             Classification sigma profile needed to fit.
-        sigma : int or array_like, optional, default = None
+        sigma : int or array_like, optional, default=None
             Explicit sigma index or profile.
 
         Returns
         -------
-        sigma : ndarray, length = n_constant_wavelengths
+        sigma : numpy.ndarray, length=n_constant_wavelengths
              The sigma profile.
 
         See Also
         --------
-        utils.generate_sigma : Generate a specified sigma profile
+        mcalf.utils.generate_sigma : Generate a specified sigma profile.
         """
         if sigma is None:
             # Decide how to weight the wavelengths
@@ -203,33 +203,33 @@ class IBIS8542Model(ModelBase):
                 return np.asarray(sigma, dtype=np.float64)
 
     def _fit(self, spectrum, classification=None, spectrum_index=None, profile=None, sigma=None):
-        """Fit a single spectrum for the given profile or classification
+        """Fit a single spectrum for the given profile or classification.
 
-        Warning: Using this method directly will skip the corrections that are applied to spectra by the `get_spectra`
-        method.
+        Warning: Using this method directly will skip the corrections that are applied to spectra by the
+        :meth:`~mcalf.models.ModelBase.get_spectra` method.
 
         Parameters
         ----------
         spectrum : numpy.ndarray, ndim=1, length=n_constant_wavelengths
             The spectrum to be fitted.
-        classification : int, optional, default = None
+        classification : int, optional, default=None
             Classification to determine the fitted profile to use (if profile not explicitly given).
-        spectrum_index : array_like or list or tuple, length=3, optional, default = None
+        spectrum_index : array_like or list or tuple, length=3, optional, default=None
             The [time, row, column] index of the `spectrum` provided. Only used for error reporting.
-        profile : str, optional, default = None
+        profile : str, optional, default=None
             The profile to fit. (Will infer profile from classification if omitted.)
-        sigma : int or array_like, optional, default = None
-            Explicit sigma index or profile. See `_get_sigma` for details.
+        sigma : int or array_like, optional, default=None
+            Explicit sigma index or profile. See :meth:`~mcalf.models.IBIS8542Model._get_sigma` for details.
 
         Returns
         -------
-        result : FitResult
-            Outcome of the fit returned in a FitResult object
+        result : mcalf.models.FitResult
+            Outcome of the fit returned in a :class:`~mcalf.models.FitResult` object.
 
         See Also
         --------
-        fit : The recommended method for fitting spectra
-        FitResult : The object that the fit method returns
+        fit : The recommended method for fitting spectra.
+        mcalf.models.FitResult : The object that the fit method returns.
         """
         if profile is None:  # If profile hasn't been specified, find it
 
@@ -281,49 +281,52 @@ class IBIS8542Model(ModelBase):
 
     def plot(self, fit=None, time=None, row=None, column=None, spectrum=None, classification=None, background=None,
              sigma=None, stationary_line_core=None, output=False, **kwargs):
-        """Plots the data and fitted parameters
+        """Plots the data and fitted parameters.
 
         Parameters
         ----------
-        fit : FitResult or list or array_like, optional, default = None
+        fit : mcalf.models.FitResult or list or array_like, optional, default=None
             The fitted parameters to plot with the data. Can extract the necessary plot metadata from the fit object.
             Otherwise, `fit` should be the parameters to be fitted to either a Voigt or double Voigt profile depending
             on the number of parameters fitted.
-        time : int or iterable, optional, default = None
-            The time index. The index can be either a single integer index or an iterable. E.g. a list, a NumPy
-            array, a Python range, etc. can be used.
-        row : int or iterable, optional, default = None
+        time : int or iterable, optional, default=None
+            The time index. The index can be either a single integer index or an iterable. E.g. a list,
+            :class:`numpy.ndarray`, a Python range, etc. can be used.
+        row : int or iterable, optional, default=None
             The row index. See comment for `time` parameter.
-        column : int or iterable, optional, default = None
+        column : int or iterable, optional, default=None
             The column index. See comment for `time` parameter.
-        spectrum : ndarray of length `original_wavelengths`, ndim=1, optional, default = None
+        spectrum : numpy.ndarray, length=`original_wavelengths`, ndim=1, optional, default=None
             The explicit spectrum to plot along with a fit (if specified).
-        classification : int, optional, default = None
-            Used to determine which sigma profile to use. See `_get_sigma` for more details.
-        background : float or array_like of length `constant_wavelengths`, optional, default = see note
+        classification : int, optional, default=None
+            Used to determine which sigma profile to use. See :meth:`~mcalf.models.IBIS8542Model._get_sigma`
+            for more details.
+        background : float or array_like, length=n_constant_wavelengths, optional, default= see note
             Background to added to the fitted profiles. If a `spectrum` is given, this will default to zero, otherwise
-            the value loaded by `load_background` will be used.
-        sigma : int or array_like, optional, default = None
-            Explicit sigma index or profile. See `_get_sigma` for details.
-        stationary_line_core : float, optional, default = `self.stationary_line_core`
+            the value loaded by :meth:`~mcalf.models.ModelBase.load_background` will be used.
+        sigma : int or array_like, optional, default=None
+            Explicit sigma index or profile. See :meth:`~mcalf.models.IBIS8542Model._get_sigma` for details.
+        stationary_line_core : float, optional, default=`stationary_line_core`
             The stationary line core wavelength to mark on the plot.
-        output : bool or str, optional, default = False
+        output : bool or str, optional, default=False
             Whether to save the plot to a file. If true, a file of format `plot_<time>_<row>_<column>.eps` will be
             created in the current directory. If a string, that will be used as the filename. (Can change filetype
             like this.) If false, no file will be created.
-        **kwargs
-            Parameters used by matplotlib and `separate` (see `plot_separate`) and `subtraction`
-            (see `plot_subtraction`).
-                - `figsize` passed to `matplotlib.pyplot.figure`
-                - `legend_position` passed to `matplotlib.pyplot.legend`
-                - `dpi` passed to `matplotlib.pyplot.figure` and `matplotlib.pyplot.savefig`
-                - `fontfamily` passed to `matplotlib.pyplot.rc('font', family=`fontfamily`)` if given
+        **kwargs : dict
+            Parameters used by :mod:`matplotlib.pyplot` and
+            `separate` (see :meth:`plot_separate`) and
+            `subtraction` (see :meth:`plot_subtraction`).
+
+            * `figsize` passed to :func:`matplotlib.pyplot.figure`.
+            * `legend_position` passed to :func:`matplotlib.pyplot.legend`.
+            * `dpi` passed to :func:`matplotlib.pyplot.figure` and :func:`matplotlib.pyplot.savefig`.
+            * `fontfamily` passed to `matplotlib.pyplot.rc('font', family=`fontfamily`)` if given.
 
         See Also
         --------
-        plot_separate : Plot the fit parameters separately
-        plot_subtraction : Plot the spectrum with the emission fit subtracted from it
-        FitResult.plot : Plotting method on the fit result
+        plot_separate : Plot the fit parameters separately.
+        plot_subtraction : Plot the spectrum with the emission fit subtracted from it.
+        mcalf.models.FitResult.plot : Plotting method on the fit result.
         """
         if fit.__class__ == FitResult:  # If fit is a `FitResult`
 
@@ -376,28 +379,28 @@ class IBIS8542Model(ModelBase):
                       stationary_line_core=stationary_line_core, output=output, **kwargs)
 
     def plot_separate(self, *args, **kwargs):
-        """Plot the fitted profiles separately
+        """Plot the fitted profiles separately.
 
-        If multiple profiles exist, fit them separately. See `plot` for more details.
+        If multiple profiles exist, fit them separately. See :meth:`plot` for more details.
 
         See Also
         --------
-        plot : General plotting method
-        plot_subtraction : Plot the spectrum with the emission fit subtracted from it
-        FitResult.plot : Plotting method on the fit result
+        plot : General plotting method.
+        plot_subtraction : Plot the spectrum with the emission fit subtracted from it.
+        mcalf.models.FitResult.plot : Plotting method on the fit result.
         """
         self.plot(*args, separate=True, **kwargs)
 
     def plot_subtraction(self, *args, **kwargs):
-        """Plot the spectrum with the emission fit subtracted from it
+        """Plot the spectrum with the emission fit subtracted from it.
 
-        If multiple profiles exist, subtract the fitted emission from the raw data. See `plot` for more details.
+        If multiple profiles exist, subtract the fitted emission from the raw data. See :meth:`plot` for more details.
 
         See Also
         --------
-        plot : General plotting method
-        plot_separate : Plot the fit parameters separately
-        FitResult.plot : Plotting method on the fit result
+        plot : General plotting method.
+        plot_separate : Plot the fit parameters separately.
+        mcalf.models.FitResult.plot : Plotting method on the fit result.
         """
         self.plot(*args, subtraction=True, **kwargs)
 
@@ -409,39 +412,40 @@ IBIS8542_ATTRIBUTES = copy.deepcopy(BASE_ATTRIBUTES)
 # Update documentation from base class (include new defaults)
 for d in [IBIS8542_PARAMETERS, IBIS8542_ATTRIBUTES]:
     d['stationary_line_core'] = """
-    stationary_line_core : float, optional, default = 8542.099145376844
+    stationary_line_core : float, optional, default=8542.099145376844
         Wavelength of the stationary line core."""
     d['sigma'] = """
-    sigma : list of array_like or bool, length=(2, n_wavelengths), optional, default = [type1, type2]
+    sigma : list of array_like or bool, length=(2, n_wavelengths), optional, default=[type1, type2]
         A list of different sigma that are used to weight particular wavelengths along the spectra when fitting. The
         fitting method will expect to be able to choose a sigma array from this list at a specific index. It's default
         value is `[generate_sigma(i, constant_wavelengths, stationary_line_core) for i in [1, 2]]`.
-        See `utils.generate_sigma()` for more information. If bool, True will generate the default sigma value
-        regardless of the value specified in `config`, and False will set `sigma` to be all ones, effectively disabling
-        it."""
+        See :func:`mcalf.utils.generate_sigma` for more information. 
+        If bool, True will generate the default sigma value regardless of the value specified in `config`,
+        and False will set `sigma` to be all ones, effectively disabling it."""
 IBIS8542_ATTRIBUTES['neural_network'] = """
-    neural_network : sklearn.neural_network.MLPClassifier, optional, default = see description
-        The MLPClassifier object (or similar) that will be used to classify the spectra. Defaults to a `GridSearchCV`
-        with `MLPClassifier(solver='lbfgs', hidden_layer_sizes=(40,), max_iter=1000)`
+    neural_network : sklearn.neural_network.MLPClassifier, optional, default= see description
+        The :class:`sklearn.neural_network.MLPClassifier` object (or similar) that will be used to
+        classify the spectra. Defaults to a :class:`sklearn.model_selection.GridSearchCV`
+        with :class:`~sklearn.neural_network.MLPClassifier(solver='lbfgs', hidden_layer_sizes=(40,), max_iter=1000)`
         for best `alpha` selected from `[1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5]`."""
 
 # Add documentation for new parameters and attributes
 IBIS8542_DOCS = """        
-    absorption_guess : array_like, length=4, optional, default = [-1000, stationary_line_core, 0.2, 0.1]
+    absorption_guess : array_like, length=4, optional, default=[-1000, stationary_line_core, 0.2, 0.1]
         Initial guess to take when fitting the absorption Voigt profile.
-    emission_guess : array_like, length=4, optional, default = [1000, stationary_line_core, 0.2, 0.1]
+    emission_guess : array_like, length=4, optional, default=[1000, stationary_line_core, 0.2, 0.1]
         Initial guess to take when fitting the emission Voigt profile.
-    absorption_min_bound : array_like, length=4, optional, default = [-np.inf, stationary_line_core-0.15, 1e-6, 1e-6]
+    absorption_min_bound : array_like, length=4, optional, default=[-np.inf, stationary_line_core-0.15, 1e-6, 1e-6]
         Minimum bounds for all the absorption Voigt profile parameters in order of the function's arguments.
-    emission_min_bound : array_like, length=4, optional, default = [0, -np.inf, 1e-6, 1e-6]
+    emission_min_bound : array_like, length=4, optional, default=[0, -np.inf, 1e-6, 1e-6]
         Minimum bounds for all the emission Voigt profile parameters in order of the function's arguments.
-    absorption_max_bound : array_like, length=4, optional, default = [0, stationary_line_core+0.15, 1, 1]
+    absorption_max_bound : array_like, length=4, optional, default=[0, stationary_line_core+0.15, 1, 1]
         Maximum bounds for all the absorption Voigt profile parameters in order of the function's arguments.
-    emission_max_bound : array_like, length=4, optional, default = [np.inf, np.inf, 1, 1]
+    emission_max_bound : array_like, length=4, optional, default=[np.inf, np.inf, 1, 1]
         Maximum bounds for all the emission Voigt profile parameters in order of the function's arguments.
-    absorption_x_scale : array_like, length=4, optional, default = [1500, 0.2, 0.3, 0.5]
+    absorption_x_scale : array_like, length=4, optional, default=[1500, 0.2, 0.3, 0.5]
         Characteristic scale for all the absorption Voigt profile parameters in order of the function's arguments.
-    emission_x_scale : array_like, length=4, optional, default = [1500, 0.2, 0.3, 0.5]
+    emission_x_scale : array_like, length=4, optional, default=[1500, 0.2, 0.3, 0.5]
         Characteristic scale for all the emission Voigt profile parameters in order of the function's arguments."""
 
 # Form the docstring and do the replacements
