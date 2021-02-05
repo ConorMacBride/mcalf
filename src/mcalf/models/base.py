@@ -131,6 +131,11 @@ class ModelBase:
     def _set_prefilter(self):
         """Set the `prefilter_response` parameter.
 
+        .. deprecated:: 0.2
+             Prefilter response correction code, and `prefilter_response`, `prefilter_ref_main`
+             and `prefilter_ref_wvscl`, may be removed in a later release of MCALF.
+             Spectra should be fully processed before loading into MCALF.
+
         This method should be called in a child class once `stationary_line_core` has been set.
         """
         if self.prefilter_response is None:
@@ -139,10 +144,14 @@ class ModelBase:
                                                                  self.__prefilter_ref_wvscl + self.stationary_line_core,
                                                                  self.constant_wavelengths)
             else:
-                # TODO: Remove this warning and possibly all prefilter code
-                warnings.warn("prefilter_response will not be applied to spectra")
+                return  # None of the prefilter attributes are set, so no prefilter to apply.
         else:  # Make sure it is a numpy array so that division works as expected when doing array operations
             self.prefilter_response = np.asarray(self.prefilter_response, dtype=np.float64)
+
+        # TODO: Remove this warning and possibly all prefilter code
+        warnings.warn("Spectra should be fully processed before loading into MCALF. "
+                      "Prefilter response correction code may be removed in a later "
+                      "release.", PendingDeprecationWarning)
 
         # If a prefilter response is given it must be a compatible length
         if self.prefilter_response is not None:

@@ -91,11 +91,11 @@ def test_ibis8542model_configfile():
     IBIS8542Model(config="ibis8542model_config.yml", sigma=False)
 
     # Test with defined prefilter
-    IBIS8542Model(config="ibis8542model_config_prefilter.yml")
+    with pytest.deprecated_call():
+        IBIS8542Model(config="ibis8542model_config_prefilter.yml")
 
     # Test with no prefilter
-    with pytest.warns(UserWarning, match='prefilter_response'):
-        IBIS8542Model(config="ibis8542model_config_noprefilter.yml")
+    IBIS8542Model(config="ibis8542model_config_noprefilter.yml")
 
     # TODO Check that the parameters were imported correctly
 
