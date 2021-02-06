@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
@@ -49,6 +50,12 @@ extensions = [
 ]
 numpydoc_show_class_members = False
 nbsphinx_execute = 'never'
+all_methods = [
+    'mcalf.models.base.ModelBase',
+    'mcalf.models.ModelBase',
+]
+automodsumm_private_methods_of = all_methods
+automodsumm_special_methods_of = all_methods
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -58,6 +65,14 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+intersphinx_mapping = {
+    "python": ('https://docs.python.org/3', None),
+    "astropy": ("https://docs.astropy.org/en/stable/", None),
+    "matplotlib": ('https://matplotlib.org/', None),
+    "numpy": ('https://numpy.org/doc/stable', None),
+    "scipy": ('https://docs.scipy.org/doc/scipy/reference', None),
+    "sklearn": ('https://scikit-learn.org/stable', None),
+}
 
 # -- Options for HTML output -------------------------------------------------
 

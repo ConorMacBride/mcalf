@@ -37,7 +37,7 @@ def test_normalise_spectrum():
 
 
 def test_normalise_spectrum_model():
-    m = DummyModel()
+    m = DummyModel(original_wavelengths=[0.0, 0.1])
     m.original_wavelengths = np.linspace(-20, 20, 15)
     m.constant_wavelengths = m.original_wavelengths * 0.9
     np.random.seed(0)  # Produce identical results
