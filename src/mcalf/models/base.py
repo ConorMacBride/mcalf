@@ -291,6 +291,21 @@ class ModelBase:
         See Also
         --------
         load_background : Load an array of spectral backgrounds.
+
+        Examples
+        --------
+
+        Create a basic model:
+
+        >>> import mcalf.models
+        >>> from astropy.io import fits
+        >>> wavelengths = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
+        >>> model = mcalf.models.ModelBase(original_wavelengths=wavelengths)
+
+        Load spectra from a file:
+
+        >>> spectra = fits.open('spectra_0000.fits')[0].data  # doctest: +SKIP
+        >>> model.load_array(spectra, names=['wavelength', 'column', 'row'])  # doctest: +SKIP
         """
         self._load_data(array, names=names, target='array')
 
@@ -310,6 +325,21 @@ class ModelBase:
         See Also
         --------
         load_array : Load and array of spectra.
+
+        Examples
+        --------
+
+        Create a basic model:
+
+        >>> import mcalf.models
+        >>> from astropy.io import fits
+        >>> wavelengths = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
+        >>> model = mcalf.models.ModelBase(original_wavelengths=wavelengths)
+
+        Load background array from a file:
+
+        >>> background = fits.open('background_0000.fits')[0].data  # doctest: +SKIP
+        >>> model.load_background(background, names=['column', 'row'])  # doctest: +SKIP
         """
         self._load_data(array, names=names, target='background')
 
@@ -419,8 +449,13 @@ class ModelBase:
             The column index. See comment for `time` parameter.
         spectra : numpy.ndarray, optional, default=None
             The explicit spectra to classify. If `only_normalise` is False, this must be 1D.
+            However, if `only_normalise` is set to true, `spectra` can be of any dimension.
+            It is assumed that the final dimension is wavelengths, so return shape will be the
+            same as `spectra`, except with no final wavelengths dimension.
         only_normalise : bool, optional, default=False
             Whether the single spectrum given  in `spectra` should not be interpolated and corrected.
+            If set to true, the only processing applied to `spectra` will be a normalisation to be
+            in range 0 to 1.
 
         Returns
         -------
@@ -432,6 +467,43 @@ class ModelBase:
         train : Train the neural network.
         test : Test the accuracy of the neural network.
         get_spectra : Get processed spectra from the objects `array` attribute.
+
+        Examples
+        --------
+
+        Create a basic model:
+
+        >>> import mcalf.models
+        >>> import numpy as np
+        >>> wavelengths = np.linspace(8542.1, 8542.2, 30)
+        >>> model = mcalf.models.ModelBase(original_wavelengths=wavelengths)
+
+        Load a trained neural network:
+
+        >>> import pickle
+        >>> pkl = open('trained_neural_network.pkl', 'rb')  # doctest: +SKIP
+        >>> model.neural_network = pickle.load(pkl)  # doctest: +SKIP
+
+        Classify an individual spectrum:
+
+        >>> spectrum = np.random.rand(30)
+        >>> model.classify_spectra(spectra=spectrum)  # doctest: +SKIP
+        array([2])
+
+        When :code:`only_normalise=True`, classify an n-dimensional spectral array:
+
+        >>> spectra = np.random.rand(5, 4, 3, 2, 30)
+        >>> model.classify_spectra(spectra=spectra, only_normalise=True).shape  # doctest: +SKIP
+        (5, 4, 3, 2)
+
+        Load spectra from a file and classify:
+
+        >>> from astropy.io import fits
+        >>> spectra = fits.open('spectra_0000.fits')[0].data  # doctest: +SKIP
+        >>> model.load_array(spectra, names=['wavelength', 'column', 'row'])  # doctest: +SKIP
+        >>> model.classify_spectra(column=range(10, 15), row=[7, 16])  # doctest: +SKIP
+        array([[[0, 2, 0, 3, 0],
+                [4, 0, 1, 0, 0]]])
         """
         if not only_normalise:  # Get the spectrum, otherwise use the provided one directly
             spectra = self.get_spectra(time=time, row=row, column=column, spectrum=spectra)
@@ -532,6 +604,55 @@ class ModelBase:
         background : bool, optional, default=False
             Whether to include the background in the outputted spectra. Only removes the background if the
             relevant background array has been loaded. Does not remove background is processing an explicit spectrum.
+
+        Returns
+        -------
+        spectra : ndarray
+
+
+        Examples
+        --------
+
+        Create a basic model:
+
+        >>> import mcalf.models
+        >>> import numpy as np
+        >>> wavelengths = np.linspace(8541.3, 8542.7, 30)
+        >>> model = mcalf.models.ModelBase(original_wavelengths=wavelengths)
+
+        Provide a single spectrum for processing, and notice output is 1D:
+
+        >>> spectrum = model.get_spectra(spectrum=np.random.rand(30))
+        >>> spectrum.ndim
+        1
+
+        Load an array of spectra:
+
+        >>> spectra = np.random.rand(3, 4, 30)
+        >>> model.load_array(spectra, names=['column', 'row', 'wavelength'])
+
+        Extract a single (unprocessed) spectrum from the loaded array, and notice output is 4D:
+
+        >>> spectrum = model.get_spectra(row=1, column=0, correct=False)
+        >>> spectrum.shape
+        (1, 1, 1, 30)
+        >>> (spectrum[0, 0, 0] == spectra[0, 1]).all()
+        True
+
+        Extract an array of spectra, and notice output is 4D, and with dimensions
+        time, row, column, wavelength regardless of the original dimensions and order:
+
+        >>> spectrum = model.get_spectra(row=range(4), column=range(3))
+        >>> spectrum.shape
+        (1, 4, 3, 30)
+
+        Notice that the time index can be excluded, as the loaded array only represents a single time.
+        However, in this case leaving out `row` or `column` results in an error as it is ambiguous:
+
+        >>> spectrum = model.get_spectra(row=range(4))
+        Traceback (most recent call last):
+         ...
+        ValueError: column index must be specified as multiple indices exist
         """
         # Locate the spectra
         if spectrum is None:  # No explicit spectrum so use specified indices
@@ -641,6 +762,45 @@ class ModelBase:
         -------
         result : list of :class:`~mcalf.models.FitResult`, length=n_spectra
             Outcome of the fits returned as a list of :class:`~mcalf.models.FitResult` objects.
+
+        Examples
+        --------
+
+        Create a basic model:
+
+        >>> import mcalf.models
+        >>> import numpy as np
+        >>> wavelengths = np.linspace(8541.3, 8542.7, 30)
+        >>> model = mcalf.models.ModelBase(original_wavelengths=wavelengths)
+
+        Set up the neural network classifier:
+
+        >>> model.neural_network = ...  # load an untrained classifier  # doctest: +SKIP
+        >>> model.train(...)  # doctest: +SKIP
+        >>> model.test(...)  # doctest: +SKIP
+
+        Load the spectra and background array:
+
+        >>> model.load_array(...)  # doctest: +SKIP
+        >>> model.load_background(...)  # doctest: +SKIP
+
+        Fit a subset of the loaded spectra, using 5 processing pools:
+
+        >>> fits = model.fit(row=range(3, 5), column=range(200), n_pools=5)  # doctest: +SKIP
+        >>> fits  # doctest: +SKIP
+        ['Successful FitResult with ________ profile of classification 0',
+         'Successful FitResult with ________ profile of classification 2',
+         ...
+         'Successful FitResult with ________ profile of classification 0',
+         'Successful FitResult with ________ profile of classification 4']
+
+        Merge the fit results into a :class:`~mcalf.models.FitResults` object:
+
+        >>> results = mcalf.models.FitResults((500, 500), 8)
+        >>> for fit in fits:  # doctest: +SKIP
+        ...     results.append(fit)  # doctest: +SKIP
+
+        See :meth:`fit_spectrum` examples for how to manually providing a `spectrum` to fit.
         """
         # Specific fitting algorithm for IBIS Ca II 8542 Å
 
@@ -757,6 +917,31 @@ class ModelBase:
         See Also
         --------
         fit : General fitting method.
+
+        Examples
+        --------
+
+        Create a basic model:
+
+        >>> import mcalf.models
+        >>> import numpy as np
+        >>> wavelengths = np.linspace(8541.3, 8542.7, 30)
+        >>> model = mcalf.models.ModelBase(original_wavelengths=wavelengths)
+
+        **Quickly provide a spectrum and fit it.** Remember that the model must be optimised for
+        the spectra that it is asked to fit. In this example the neural network is not
+        called upon to classify the provided spectrum as a classification is provided directly:
+
+        >>> spectrum = np.random.rand(30)
+        >>> model.fit_spectrum(spectrum, classifications=0, background=142.2)  # doctest: +SKIP
+        Successful FitResult with ________ profile of classification 0
+
+        As the spectrum is provided manually, any background value must also be provided manually.
+        Alternatively, the background can be subtracted before passing to the function, as by
+        default, no background is subtracted:
+
+        >>> model.fit_spectrum(spectrum - 142.2, classifications=0)  # doctest: +SKIP
+        Successful FitResult with ________ profile of classification 0
         """
         return self.fit(spectrum=spectrum, **kwargs)
 

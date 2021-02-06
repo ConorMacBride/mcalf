@@ -189,6 +189,37 @@ class IBIS8542Model(ModelBase):
         See Also
         --------
         mcalf.utils.generate_sigma : Generate a specified sigma profile.
+
+        Examples
+        --------
+
+        Create a basic model:
+
+        >>> import mcalf.models
+        >>> import numpy as np
+        >>> wavelengths = np.linspace(8541.3, 8542.7, 30)
+        >>> model = mcalf.models.IBIS8542Model(original_wavelengths=wavelengths)
+
+        Choose a sigma profile for the specified classification:
+
+        >>> model._get_sigma(classification=3)
+        array([1.        , 1.        , 1.        , 1.        , 1.        ,
+               0.99999606, 0.99909053, 0.95597984, 0.55338777, 0.05021681,
+               0.05021681, 0.05021681, 0.05021681, 0.4       , 0.4       ,
+               0.4       , 0.4       , 0.4       , 0.4       , 0.4       ,
+               0.05021681, 0.05021681, 0.05021681, 0.05021681, 0.57661719,
+               0.96043995, 0.99922519, 0.99999682, 1.        , 1.        ])
+
+        Get a specific sigma profile "index":
+
+        >>> (model._get_sigma(sigma=1) == model.sigma[1]).all()
+        True
+
+        Convert an array like object into a suitable datatype for a sigma profile:
+
+        >>> sigma = [1, 2, 3, 4, 5]
+        >>> model._get_sigma(sigma=sigma)
+        array([1., 2., 3., 4., 5.])
         """
         if sigma is None:
             # Decide how to weight the wavelengths
@@ -205,8 +236,9 @@ class IBIS8542Model(ModelBase):
     def _fit(self, spectrum, classification=None, spectrum_index=None, profile=None, sigma=None):
         """Fit a single spectrum for the given profile or classification.
 
-        Warning: Using this method directly will skip the corrections that are applied to spectra by the
-        :meth:`~mcalf.models.ModelBase.get_spectra` method.
+        .. warning::
+            Using this method directly will skip the corrections that are applied to spectra by the
+            :meth:`~mcalf.models.ModelBase.get_spectra` method. Use :meth:`.fit_spectrum` instead.
 
         Parameters
         ----------
@@ -228,7 +260,8 @@ class IBIS8542Model(ModelBase):
 
         See Also
         --------
-        fit : The recommended method for fitting spectra.
+        .fit_spectrum : The recommended method for fitting a single spectrum.
+        .fit : The recommended method for fitting multiple spectra.
         mcalf.models.FitResult : The object that the fit method returns.
         """
         if profile is None:  # If profile hasn't been specified, find it
