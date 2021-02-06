@@ -1,5 +1,6 @@
 sphinx==3.1.2
-sphinx-automodapi==0.12
+#sphinx-automodapi==0.12
+-e git+https://github.com/astropy/sphinx-automodapi.git@refs/pull/121/head#egg=sphinx-automodapi
 ipykernel
 nbsphinx==0.7.1
 sphinx-rtd-theme==0.5.0
