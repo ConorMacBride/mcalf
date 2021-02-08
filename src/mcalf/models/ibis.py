@@ -324,7 +324,8 @@ class IBIS8542Model(ModelBase):
             on the number of parameters fitted.
         time : int or iterable, optional, default=None
             The time index. The index can be either a single integer index or an iterable. E.g. a list,
-            :class:`numpy.ndarray`, a Python range, etc. can be used.
+            :class:`numpy.ndarray`, a Python range, etc. can be used. If not provided, will be taken from
+            `fit` if it is a :class:`~mcalf.models.FitResult` object, unless a `spectrum` is provided.
         row : int or iterable, optional, default=None
             The row index. See comment for `time` parameter.
         column : int or iterable, optional, default=None
@@ -333,7 +334,8 @@ class IBIS8542Model(ModelBase):
             The explicit spectrum to plot along with a fit (if specified).
         classification : int, optional, default=None
             Used to determine which sigma profile to use. See :meth:`~mcalf.models.IBIS8542Model._get_sigma`
-            for more details.
+            for more details. If not provided, will be taken from `fit` if it is a
+            :class:`~mcalf.models.FitResult` object, unless a `spectrum` is provided.
         background : float or array_like, length=n_constant_wavelengths, optional, default= see note
             Background to added to the fitted profiles. If a `spectrum` is given, this will default to zero, otherwise
             the value loaded by :meth:`~mcalf.models.ModelBase.load_background` will be used.

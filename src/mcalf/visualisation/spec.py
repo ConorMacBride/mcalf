@@ -13,27 +13,31 @@ def plot_ibis8542(wavelengths, spectrum, fit=None, background=0, sigma=None, sig
                   fontfamily=None, reduced_legend=False, show_intensity=True, hook=None):
     """Plot an IBIS8542Model fit
 
-    It is recommended to use the plot method on either an IBIS8542Model or a FitResult from an IBIS8542Model instead.
+    .. note::
+        It is recommended to use the plot method built into either the
+        `~mcalf.models.IBIS8542Model` class or the `~mcalf.models.FitResult`
+        class instead.
 
     Parameters
     ----------
-    wavelengths : ndarray
+    wavelengths : numpy.ndarray
         The x-axis values.
-    spectrum : ndarray, length=n_wavelengths
+    spectrum : numpy.ndarray, length=n_wavelengths
         The y-axis values.
-    fit : array_like, optional, default = None
+    fit : array_like, optional, default=None
         The fitted parameters.
-    background : float or ndarray of length n_wavelengths, optional, default = 0
+    background : float or numpy.ndarray, length=n_wavelengths, optional, default=0
         The background to add to the fitted profiles.
-    sigma : ndarray, length=n_wavelengths, optional, default = None
-        The sigma profile used when fitting the parameters to `spectrum`. If given, will be plotted as shaded regions.
-    sigma_scale : float, optional, default = 70
+    sigma : numpy.ndarray, length=n_wavelengths, optional, default=None
+        The sigma profile used when fitting the parameters to `spectrum`.
+        If given, will be plotted as shaded regions.
+    sigma_scale : float, optional, default=70
         A factor to multiply the error bars to change their prominence.
-    stationary_line_core : float, optional, default = None
+    stationary_line_core : float, optional, default=None
         If given, will show a dashed line at this wavelength.
-    subtraction : bool, optional, default = False
+    subtraction : bool, optional, default=False
         Whether to plot the `spectrum` minus emission fit (if exists) instead.
-    separate : bool, optional, default = False
+    separate : bool, optional, default=False
         Whether to plot the fitted profiles separately (if multiple components exist).
     output : str, optional, default = None
         If present, the filename to save the plot as.
@@ -48,7 +52,7 @@ def plot_ibis8542(wavelengths, spectrum, fit=None, background=0, sigma=None, sig
     reduced_legend : bool, optional, default = False
         Whether to add to the legend the labels that would be displayed on an absorption only plot. Useful for saving
         space when plotting both a single component fit and a multi-component fit alongside each other.
-    show_intensity : bool, optional, default = True
+    show_intensity : bool, optional, default=True
         Whether to show the intensity axis tick labels and axis label.
     hook : callable, optional, default = None
         If provided this function must accept the current `plt' as a single argument such that it can operate upon
@@ -56,10 +60,10 @@ def plot_ibis8542(wavelengths, spectrum, fit=None, background=0, sigma=None, sig
 
     See Also
     --------
-    models.IBIS8542.plot : General plotting method
-    models.IBIS8542.plot_separate : Plot the fit parameters separately
-    models.IBIS8542.plot_subtraction : Plot the spectrum with the emission fit subtracted from it
-    models.FitResult.plot : Plotting method on the fit result
+    mcalf.models.IBIS8542Model.plot : General plotting method.
+    mcalf.models.IBIS8542Model.plot_separate : Plot the fit parameters separately.
+    mcalf.models.IBIS8542Model.plot_subtraction : Plot the spectrum with the emission fit subtracted from it.
+    mcalf.models.FitResult.plot : Plotting method provided by the fit result.
     """
     # Choose the function to plot the fitted parameters with
     if fit is not None and len(fit) == 8:
@@ -144,15 +148,15 @@ def plot_spectrum(wavelengths, spectrum, output=None, normalised=True, smooth=Tr
 
     Parameters
     ----------
-    wavelengths : ndarray
+    wavelengths : numpy.ndarray
         The x-axis values.
-    spectrum : ndarray, length=n_wavelengths
+    spectrum : numpy.ndarray, length=n_wavelengths
         The y-axis values.
     output : str, optional, default = None
         If present, the filename to save the plot as.
-    normalised : bool, optional, default = True
+    normalised : bool, optional, default=True
         Whether to normalise the spectrum using the last three spectral points.
-    smooth : bool, optional, default = True
+    smooth : bool, optional, default=True
         Whether to smooth the `spectrum` with a spline.
     figsize : 2-tuple, optional, default = None
         Size of the figure.
