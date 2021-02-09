@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import pytest
 
 
-__all__ = ['data_path_function', 'get_hash_library_name', 'figure_test']
+__all__ = ['data_path_function', 'get_mpl_ft2_version', 'figure_test']
 
 
 def data_path_function(mod):
@@ -18,9 +18,12 @@ def data_path_function(mod):
     return data_path
 
 
-def get_hash_library_name():
+def get_mpl_ft2_version(form):
     """
     Generate the hash library name for this env.
+    Parameters
+    ----------
+    form : {'hash_library', 'baseline_dir'}
     Notes
     -----
     Based on functions at https://github.com/sunpy/sunpy/blob/v2.0.7/sunpy/tests/helpers.py
@@ -28,7 +31,12 @@ def get_hash_library_name():
     """
     ft2_version = f"{mpl.ft2font.__freetype_version__.replace('.', '')}"
     mpl_version = "dev" if "+" in mpl.__version__ else mpl.__version__.replace('.', '')
-    return f"figure_hashes_mpl_{mpl_version}_ft_{ft2_version}.json"
+    if form == 'hash_library':
+        return f"figure_hashes_mpl_{mpl_version}_ft_{ft2_version}.json"
+    elif form == 'baseline_dir':
+        return f"baseline_mpl_{mpl_version}_ft_{ft2_version}"
+    else:
+        raise ValueError(f"Unknown `form` {form}")
 
 
 def figure_test(test_function):
@@ -48,10 +56,13 @@ def figure_test(test_function):
     Based on functions at https://github.com/sunpy/sunpy/blob/v2.0.7/sunpy/tests/helpers.py
     The SunPy Community et al. SunPy (Version v2.0.7). Zenodo. http://doi.org/10.5281/zenodo.4423217
     """
-    hash_library_name = get_hash_library_name()
+    hash_library_name = get_mpl_ft2_version('hash_library')
     hash_library_file = Path(__file__).parent / hash_library_name
+    baseline_dir_name = get_mpl_ft2_version('baseline_dir')
+    baseline_dir_path = Path(__file__).parent / baseline_dir_name
 
     @pytest.mark.mpl_image_compare(hash_library=hash_library_file,
+                                   baseline_dir=baseline_dir_path,
                                    savefig_kwargs={'metadata': {'Software': None}},
                                    style='default')
     @wraps(test_function)
