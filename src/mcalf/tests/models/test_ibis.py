@@ -587,7 +587,7 @@ def test_ibis8542model_fit(ibis8542model_results, ibis8542model_resultsobjs):
 
 @pytest.mark.parametrize("i,j,k", [(0, 1, 3), (1, 0, 3)])
 @figure_test
-def test_ibis8542model_plot_indices(i, j, k, ibis8542model_spectra):
+def test_ibis8542model_plot_indices(pytestconfig, i, j, k, ibis8542model_spectra):
     m = ibis8542model_spectra[0]
     ax = plt.gca()
     m.plot(time=i, row=j, column=k, ax=ax)
@@ -595,34 +595,34 @@ def test_ibis8542model_plot_indices(i, j, k, ibis8542model_spectra):
 
 @pytest.mark.parametrize("i", np.hstack([range(4, 8), range(18, 20)]))
 @figure_test
-def test_ibis8542model_plot(i, ibis8542model_results):
+def test_ibis8542model_plot(pytestconfig, i, ibis8542model_results):
     res, m, _ = ibis8542model_results
     m.plot(fit=res[i])
 
 
 @pytest.mark.parametrize("i", np.hstack([range(4, 8), range(18, 20)]))
 @figure_test
-def test_ibis8542model_plot_separate(i, ibis8542model_results):
+def test_ibis8542model_plot_separate(pytestconfig, i, ibis8542model_results):
     res, m, _ = ibis8542model_results
     m.plot_separate(fit=res[i])
 
 
 @pytest.mark.parametrize("i", np.hstack([range(4, 8), range(18, 20)]))
 @figure_test
-def test_ibis8542model_plot_subtraction(i, ibis8542model_results):
+def test_ibis8542model_plot_subtraction(pytestconfig, i, ibis8542model_results):
     res, m, _ = ibis8542model_results
     m.plot_subtraction(fit=res[i])
 
 
 @pytest.mark.parametrize("i", np.hstack([range(4, 8), range(18, 20)]))
 @figure_test
-def test_ibis8542model_fitresult_plot(i, ibis8542model_results):
+def test_ibis8542model_fitresult_plot(pytestconfig, i, ibis8542model_results):
     res, m, _ = ibis8542model_results
     res[i].plot(m)
 
 
 @figure_test
-def test_ibis8542model_plot_spectrum(ibis8542model_spectra):
+def test_ibis8542model_plot_spectrum(pytestconfig, ibis8542model_spectra):
     m = ibis8542model_spectra[0]
     spectrum = np.linspace(-1, 1, len(m.constant_wavelengths))
     spectrum = 11 * np.exp(-spectrum ** 2 / 0.05)
@@ -640,7 +640,7 @@ def test_ibis8542model_plot_spectrum(ibis8542model_spectra):
 
 
 @figure_test
-def test_ibis8542model_plot_no_intensity(ibis8542model_results):
+def test_ibis8542model_plot_no_intensity(pytestconfig, ibis8542model_results):
     res, m, _ = ibis8542model_results
     m.plot(fit=res[4], show_intensity=False, show_legend=False)
 

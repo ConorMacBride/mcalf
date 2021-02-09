@@ -15,24 +15,24 @@ def wavelengths_spectrum():
 
 
 @figure_test
-def test_plot_spectrum(wavelengths_spectrum):
+def test_plot_spectrum(pytestconfig, wavelengths_spectrum):
     wavelengths, spectrum = wavelengths_spectrum
     plot_spectrum(wavelengths, spectrum)
 
 
 @figure_test
-def test_plot_spectrum_no_smooth(wavelengths_spectrum):
+def test_plot_spectrum_no_smooth(pytestconfig, wavelengths_spectrum):
     wavelengths, spectrum = wavelengths_spectrum
     plot_spectrum(wavelengths, spectrum, smooth=False)
 
 
 @figure_test
-def test_plot_spectrum_no_norm(wavelengths_spectrum):
+def test_plot_spectrum_no_norm(pytestconfig, wavelengths_spectrum):
     wavelengths, spectrum = wavelengths_spectrum
     plot_spectrum(wavelengths, spectrum, normalised=False)
 
 
 @figure_test
-def test_plot_spectrum_no_smooth_norm(wavelengths_spectrum):
+def test_plot_spectrum_no_smooth_norm(pytestconfig, wavelengths_spectrum):
     wavelengths, spectrum = wavelengths_spectrum
     plot_spectrum(wavelengths, spectrum, smooth=False, normalised=False)

@@ -55,10 +55,15 @@ def figure_test(test_function):
                                    savefig_kwargs={'metadata': {'Software': None}},
                                    style='default')
     @wraps(test_function)
-    def test_wrapper(*args, **kwargs):
-        ret = test_function(*args, **kwargs)
+    def test_wrapper(pytestconfig, *args, **kwargs):
+        ret = test_function(pytestconfig, *args, **kwargs)
         if ret is None:
             ret = plt.gcf()
-        return ret
+        if pytestconfig.getoption('--mpl', default=None) is None:
+            print("close ", end='')
+            plt.close(fig=ret)
+        else:
+            print("return ", end='')
+            return ret
 
     return test_wrapper
