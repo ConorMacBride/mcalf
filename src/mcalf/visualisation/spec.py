@@ -14,11 +14,11 @@ def plot_ibis8542(wavelengths, spectrum, fit=None, background=0,
                   stationary_line_core=None,
                   subtraction=False, separate=False,
                   show_intensity=True, show_legend=True, ax=None):
-    """Plot an `~mcalf.models.IBIS8542Model` fit.
+    """Plot an :class:`~mcalf.models.IBIS8542Model` fit.
 
     .. note::
         It is recommended to use the plot method built into either the
-        `~mcalf.models.IBIS8542Model` class or the `~mcalf.models.FitResult`
+        :class:`~mcalf.models.IBIS8542Model` class or the :class:`~mcalf.models.FitResult`
         class instead.
 
     Parameters
