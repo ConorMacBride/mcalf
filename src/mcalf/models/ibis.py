@@ -397,7 +397,8 @@ class IBIS8542Model(ModelBase):
     def plot_separate(self, *args, **kwargs):
         """Plot the fitted profiles separately.
 
-        If multiple profiles exist, fit them separately. See :meth:`plot` for more details.
+        If multiple profiles exist, fit them separately.
+        Arguments are the same as the :meth:`plot` method.
 
         See Also
         --------
@@ -410,7 +411,8 @@ class IBIS8542Model(ModelBase):
     def plot_subtraction(self, *args, **kwargs):
         """Plot the spectrum with the emission fit subtracted from it.
 
-        If multiple profiles exist, subtract the fitted emission from the raw data. See :meth:`plot` for more details.
+        If multiple profiles exist, subtract the fitted emission from the raw data.
+        Arguments are the same as the :meth:`plot` method.
 
         See Also
         --------
