@@ -1,9 +1,9 @@
 import pytest
-import os
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy.io import fits
 
-from mcalf.utils.misc import make_iter, load_parameter, merge_results
+from mcalf.utils.misc import make_iter, load_parameter, merge_results, hide_existing_labels
 
 from ..helpers import data_path_function
 data_path = data_path_function('utils')
@@ -48,7 +48,7 @@ def test_load_parameter_file():
     # Test CSV with expected exceptions
     for e in ['typeerror', 'syntaxerror']:
         with pytest.raises(SyntaxError):  # Note: the TypeError is converted into a SyntaxError
-            res = load_parameter(data_path(f'test_load_parameter_file_{e}.csv'), wl=2523.43)
+            load_parameter(data_path(f'test_load_parameter_file_{e}.csv'), wl=2523.43)
 
 
 def test_merge_results(tmp_path):
@@ -114,3 +114,18 @@ def test_merge_results(tmp_path):
             data_path('test_merge_results_2.fits'),
         ], output_file)
     assert 'nexpected' in str(excinfo.value)  # "Unexpected"
+
+
+def test_hide_existing_labels():
+    plot_settings = {
+        'LineA': {'color': 'r', 'label': 'A'},
+        'LineB': {'color': 'g', 'label': 'B'},
+        'LineC': {'color': 'b', 'label': 'C'},
+    }
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1], **plot_settings['LineA'])
+    ax.plot([0, 1], [1, 0], **plot_settings['LineB'])
+    hide_existing_labels(plot_settings)
+    plt.close()
+    ret = [x['label'] for x in plot_settings.values()]
+    assert ret == ['_A', '_B', 'C']
