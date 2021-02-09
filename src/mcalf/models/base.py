@@ -598,7 +598,7 @@ class ModelBase:
         column : int or iterable, optional, default=None
             The column index. See comment for `time` parameter.
         spectrum : ndarray of ndim=1, optional, default=None
-            The explicit spectrum.
+            The explicit spectrum. If provided, `time`, `row`, and `column` are ignored.
         correct : bool, optional, default=True
             Whether to reinterpolate the spectrum and apply the prefilter correction (if exists).
         background : bool, optional, default=False
@@ -608,7 +608,6 @@ class ModelBase:
         Returns
         -------
         spectra : ndarray
-
 
         Examples
         --------

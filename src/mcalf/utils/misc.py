@@ -2,11 +2,12 @@ import os
 from shutil import copyfile
 
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy.io import fits
 from scipy.io import readsav
 
 
-__all__ = ['make_iter', 'load_parameter', 'merge_results']
+__all__ = ['make_iter', 'load_parameter', 'merge_results', 'hide_existing_labels']
 
 
 def make_iter(*args):
@@ -351,3 +352,80 @@ def _zero_test(x):
         Whether corresponding index is not 0.
     """
     return x != 0
+
+
+def hide_existing_labels(plot_settings, axes=None, fig=None):
+    """Hides labels for each dictionary provided if label already exists in legend.
+
+    Parameters
+    ----------
+    plot_settings : dict of {str: dict}
+        Dictionary of lines to be plotted. Values must be dictionaries with a 'label'
+        entry that this function my append with a '_' to hide the label.
+    axes : list of matplotlib.axes.Axes, optional, default=None
+        List of axes to extract lines labels from. Extracts axes from `fig` if omitted.
+    fig : matplotlib.figure.Figure, optional, default=None
+        Figure to take line labels from. Uses current figure if omitted.
+
+    Notes
+    -----
+    Only the ``plot_settings[*]['label']`` values are uses to assess if a label has already
+    been used. Other `plot_settings` parameters such as `color` are ignored.
+
+    Examples
+    --------
+
+    Import plotting package:
+
+    >>> import matplotlib.pyplot as plt
+
+    Define various plot settings:
+
+    >>> plot_settings = {
+    ...     'LineA': {'color': 'r', 'label': 'A'},
+    ...     'LineB': {'color': 'g', 'label': 'B'},
+    ...     'LineC': {'color': 'b', 'label': 'C'},
+    ... }
+
+    Create a figure and plot two lines on the first axes:
+
+    >>> fig, axes = plt.subplots(1, 2)
+    >>> axes[0].plot([0, 1], [0, 1], **plot_settings['LineA'])
+    >>> axes[0].plot([0, 1], [1, 0], **plot_settings['LineB'])
+
+    Set labels already used to be hidden if used again:
+
+    >>> hide_existing_labels(plot_settings)
+
+    Anything already used will have an underscore prepended:
+
+    >>> [x['label'] for x in plot_settings.values()]
+    ['_A', '_B', 'C']
+
+    Plot two lines on the second axes:
+
+    >>> axes[1].plot([0, 1], [0, 1], **plot_settings['LineB'])  # Label hidden
+    >>> axes[1].plot([0, 1], [1, 0], **plot_settings['LineC'])
+
+    Show the figure with the legend:
+
+    >>> fig.legend(ncol=3, loc='upper center')
+    >>> plt.show()
+    >>> plt.close()
+    """
+    # Get axes:
+    if axes is None:
+        if fig is None:
+            fig = plt.gcf()
+        axes = fig.get_axes()
+
+    # Get plotted labels:
+    lines = []
+    for ax in axes:
+        lines.extend(ax.get_lines())
+    existing = [line.get_label() for line in lines]
+
+    # Hide labels already plotted:
+    for name in plot_settings:
+        if plot_settings[name]['label'] in existing:
+            plot_settings[name]['label'] = '_' + plot_settings[name]['label']

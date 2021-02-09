@@ -2,6 +2,7 @@ import pytest
 import os
 
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy.io import fits
 from sklearn.exceptions import NotFittedError
 
@@ -10,7 +11,7 @@ from mcalf.models.ibis import IBIS8542Model
 from mcalf.models.results import FitResults
 from mcalf.profiles.voigt import voigt, double_voigt
 
-from ..helpers import data_path_function
+from ..helpers import data_path_function, figure_test
 data_path = data_path_function('models')
 
 
@@ -82,6 +83,7 @@ def test_ibis8542model_basic():
 
 def test_ibis8542model_configfile():
     # Enter the data directory (needed to find the files referenced in the config files)
+    original_dir = os.getcwd()
     os.chdir(data_path())
 
     # Test with config file
@@ -98,6 +100,9 @@ def test_ibis8542model_configfile():
     IBIS8542Model(config="ibis8542model_config_noprefilter.yml")
 
     # TODO Check that the parameters were imported correctly
+
+    # Go back to original directory
+    os.chdir(original_dir)
 
 
 @pytest.fixture
@@ -327,6 +332,7 @@ def test_ibis8542model_validate_parameters(valid_kwargs):
 
 def test_ibis8542model_get_sigma():
     # Enter the data directory (needed to find the files referenced in the config files)
+    original_dir = os.getcwd()
     os.chdir(data_path())
 
     m = IBIS8542Model(config="ibis8542model_config.yml")
@@ -343,10 +349,14 @@ def test_ibis8542model_get_sigma():
     x = np.array([1.4325, 1421.43, -1325.342, 153.3, 1.2, 433.0])
     assert np.array_equal(m._get_sigma(sigma=x), x)
 
+    # Go back to original directory
+    os.chdir(original_dir)
 
-@pytest.fixture()
+
+@pytest.fixture(scope='module')
 def ibis8542model_init():
     # Enter the data directory (needed to find the files referenced in the config files)
+    original_dir = os.getcwd()
     os.chdir(data_path())
 
     x_orig = np.loadtxt("ibis8542model_wavelengths_original.csv")
@@ -355,6 +365,9 @@ def ibis8542model_init():
                       prefilter_response=np.ones(25))
 
     m.neural_network = DummyClassifier(trained=True, n_features=25)
+
+    # Go back to original directory
+    os.chdir(original_dir)
 
     return m
 
@@ -380,7 +393,7 @@ def test_ibis8542model_classify_spectra(ibis8542model_init):
         m.classify_spectra(spectra=spectra, only_normalise=True)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='module')
 def ibis8542model_spectra(ibis8542model_init):
     """IBIS8542Model with random data loaded"""
 
@@ -427,7 +440,7 @@ def ibis8542model_spectra(ibis8542model_init):
     return m, classifications
 
 
-@pytest.fixture()
+@pytest.fixture(scope='module')
 def ibis8542model_results(ibis8542model_spectra):
 
     # Load model with random spectra loaded
@@ -572,26 +585,64 @@ def test_ibis8542model_fit(ibis8542model_results, ibis8542model_resultsobjs):
         assert np.array_equal(results.success, truth['SUCCESS'].data)
 
 
-def test_ibis8542model_plot(ibis8542model_results):
+@pytest.mark.parametrize("i,j,k", [(0, 1, 3), (1, 0, 3)])
+@figure_test
+def test_ibis8542model_plot_indices(pytestconfig, i, j, k, ibis8542model_spectra):
+    m = ibis8542model_spectra[0]
+    ax = plt.gca()
+    m.plot(time=i, row=j, column=k, ax=ax)
 
-    # Test that plots can be produced without exceptions
 
-    res1, m, classifications = ibis8542model_results
+@pytest.mark.parametrize("i", np.hstack([range(4, 8), range(18, 20)]))
+@figure_test
+def test_ibis8542model_plot(pytestconfig, i, ibis8542model_results):
+    res, m, _ = ibis8542model_results
+    m.plot(fit=res[i])
 
-    def test_hook(plt):
-        # Test the hook and also try to stop plots showing fully
-        plt.close()
 
-    for i, j, k in [(0, 1, 3), (0, 0, 2), (1, 0, 3), (1, 2, 2)]:
-        m.plot(time=i, row=j, column=k, hook=test_hook)
+@pytest.mark.parametrize("i", np.hstack([range(4, 8), range(18, 20)]))
+@figure_test
+def test_ibis8542model_plot_separate(pytestconfig, i, ibis8542model_results):
+    res, m, _ = ibis8542model_results
+    m.plot_separate(fit=res[i])
 
-    for fit in res1[::3]:
-        m.plot(fit=fit, hook=test_hook)
-        m.plot_separate(fit=fit, hook=test_hook)
-        m.plot_subtraction(fit=fit, hook=test_hook)
-        fit.plot(m, hook=test_hook)
 
-    # TODO Use a lookup table of hashes for each MPL version
+@pytest.mark.parametrize("i", np.hstack([range(4, 8), range(18, 20)]))
+@figure_test
+def test_ibis8542model_plot_subtraction(pytestconfig, i, ibis8542model_results):
+    res, m, _ = ibis8542model_results
+    m.plot_subtraction(fit=res[i])
+
+
+@pytest.mark.parametrize("i", np.hstack([range(4, 8), range(18, 20)]))
+@figure_test
+def test_ibis8542model_fitresult_plot(pytestconfig, i, ibis8542model_results):
+    res, m, _ = ibis8542model_results
+    res[i].plot(m)
+
+
+@figure_test
+def test_ibis8542model_plot_spectrum(pytestconfig, ibis8542model_spectra):
+    m = ibis8542model_spectra[0]
+    spectrum = np.linspace(-1, 1, len(m.constant_wavelengths))
+    spectrum = 11 * np.exp(-spectrum ** 2 / 0.05)
+
+    # Raises invalid spectrum dimensions
+    with pytest.raises(ValueError) as e:
+        m.plot(spectrum=np.array([spectrum, spectrum]))
+    assert 'spectrum must have one dimension' in str(e.value)
+
+    # Raises invalid index
+    with pytest.raises(IndexError):
+        m.plot(time=0, row=10.25, column=0)
+
+    m.plot(spectrum=spectrum, fit=[5, 8542, 0.1, 0.1])
+
+
+@figure_test
+def test_ibis8542model_plot_no_intensity(pytestconfig, ibis8542model_results):
+    res, m, _ = ibis8542model_results
+    m.plot(fit=res[4], show_intensity=False, show_legend=False)
 
 
 def test_ibis8542model_save(ibis8542model_results, ibis8542model_resultsobjs, tmp_path):

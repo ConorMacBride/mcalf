@@ -63,6 +63,20 @@ stages:
           posargs: " "
           pytest: false
 
+  - stage: FigureTests
+    displayName: Figure Tests
+    condition: or(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+    - template: run-tox-env.yml@OpenAstronomy
+      parameters:
+        default_python: '3.8'
+        coverage: codecov
+        posargs: -n=4
+        envs:
+        - linux: py38-figure
+        - macos: py38-figure
+        - windows: py38-figure
+
   # RELEASING A VERSION: Run more detailed tests if releasing a version (or if triggered manually)
   - ${{ if or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.Reason'], 'Manual')) }}:
     - stage: PreReleaseTests

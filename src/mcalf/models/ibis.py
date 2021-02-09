@@ -313,7 +313,7 @@ class IBIS8542Model(ModelBase):
         return FitResult(fitted_parameters, fit_info)
 
     def plot(self, fit=None, time=None, row=None, column=None, spectrum=None, classification=None, background=None,
-             sigma=None, stationary_line_core=None, output=False, **kwargs):
+             sigma=None, stationary_line_core=None, **kwargs):
         """Plots the data and fitted parameters.
 
         Parameters
@@ -324,7 +324,8 @@ class IBIS8542Model(ModelBase):
             on the number of parameters fitted.
         time : int or iterable, optional, default=None
             The time index. The index can be either a single integer index or an iterable. E.g. a list,
-            :class:`numpy.ndarray`, a Python range, etc. can be used.
+            :class:`numpy.ndarray`, a Python range, etc. can be used. If not provided, will be taken from
+            `fit` if it is a :class:`~mcalf.models.FitResult` object, unless a `spectrum` is provided.
         row : int or iterable, optional, default=None
             The row index. See comment for `time` parameter.
         column : int or iterable, optional, default=None
@@ -333,7 +334,8 @@ class IBIS8542Model(ModelBase):
             The explicit spectrum to plot along with a fit (if specified).
         classification : int, optional, default=None
             Used to determine which sigma profile to use. See :meth:`~mcalf.models.IBIS8542Model._get_sigma`
-            for more details.
+            for more details. If not provided, will be taken from `fit` if it is a
+            :class:`~mcalf.models.FitResult` object, unless a `spectrum` is provided.
         background : float or array_like, length=n_constant_wavelengths, optional, default= see note
             Background to added to the fitted profiles. If a `spectrum` is given, this will default to zero, otherwise
             the value loaded by :meth:`~mcalf.models.ModelBase.load_background` will be used.
@@ -341,19 +343,13 @@ class IBIS8542Model(ModelBase):
             Explicit sigma index or profile. See :meth:`~mcalf.models.IBIS8542Model._get_sigma` for details.
         stationary_line_core : float, optional, default=`stationary_line_core`
             The stationary line core wavelength to mark on the plot.
-        output : bool or str, optional, default=False
-            Whether to save the plot to a file. If true, a file of format `plot_<time>_<row>_<column>.eps` will be
-            created in the current directory. If a string, that will be used as the filename. (Can change filetype
-            like this.) If false, no file will be created.
         **kwargs : dict
-            Parameters used by :mod:`matplotlib.pyplot` and
-            `separate` (see :meth:`plot_separate`) and
-            `subtraction` (see :meth:`plot_subtraction`).
+            Other parameters used to adjust the plotting.
+            See :func:`mcalf.visualisation.spec.plot_ibis8542` for full details.
 
-            * `figsize` passed to :func:`matplotlib.pyplot.figure`.
-            * `legend_position` passed to :func:`matplotlib.pyplot.legend`.
-            * `dpi` passed to :func:`matplotlib.pyplot.figure` and :func:`matplotlib.pyplot.savefig`.
-            * `fontfamily` passed to `matplotlib.pyplot.rc('font', family=`fontfamily`)` if given.
+            * `separate` -- See :meth:`plot_separate`.
+            * `subtraction` -- See :meth:`plot_subtraction`.
+            * `sigma_scale` -- A factor to multiply the error bars to change their prominence.
 
         See Also
         --------
@@ -380,15 +376,11 @@ class IBIS8542Model(ModelBase):
         # Get the spectrum and reduce it to 1D
         spectrum = self.get_spectra(time=time, row=row, column=column, spectrum=spectrum, background=True)
         spectrum = np.squeeze(spectrum)
-        if spectrum.ndim != 1:
-            raise ValueError("spectrum must be 1D")
 
         # If no background to be added to the fit is given...
         if background is None and fit is not None:
             if not explicit_spectrum:  # Take from loaded background if using indices
                 time, row, column = self._get_time_row_column(time=time, row=row, column=column)
-                if sum([isinstance(i, (int, np.integer)) for i in [time, row, column]]) != 3:
-                    raise TypeError("plot only accepts integer values for time, row and column")
                 background = self.background[time, row, column]
             else:  # Otherwise assume to be zero
                 background = 0
@@ -399,22 +391,14 @@ class IBIS8542Model(ModelBase):
         if stationary_line_core is None:
             stationary_line_core = self.stationary_line_core
 
-        if isinstance(output, bool):
-            if output:
-                # Create a name
-                output = "plot_{}_{}_{}.eps".format(time, row, column)
-            else:
-                output = None  # Do not output a file
-        elif not isinstance(output, str):  # A valid string can pass through as the filename
-            raise TypeError("output must be either boolean or a string, got %s" % type(output))
-
-        plot_ibis8542(self.constant_wavelengths, spectrum, fit=fit, background=background, sigma=sigma,
-                      stationary_line_core=stationary_line_core, output=output, **kwargs)
+        return plot_ibis8542(self.constant_wavelengths, spectrum, fit=fit, background=background, sigma=sigma,
+                             stationary_line_core=stationary_line_core, **kwargs)
 
     def plot_separate(self, *args, **kwargs):
         """Plot the fitted profiles separately.
 
-        If multiple profiles exist, fit them separately. See :meth:`plot` for more details.
+        If multiple profiles exist, fit them separately.
+        Arguments are the same as the :meth:`plot` method.
 
         See Also
         --------
@@ -427,7 +411,8 @@ class IBIS8542Model(ModelBase):
     def plot_subtraction(self, *args, **kwargs):
         """Plot the spectrum with the emission fit subtracted from it.
 
-        If multiple profiles exist, subtract the fitted emission from the raw data. See :meth:`plot` for more details.
+        If multiple profiles exist, subtract the fitted emission from the raw data.
+        Arguments are the same as the :meth:`plot` method.
 
         See Also
         --------
