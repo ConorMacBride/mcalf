@@ -56,13 +56,10 @@ def figure_test(test_function):
     Based on functions at https://github.com/sunpy/sunpy/blob/v2.0.7/sunpy/tests/helpers.py
     The SunPy Community et al. SunPy (Version v2.0.7). Zenodo. http://doi.org/10.5281/zenodo.4423217
     """
-    hash_library_name = get_mpl_ft2_version('hash_library')
-    hash_library_file = Path(__file__).parent / hash_library_name
     baseline_dir_name = get_mpl_ft2_version('baseline_dir')
     baseline_dir_path = Path(__file__).parent / baseline_dir_name
 
-    @pytest.mark.mpl_image_compare(hash_library=hash_library_file,
-                                   baseline_dir=baseline_dir_path,
+    @pytest.mark.mpl_image_compare(baseline_dir=baseline_dir_path,
                                    savefig_kwargs={'metadata': {'Software': None}},
                                    style='default')
     @wraps(test_function)
