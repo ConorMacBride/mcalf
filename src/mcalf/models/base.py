@@ -755,7 +755,7 @@ class ModelBase:
             If few spectra are being fitted, performance may decrease due to the overhead associated with splitting
             the evaluation over separate processes. If `n_pools` is not an integer greater than zero, it will fit
             the spectrum with a for loop.
-        **kwargs : dictionary, optional
+        **kwargs : dict, optional
             Extra keyword arguments to pass to :meth:`~mcalf.models.ModelBase._fit`.
 
         Returns
@@ -802,8 +802,6 @@ class ModelBase:
 
         See :meth:`fit_spectrum` examples for how to manually providing a `spectrum` to fit.
         """
-        # Specific fitting algorithm for IBIS Ca II 8542 Å
-
         # Only include the background is using an explicit spectrum; remove for indices
         include_background = False if spectrum is None else True
         spectra = self.get_spectra(time=time, row=row, column=column, spectrum=spectrum, background=include_background)

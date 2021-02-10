@@ -5,7 +5,7 @@ __all__ = ['genmask', 'radial_distances']
 
 
 def genmask(width, height, radius=np.inf, right_shift=0, up_shift=0):
-    """Generate a circular mask of specified size
+    """Generate a circular mask of specified size.
 
     Parameters
     ----------
@@ -13,16 +13,16 @@ def genmask(width, height, radius=np.inf, right_shift=0, up_shift=0):
         Width of mask.
     height : int
         Height of mask.
-    radius : int, optional, default = inf
+    radius : int, optional, default=inf
         Radius of mask.
-    right_shift : int, optional, default = 0
+    right_shift : int, optional, default=0
         Indices to shift forward through row.
-    up_shift : int, optional, default = 0
+    up_shift : int, optional, default=0
         Indices to shift forward through columns.
 
     Returns
     -------
-    array : ndarray of shape (height, width)
+    array : numpy.ndarray, shape=(height, width)
         The generated mask.
     """
     array = radial_distances(width, height) < radius  # Create mask
@@ -31,7 +31,7 @@ def genmask(width, height, radius=np.inf, right_shift=0, up_shift=0):
 
 
 def radial_distances(n_cols, n_rows):
-    """Generates a 2D array of specified shape of radial distances from the centre
+    """Generates a 2D array of specified shape of radial distances from the centre.
 
     Parameters
     ----------
@@ -42,12 +42,12 @@ def radial_distances(n_cols, n_rows):
 
     Returns
     -------
-    array : ndarray of shape (n_rows, n_cols)
+    array : numpy.ndarray, shape=(n_rows, n_cols)
         Array of radial distances.
 
     See Also
     --------
-    genmask : Generates a circular mask
+    genmask : Generates a circular mask.
     """
     horiz_mid = (n_cols - 1) / 2.0  # Horizontal midpoint
     verti_mid = (n_rows - 1) / 2.0  # Vertical midpoint

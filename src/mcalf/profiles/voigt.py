@@ -36,14 +36,14 @@ __all__ = ['voigt_approx_nobg', 'voigt_approx', 'double_voigt_approx_nobg', 'dou
 
 
 def voigt_approx_nobg(x, a, b, s, g):
-    """Voigt function (efficient approximation) with no background (Base approx. Voigt function)
+    """Voigt function (efficient approximation) with no background (Base approx. Voigt function).
 
     This is the base for all other approximated Voigt functions. Not implemented in any models yet as initial tests
     exhibited slow convergence.
 
     Parameters
     ----------
-    x : ndarray
+    x : numpy.ndarray
         Wavelengths to evaluate Voigt function at.
     a : float
         Amplitude of the Lorentzian.
@@ -56,18 +56,18 @@ def voigt_approx_nobg(x, a, b, s, g):
 
     Returns
     -------
-    result : ndarray of shape `x.shape`
+    result : numpy.ndarray, shape=`x.shape`
         The value of the Voigt function here.
 
     See Also
     --------
-    voigt_approx : Approximated Voigt function with background added
-    double_voigt_approx_nobg : Two approximated Voigt functions added together
-    double_voigt_approx : Two approximated Voigt functions and a background added together
-    voigt_nobg : Base Voigt function with no background
-    voigt : Voigt function with background added
-    double_voigt_nobg : Two Voigt functions added together
-    double_voigt : Two Voigt function and a background added together
+    voigt_approx : Approximated Voigt function with background added.
+    double_voigt_approx_nobg : Two approximated Voigt functions added together.
+    double_voigt_approx : Two approximated Voigt functions and a background added together.
+    voigt_nobg : Base Voigt function with no background.
+    voigt : Voigt function with background added.
+    double_voigt_nobg : Two Voigt functions added together.
+    double_voigt : Two Voigt function and a background added together.
 
     Notes
     -----
@@ -90,11 +90,11 @@ def voigt_approx_nobg(x, a, b, s, g):
 
 
 def voigt_approx(x, a, b, s, g, d):
-    """Voigt function (efficient approximation) with background
+    """Voigt function (efficient approximation) with background.
 
     Parameters
     ----------
-    x : ndarray
+    x : numpy.ndarray
         Wavelengths to evaluate Voigt function at.
     a : float
         Amplitude of the Lorentzian.
@@ -109,28 +109,28 @@ def voigt_approx(x, a, b, s, g, d):
 
     Returns
     -------
-    result : ndarray of shape `x.shape`
+    result : numpy.ndarray, shape=`x.shape`
         The value of the Voigt function here.
 
     See Also
     --------
-    voigt_approx_nobg : Base approximated Voigt function with no background
-    double_voigt_approx_nobg : Two approximated Voigt functions added together
-    double_voigt_approx : Two approximated Voigt functions and a background added together
-    voigt_nobg : Base Voigt function with no background
-    voigt : Voigt function with background added
-    double_voigt_nobg : Two Voigt functions added together
-    double_voigt : Two Voigt function and a background added together
+    voigt_approx_nobg : Base approximated Voigt function with no background.
+    double_voigt_approx_nobg : Two approximated Voigt functions added together.
+    double_voigt_approx : Two approximated Voigt functions and a background added together.
+    voigt_nobg : Base Voigt function with no background.
+    voigt : Voigt function with background added.
+    double_voigt_nobg : Two Voigt functions added together.
+    double_voigt : Two Voigt function and a background added together.
     """
     return voigt_approx_nobg(x, a, b, s, g) + d
 
 
 def double_voigt_approx_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2):
-    """Double Voigt function (efficient approximation) with no background
+    """Double Voigt function (efficient approximation) with no background.
 
     Parameters
     ----------
-    x : ndarray
+    x : numpy.ndarray
         Wavelengths to evaluate Voigt function at.
     a1 : float
         Amplitude of the Lorentzian of 1st Voigt function.
@@ -151,28 +151,28 @@ def double_voigt_approx_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2):
 
     Returns
     -------
-    result : ndarray of shape `x.shape`
+    result : numpy.ndarray, shape=`x.shape`
         The value of the Voigt function here.
 
     See Also
     --------
-    voigt_approx_nobg : Base approximated Voigt function with no background
-    voigt_approx : Approximated Voigt function with background added
-    double_voigt_approx : Two approximated Voigt functions and a background added together
-    voigt_nobg : Base Voigt function with no background
-    voigt : Voigt function with background added
-    double_voigt_nobg : Two Voigt functions added together
-    double_voigt : Two Voigt function and a background added together
+    voigt_approx_nobg : Base approximated Voigt function with no background.
+    voigt_approx : Approximated Voigt function with background added.
+    double_voigt_approx : Two approximated Voigt functions and a background added together.
+    voigt_nobg : Base Voigt function with no background.
+    voigt : Voigt function with background added.
+    double_voigt_nobg : Two Voigt functions added together.
+    double_voigt : Two Voigt function and a background added together.
     """
     return voigt_approx_nobg(x, a1, b1, s1, g1) + voigt_approx_nobg(x, a2, b2, s2, g2)
 
 
 def double_voigt_approx(x, a1, b1, s1, g1, a2, b2, s2, g2, d):
-    """Double Voigt function (efficient approximation) with background
+    """Double Voigt function (efficient approximation) with background.
 
     Parameters
     ----------
-    x : ndarray
+    x : numpy.ndarray
         Wavelengths to evaluate Voigt function at.
     a1 : float
         Amplitude of the Lorentzian of 1st Voigt function.
@@ -195,30 +195,30 @@ def double_voigt_approx(x, a1, b1, s1, g1, a2, b2, s2, g2, d):
 
     Returns
     -------
-    result : ndarray of shape `x.shape`
+    result : numpy.ndarray, shape=`x.shape`
         The value of the Voigt function here.
 
     See Also
     --------
-    voigt_approx_nobg : Base approximated Voigt function with no background
-    voigt_approx : Approximated Voigt function with background added
-    double_voigt_approx_nobg : Two approximated Voigt functions added together
-    voigt_nobg : Base Voigt function with no background
-    voigt : Voigt function with background added
-    double_voigt_nobg : Two Voigt functions added together
-    double_voigt : Two Voigt function and a background added together
+    voigt_approx_nobg : Base approximated Voigt function with no background.
+    voigt_approx : Approximated Voigt function with background added.
+    double_voigt_approx_nobg : Two approximated Voigt functions added together.
+    voigt_nobg : Base Voigt function with no background.
+    voigt : Voigt function with background added.
+    double_voigt_nobg : Two Voigt functions added together.
+    double_voigt : Two Voigt function and a background added together.
     """
     return voigt_approx_nobg(x, a1, b1, s1, g1) + voigt_approx_nobg(x, a2, b2, s2, g2) + d
 
 
 def voigt_nobg(x, a, b, s, g, clib=True):
-    """Voigt function with no background (Base Voigt function)
+    """Voigt function with no background (Base Voigt function).
 
     This is the base of all the other Voigt functions.
 
     Parameters
     ----------
-    x : ndarray
+    x : numpy.ndarray
         Wavelengths to evaluate Voigt function at.
     a : float
         Amplitude.
@@ -228,7 +228,7 @@ def voigt_nobg(x, a, b, s, g, clib=True):
         Sigma (for Gaussian).
     g : float
         Gamma (for Lorentzian).
-    clib : bool, optional, default = True
+    clib : bool, optional, default=True
         Whether to use the complied C library or a slower Python version. If using the C library, the accuracy
         of the integration is reduced to give the code a significant speed boost. Python version can be used when
         speed is not a priority. Python version will remove deviations that are sometimes present around the wings
@@ -236,14 +236,14 @@ def voigt_nobg(x, a, b, s, g, clib=True):
 
     Returns
     -------
-    result : ndarray of shape `x.shape`
+    result : numpy.ndarray, shape=`x.shape`
         The value of the Voigt function here.
 
     See Also
     --------
-    voigt : Voigt function with background added
-    double_voigt_nobg : Two Voigt functions added together
-    double_voigt : Two Voigt function and a background added together
+    voigt : Voigt function with background added.
+    double_voigt_nobg : Two Voigt functions added together.
+    double_voigt : Two Voigt function and a background added together.
 
     Notes
     -----
@@ -260,11 +260,11 @@ def voigt_nobg(x, a, b, s, g, clib=True):
 
 
 def voigt(x, a, b, s, g, d, clib=True):
-    """Voigt function with background
+    """Voigt function with background.
 
     Parameters
     ----------
-    x : ndarray
+    x : numpy.ndarray
         Wavelengths to evaluate Voigt function at.
     a : float
         Amplitude.
@@ -276,7 +276,7 @@ def voigt(x, a, b, s, g, d, clib=True):
         Gamma (for Lorentzian).
     d : float
         Background.
-    clib : bool, optional, default = True
+    clib : bool, optional, default=True
         Whether to use the complied C library or a slower Python version. If using the C library, the accuracy
         of the integration is reduced to give the code a significant speed boost. Python version can be used when
         speed is not a priority. Python version will remove deviations that are sometimes present around the wings
@@ -284,14 +284,14 @@ def voigt(x, a, b, s, g, d, clib=True):
 
     Returns
     -------
-    result : ndarray of shape `x.shape`
+    result : numpy.ndarray, shape=`x.shape`
         The value of the Voigt function here.
 
     See Also
     --------
-    voigt_nobg : Base Voigt function with no background
-    double_voigt_nobg : Two Voigt functions added together
-    double_voigt : Two Voigt function and a background added together
+    voigt_nobg : Base Voigt function with no background.
+    double_voigt_nobg : Two Voigt functions added together.
+    double_voigt : Two Voigt function and a background added together.
 
     Notes
     -----
@@ -301,11 +301,11 @@ def voigt(x, a, b, s, g, d, clib=True):
 
 
 def double_voigt_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2, clib=True):
-    """Double Voigt function with no background
+    """Double Voigt function with no background.
 
     Parameters
     ----------
-    x : ndarray
+    x : numpy.ndarray
         Wavelengths to evaluate Voigt function at.
     a1 : float
         Amplitude of 1st Voigt function.
@@ -323,7 +323,7 @@ def double_voigt_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2, clib=True):
         Sigma (for Gaussian) of 2st Voigt function.
     g2 : float
         Gamma (for Lorentzian) of 2st Voigt function.
-    clib : bool, optional, default = True
+    clib : bool, optional, default=True
         Whether to use the complied C library or a slower Python version. If using the C library, the accuracy
         of the integration is reduced to give the code a significant speed boost. Python version can be used when
         speed is not a priority. Python version will remove deviations that are sometimes present around the wings
@@ -331,14 +331,14 @@ def double_voigt_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2, clib=True):
 
     Returns
     -------
-    result : ndarray of shape `x.shape`
+    result : numpy.ndarray, shape=`x.shape`
         The value of the Voigt function here.
 
     See Also
     --------
-    voigt_nobg : Base Voigt function with no background
-    voigt : Voigt function with background added
-    double_voigt : Two Voigt function and a background added together
+    voigt_nobg : Base Voigt function with no background.
+    voigt : Voigt function with background added.
+    double_voigt : Two Voigt function and a background added together.
 
     Notes
     -----
@@ -348,11 +348,11 @@ def double_voigt_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2, clib=True):
 
 
 def double_voigt(x, a1, b1, s1, g1, a2, b2, s2, g2, d, clib=True):
-    """Double Voigt function with background
+    """Double Voigt function with background.
 
     Parameters
     ----------
-    x : ndarray
+    x : numpy.ndarray
         Wavelengths to evaluate Voigt function at.
     a1 : float
         Amplitude of 1st Voigt function.
@@ -372,7 +372,7 @@ def double_voigt(x, a1, b1, s1, g1, a2, b2, s2, g2, d, clib=True):
         Gamma (for Lorentzian) of 2st Voigt function.
     d : float
         Background.
-    clib : bool, optional, default = True
+    clib : bool, optional, default=True
         Whether to use the complied C library or a slower Python version. If using the C library, the accuracy
         of the integration is reduced to give the code a significant speed boost. Python version can be used when
         speed is not a priority. Python version will remove deviations that are sometimes present around the wings
@@ -380,14 +380,14 @@ def double_voigt(x, a1, b1, s1, g1, a2, b2, s2, g2, d, clib=True):
 
     Returns
     -------
-    result : ndarray of shape `x.shape`
+    result : numpy.ndarray, shape=`x.shape`
         The value of the Voigt function here.
 
     See Also
     --------
-    voigt_nobg : Base Voigt function with no background
-    voigt : Voigt function with background added
-    double_voigt_nobg : Two Voigt functions added together
+    voigt_nobg : Base Voigt function with no background.
+    voigt : Voigt function with background added.
+    double_voigt_nobg : Two Voigt functions added together.
 
     Notes
     -----

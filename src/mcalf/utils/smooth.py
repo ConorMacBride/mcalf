@@ -6,20 +6,20 @@ __all__ = ['moving_average', 'gaussian_kern_3d', 'smooth_cube']
 
 
 def moving_average(array, width):
-    """Boxcar moving average
+    """Boxcar moving average.
 
     Calculate the moving average of an array with a boxcar of defined width. An odd width is recommended.
 
     Parameters
     ----------
-    array : ndarray, ndim=1
+    array : numpy.ndarray, ndim=1
         Array to find the moving average of.
     width : int
         Width of the boxcar. Odd integer recommended. Less than or equal to length of `array`.
 
     Returns
     -------
-    averaged : ndarray of shape `array`
+    averaged : numpy.ndarray, shape=`array`
         Averaged array.
 
     Notes
@@ -67,20 +67,20 @@ def moving_average(array, width):
 
 
 def gaussian_kern_3d(width=5, sigma=(1, 1, 1)):
-    """3D Gaussian kernel
+    """3D Gaussian kernel.
 
     Create a Gaussian kernel of shape `width`*`width`*`width`.
 
     Parameters
     ----------
-    width : int, optional, default = 5
+    width : int, optional, default=5
         Length of all three dimensions of the Gaussian kernel.
-    sigma : array_like, tuple, optional, default = (1, 1, 1)
+    sigma : array_like, tuple, optional, default=(1, 1, 1)
         Sigma values for the time, horizontal and vertical dimensions.
 
     Returns
     -------
-    kernel : ndarray, shape (`width`, `width`, `width`)
+    kernel : numpy.ndarray, shape=(`width`, `width`, `width`)
         The generated kernel.
 
     Examples
@@ -89,9 +89,11 @@ def gaussian_kern_3d(width=5, sigma=(1, 1, 1)):
     array([[[0.42860385, 0.53526143, 0.42860385],
             [0.48567179, 0.60653066, 0.48567179],
             [0.42860385, 0.53526143, 0.42860385]],
+    <BLANKLINE>
            [[0.70664828, 0.8824969 , 0.70664828],
             [0.8007374 , 1.        , 0.8007374 ],
             [0.70664828, 0.8824969 , 0.70664828]],
+    <BLANKLINE>
            [[0.42860385, 0.53526143, 0.42860385],
             [0.48567179, 0.60653066, 0.48567179],
             [0.42860385, 0.53526143, 0.42860385]]])
@@ -103,22 +105,22 @@ def gaussian_kern_3d(width=5, sigma=(1, 1, 1)):
 
 
 def smooth_cube(cube, mask, **kwargs):
-    """Apply Gaussian smoothing to velocities
+    """Apply Gaussian smoothing to velocities.
 
     Smooth the cube of velocities with a Gaussian kernel, applying weights at boundaries.
 
     Parameters
     ----------
-    cube : ndarray, ndim=3
+    cube : numpy.ndarray, ndim=3
         Cube of velocities with dimensions [time, row, column].
-    mask : ndarray, ndim=2
+    mask : numpy.ndarray, ndim=2
         The mask to apply to the [row, column] at every time. Points that are 0 or false will be removed.
-    kwargs : optional
-        Keyword arguments to pass to `gaussian_kern_3d`.
+    **kwargs : dict, optional
+        Keyword arguments to pass to :func:`gaussian_kern_3d`.
 
     Returns
     -------
-    cube_ : ndarray, shape `cube`
+    cube_ : numpy.ndarray, shape=`cube`
         The smoothed cube.
     """
     # Masking
