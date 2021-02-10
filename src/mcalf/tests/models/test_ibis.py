@@ -454,7 +454,7 @@ def ibis8542model_results(ibis8542model_spectra):
 
 def assert_results_equal(res1, res2):
     for i in range(len(res1)):
-        assert np.array_equal(res1[i].parameters, res2[i].parameters)
+        assert res1[i].parameters == pytest.approx(res2[i].parameters, nan_ok=True)
         assert res1[i].classification == res2[i].classification
         assert res1[i].profile == res2[i].profile
         assert res1[i].success == res2[i].success
