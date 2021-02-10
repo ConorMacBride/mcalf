@@ -202,10 +202,10 @@ License
 
 MCALF is licensed under the terms of the BSD 2-Clause license.
 
-.. |Azure Pipelines Status| image:: https://dev.azure.com/ConorMacBride/mcalf/_apis/build/status/ConorMacBride.mcalf?repoName=ConorMacBride%2Fmcalf&branchName=master
+.. |Azure Pipelines Status| image:: https://dev.azure.com/ConorMacBride/mcalf/_apis/build/status/ConorMacBride.mcalf?repoName=ConorMacBride%2Fmcalf&branchName=main
     :target: https://dev.azure.com/ConorMacBride/mcalf/_build?definitionId=2
     :alt: Azure Pipelines
-.. |Codecov| image:: https://codecov.io/gh/ConorMacBride/mcalf/branch/master/graph/badge.svg
+.. |Codecov| image:: https://codecov.io/gh/ConorMacBride/mcalf/branch/main/graph/badge.svg
     :target: https://codecov.io/gh/ConorMacBride/mcalf
     :alt: Codecov
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/mcalf
@@ -227,7 +227,7 @@ MCALF is licensed under the terms of the BSD 2-Clause license.
 .. _Anaconda: https://www.anaconda.com/products/individual#Downloads
 .. _Miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _new conda environment: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
-.. _setup.cfg: https://github.com/ConorMacBride/mcalf/blob/master/setup.cfg
+.. _setup.cfg: https://github.com/ConorMacBride/mcalf/blob/main/setup.cfg
 .. _documentation: https://docs.sunpy.org/en/latest/dev_guide/contents/newcomers.html#setting-up-a-development-environment
 
 .. _Conor MacBride: https://macbride.me/

@@ -134,10 +134,10 @@ License
 
 MCALF is licensed under the terms of the BSD 2-Clause license.
 
-.. |Azure Pipelines Status| image:: https://dev.azure.com/ConorMacBride/mcalf/_apis/build/status/ConorMacBride.mcalf?repoName=ConorMacBride%2Fmcalf&branchName=master
+.. |Azure Pipelines Status| image:: https://dev.azure.com/ConorMacBride/mcalf/_apis/build/status/ConorMacBride.mcalf?repoName=ConorMacBride%2Fmcalf&branchName=main
     :target: https://dev.azure.com/ConorMacBride/mcalf/_build?definitionId=2
     :alt: Azure Pipelines
-.. |Codecov| image:: https://codecov.io/gh/ConorMacBride/mcalf/branch/master/graph/badge.svg
+.. |Codecov| image:: https://codecov.io/gh/ConorMacBride/mcalf/branch/main/graph/badge.svg
     :target: https://codecov.io/gh/ConorMacBride/mcalf
     :alt: Codecov
 .. |PyPI Version| image:: https://img.shields.io/pypi/v/mcalf
