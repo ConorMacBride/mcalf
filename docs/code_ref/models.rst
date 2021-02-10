@@ -10,3 +10,4 @@ This sub-package contains:
   well as simplifying the calculation of velocities.
 
 .. automodapi:: mcalf.models
+   :inherited-members:
