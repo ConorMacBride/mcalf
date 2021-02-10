@@ -55,7 +55,7 @@ def normalise_spectrum(spectrum, original_wavelengths=None, constant_wavelengths
     spectrum : ndarray of ndim-1, length=length of `constant_wavelengths`
         The normalised spectrum.
     """
-    from mcalf.models.base import ModelBase
+    from mcalf.models import ModelBase
     if issubclass(model.__class__, ModelBase):
         if original_wavelengths is None:
             original_wavelengths = model.original_wavelengths

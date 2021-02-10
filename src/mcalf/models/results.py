@@ -222,7 +222,7 @@ class FitResults:
         ----------
         filename : file path, file object or file-like object
             FITS file to write to. If a file object, must be opened in a writeable mode.
-        model : child class of mcalf.models.base.ModelBase, optional, default = None
+        model : child class of mcalf.models.ModelBase, optional, default=None
             If provided, use this model to calculate and include both quiescent and active Doppler velocities.
 
         Notes

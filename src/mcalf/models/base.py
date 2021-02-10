@@ -556,12 +556,13 @@ class ModelBase:
 
         See Also
         --------
-        mcalf.utils.make_iter : Make a variable iterable.
+        mcalf.utils.misc.make_iter : Make a variable iterable.
 
         Notes
         -----
         No type checking is done on the input indices so it can be anything but in most cases will need to be
-        either an integer or iterable. The :func:`mcalf.utils.make_iter` function can be used to make indices iterable.
+        either an integer or iterable. The :func:`mcalf.utils.misc.make_iter` function can be used to make
+        indices iterable.
         """
         array_shape = np.shape(self.array)
         if time is None:
@@ -1036,7 +1037,7 @@ DOCS['stationary_line_core'] = """
 DOCS['neural_network'] = """
     neural_network : optional, default=None
         The neural network classifier object that is used to classify spectra. This attribute should be set by a
-        child class of :class:`~mcalf.models.base.ModelBase`."""
+        child class of :class:`~mcalf.models.ModelBase`."""
 DOCS['constant_wavelengths'] = """
     constant_wavelengths : array_like, ndim=1, optional, default= see description
         The desired set of wavelengths that the spectral data should be rescaled to represent. It is assumed
@@ -1050,7 +1051,7 @@ DOCS['delta_lambda'] = """
 DOCS['sigma'] = """
     sigma : optional, default=None
         Sigma values used to weight the fit. This attribute should be set by a child class of 
-        :class:`~mcalf.models.base.ModelBase`."""
+        :class:`~mcalf.models.ModelBase`."""
 DOCS['prefilter_response'] = """
     prefilter_response : array_like, length=n_wavelengths, optional, default= see note
         Each constant wavelength scaled spectrum will be corrected by dividing it by this array. If `prefilter_response`
@@ -1072,7 +1073,8 @@ DOCS['config'] = """
         and `config`. Each line of the file should specify a different parameter and be formatted like
         `emission_guess: '[-inf, wl-0.15, 1e-6, 1e-6]'` or `original_wavelengths: 'original.fits'` for example.
         When specifying a string, use 'inf' to represent `np.inf` and 'wl' to represent `stationary_line_core` as shown.
-        If the string matches a file, :func:`mcalf.utils.load_parameter()` is used to load the contents of the file."""
+        If the string matches a file, :func:`mcalf.utils.misc.load_parameter()` is used to load the contents 
+        of the file."""
 DOCS['output'] = """
     output : str, optional, default=None
         If the program wants to output data, it will place it relative to the location specified by this parameter.

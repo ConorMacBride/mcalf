@@ -7,14 +7,6 @@ This sub-package contains:
   imaging dataset.
 * Models optimised for particular data sets that can be used directly.
 * Data structures for storing and exporting the fitted parameters, as
-  well as simplifying the calculation of velocities
-  (`mcalf.models.results`).
+  well as simplifying the calculation of velocities.
 
 .. automodapi:: mcalf.models
-
-.. automodapi:: mcalf.models.base
-
-.. automodapi:: mcalf.models.ibis
-
-.. automodapi:: mcalf.models.results
-   :no-inheritance-diagram:

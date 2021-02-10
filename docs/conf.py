@@ -51,7 +51,6 @@ extensions = [
 numpydoc_show_class_members = False
 nbsphinx_execute = 'never'
 all_methods = [
-    'mcalf.models.base.ModelBase',
     'mcalf.models.ModelBase',
 ]
 automodsumm_private_methods_of = all_methods

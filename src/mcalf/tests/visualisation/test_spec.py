@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from mcalf.visualisation.spec import plot_spectrum
+from mcalf.visualisation import plot_spectrum
 from ..helpers import figure_test
 
 
