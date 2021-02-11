@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from mcalf.models.base import ModelBase as DummyModel
+from mcalf.models import ModelBase as DummyModel
 from mcalf.utils.spec import reinterpolate_spectrum, normalise_spectrum, generate_sigma
 
 

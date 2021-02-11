@@ -9,7 +9,7 @@ from mcalf.models.base import *
 from mcalf.profiles.voigt import voigt_nobg, double_voigt_nobg
 from mcalf.utils.spec import generate_sigma
 from mcalf.utils.misc import load_parameter
-from mcalf.visualisation.spec import plot_ibis8542
+from mcalf.visualisation import plot_ibis8542
 
 
 __all__ = ['IBIS8542Model']
@@ -188,7 +188,7 @@ class IBIS8542Model(ModelBase):
 
         See Also
         --------
-        mcalf.utils.generate_sigma : Generate a specified sigma profile.
+        mcalf.utils.spec.generate_sigma : Generate a specified sigma profile.
 
         Examples
         --------
@@ -345,7 +345,7 @@ class IBIS8542Model(ModelBase):
             The stationary line core wavelength to mark on the plot.
         **kwargs : dict
             Other parameters used to adjust the plotting.
-            See :func:`mcalf.visualisation.spec.plot_ibis8542` for full details.
+            See :func:`mcalf.visualisation.plot_ibis8542` for full details.
 
             * `separate` -- See :meth:`plot_separate`.
             * `subtraction` -- See :meth:`plot_subtraction`.
@@ -437,7 +437,7 @@ for d in [IBIS8542_PARAMETERS, IBIS8542_ATTRIBUTES]:
         A list of different sigma that are used to weight particular wavelengths along the spectra when fitting. The
         fitting method will expect to be able to choose a sigma array from this list at a specific index. It's default
         value is `[generate_sigma(i, constant_wavelengths, stationary_line_core) for i in [1, 2]]`.
-        See :func:`mcalf.utils.generate_sigma` for more information. 
+        See :func:`mcalf.utils.spec.generate_sigma` for more information. 
         If bool, True will generate the default sigma value regardless of the value specified in `config`,
         and False will set `sigma` to be all ones, effectively disabling it."""
 IBIS8542_ATTRIBUTES['neural_network'] = """

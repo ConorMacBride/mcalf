@@ -8,18 +8,18 @@ __all__ = ['FitResult', 'FitResults']
 
 
 class FitResult:
-    """Class that holds the result of a fit
+    """Class that holds the result of a fit.
 
     Parameters
     ----------
-    fitted_parameters : ndarray
+    fitted_parameters : numpy.ndarray
         The parameters fitted.
     fit_info : dict
         Additional information on the fit including at least 'classification', 'profile', 'success', 'chi2' and 'index'.
 
     Attributes
     ----------
-    parameters : ndarray
+    parameters : numpy.ndarray
         The parameters fitted.
     classification : int
         Classification of the fitted spectrum.
@@ -52,26 +52,26 @@ class FitResult:
             + ' profile of classification ' + str(self.__dict__['classification'])
 
     def plot(self, model, **kwargs):
-        """Plot the data and fitted parameters
+        """Plot the data and fitted parameters.
 
         This calls the `plot` method on `model` but will plot for this FitResult object. See the model's `plot` method
         for more details.
 
         Parameters
         ----------
-        model : child class of ModelBase
+        model : child class of :class:`~mcalf.models.ModelBase`
             The model object to plot with.
-        **kwargs
+        **kwargs : dict
             See the `model.plot` method for more details.
         """
         model.plot(self, **kwargs)
 
     def velocity(self, model, vtype='quiescent'):
-        """Calculate the Doppler velocity of the fit using `model` parameters
+        """Calculate the Doppler velocity of the fit using `model` parameters.
 
         Parameters
         ----------
-        model : child class of ModelBase
+        model : child class of :class:`~mcalf.models.ModelBase`
             The model object to take parameters from.
         vtype : {'quiescent', 'active'}, default='quiescent'
             The velocity type to find.
@@ -99,38 +99,36 @@ class FitResult:
 
 
 class FitResults:
-    """Class that holds multiple fit results in a way that can be easily processed
+    """Class that holds multiple fit results in a way that can be easily processed.
+
+    Parameters
+    ----------
+    shape : tuple of int
+        The number of rows and columns to hold data for, e.g. (n_rows, n_columns).
+    n_parameters : int
+        The number of fitted parameters per spectrum that need to be stored.
+    time : int, optional, default=None
+        The time the `FitResults` object will store data for. Optional, but if it is set, only
+        :class:`~mcalf.models.FitResult` objects with a matching time can be appended.
 
     Attributes
     ----------
-    parameters : ndarray of shape (`row`, `column`, `parameter`)
+    parameters : numpy.ndarray, shape=(row, column, parameter)
         Array of fitted parameters.
-    classifications : ndarray of int of shape (`row`, `column`)
+    classifications : numpy.ndarray of int, shape=(row, column)
         Array of classifications.
-    profile : ndarray of str of shape (`row`, `column`)
+    profile : numpy.ndarray of str, shape=(row, column)
         Array of profiles.
-    success : ndarray of bool of shape (`row`, `column`)
+    success : numpy.ndarray of bool, shape=(row, column)
         Array of success statuses.
-    chi2 : ndarray of shape (`row`, `column`)
+    chi2 : numpy.ndarray, shape=(row, column)
         Array of chi-squared values.
-    time : int, default = None
-        Time index that the `FitResult` object refers to (if provided).
+    time : int, default=None
+        Time index that the :class:`~mcalf.models.FitResult` object refers to (if provided).
     n_parameters : int
         Number of parameters in the last dimension of `parameters`.
     """
     def __init__(self, shape, n_parameters, time=None):
-        """Initialise a `FitResults` object of a defined shape
-
-        Parameters
-        ----------
-        shape : tuple of int
-            The number of rows and columns to hold data for, e.g. (n_rows, n_columns).
-        n_parameters : int
-            The number of fitted parameters per spectrum that need to be stored.
-        time : int, optional, default = None
-            The time the `FitResults` object will store data for. Optional, but if it is set, only `FitResult` objects
-            with a matching time can be appended.
-        """
         # TODO Allow multiple time indices to be imported
         if not isinstance(shape, tuple) or len(shape) != 2:
             raise TypeError("`shape` must be a tuple of length 2, got %s" % type(shape))
@@ -152,12 +150,12 @@ class FitResults:
         self.n_parameters = n_parameters
 
     def append(self, result):
-        """Append a `FitResult` object to the `FitResults` object
+        """Append a :class:`~mcalf.models.FitResult` object to the `FitResults` object.
 
         Parameters
         ----------
-        result : FitResult object
-            `FitResult` object to append.
+        result : ~mcalf.models.FitResult
+            :class:`~mcalf.models.FitResult` object to append.
         """
         time, row, column = result.index
         if self.time is not None and self.time != time:
@@ -180,22 +178,22 @@ class FitResults:
         self.chi2[row, column] = result.chi2
 
     def velocities(self, model, row=None, column=None, vtype='quiescent'):
-        """Calculate the Doppler velocities of the fit results using `model` parameters
+        """Calculate the Doppler velocities of the fit results using `model` parameters.
 
         Parameters
         ----------
-        model : child class of ModelBase
+        model : child class of mcalf.models.ModelBase
             The model object to take parameters from.
-        row : int, list, array_like, iterable, optional, default = None
+        row : int, list, array_like, iterable, optional, default=None
             The row indices to find velocities for. All if omitted.
-        column : int, list, array_like, iterable, optional, default = None
+        column : int, list, array_like, iterable, optional, default=None
             The column indices to find velocities for. All if omitted.
         vtype : {'quiescent', 'active'}, default='quiescent'
             The velocity type to find.
 
         Returns
         -------
-        velocities : ndarray of shape (`row`, `column`)
+        velocities : numpy.ndarray, shape=(row, column)
             The calculated velocities for the specified `row` and `column` positions.
         """
         if row is None:
@@ -216,13 +214,13 @@ class FitResults:
         return np.squeeze((wavelengths - stationary_line_core) / stationary_line_core * 300000, axis=2)  # km/s
 
     def save(self, filename, model=None):
-        """Saves the FitResults object to a FITS file
+        """Saves the FitResults object to a FITS file.
 
         Parameters
         ----------
         filename : file path, file object or file-like object
             FITS file to write to. If a file object, must be opened in a writeable mode.
-        model : child class of mcalf.models.base.ModelBase, optional, default = None
+        model : child class of mcalf.models.ModelBase, optional, default=None
             If provided, use this model to calculate and include both quiescent and active Doppler velocities.
 
         Notes

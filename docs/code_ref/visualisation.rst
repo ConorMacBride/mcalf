@@ -4,16 +4,10 @@ MCALF visualisation
 This sub-package contains:
 
 * Functions to plot the input spectrum and the fitted
-  model (`mcalf.visualisation.spec`).
+  model.
 * Functions to plot the spatial distribution and their
-  general profile (`mcalf.visualisation.classifications`).
+  general profile.
 * Functions to plot the velocities calculated for a
-  spectral imaging scan (`mcalf.visualisation.velocity`).
+  spectral imaging scan.
 
 .. automodapi:: mcalf.visualisation
-
-.. automodapi:: mcalf.visualisation.spec
-
-.. automodapi:: mcalf.visualisation.classifications
-
-.. automodapi:: mcalf.visualisation.velocity

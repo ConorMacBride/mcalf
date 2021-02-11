@@ -6,9 +6,7 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from sklearn.exceptions import NotFittedError
 
-from mcalf.models.base import ModelBase
-from mcalf.models.ibis import IBIS8542Model
-from mcalf.models.results import FitResults
+from mcalf.models import ModelBase, IBIS8542Model, FitResults
 from mcalf.profiles.voigt import voigt, double_voigt
 
 from ..helpers import data_path_function, figure_test
@@ -57,7 +55,7 @@ def test_default_parameters(model):
 
 
 def test_ibis8542model_basic():
-    # Will break if default parameters are changes in mcalf.models.ibis.IBIS8542Model
+    # Will break if default parameters are changes in mcalf.models.IBIS8542Model
     wl = 1000.97
     x_orig = np.linspace(999.81, 1002.13, num=25)
     prefilter_main = 1 - np.abs(x_orig - wl) * 0.1
@@ -647,7 +645,7 @@ def test_ibis8542model_plot_no_intensity(pytestconfig, ibis8542model_results):
 
 def test_ibis8542model_save(ibis8542model_results, ibis8542model_resultsobjs, tmp_path):
 
-    # Testing mcalf.models.results.FitResults.save method
+    # Testing mcalf.models.FitResults.save method
 
     res1, m = ibis8542model_results[:2]
     results10, results11 = ibis8542model_resultsobjs(res1)
