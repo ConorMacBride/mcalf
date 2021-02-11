@@ -50,11 +50,7 @@ extensions = [
 ]
 numpydoc_show_class_members = False
 nbsphinx_execute = 'never'
-all_methods = [
-    'mcalf.models.ModelBase',
-]
-automodsumm_private_methods_of = all_methods
-automodsumm_special_methods_of = all_methods
+automodsumm_private_methods_of = ['mcalf.models.ModelBase']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
