@@ -4,10 +4,11 @@ from shutil import copyfile
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
+import astropy.units
 from scipy.io import readsav
 
 
-__all__ = ['make_iter', 'load_parameter', 'merge_results', 'hide_existing_labels']
+__all__ = ['make_iter', 'load_parameter', 'merge_results', 'hide_existing_labels', 'calculate_extent']
 
 
 def make_iter(*args):
@@ -436,3 +437,50 @@ def hide_existing_labels(plot_settings, axes=None, fig=None):
     for name in plot_settings:
         if plot_settings[name]['label'] in existing:
             plot_settings[name]['label'] = '_' + plot_settings[name]['label']
+
+
+def calculate_extent(res, px, offset=0, unit="Mm"):
+    """Calculate the extent from a resolution value.
+
+    Parameters
+    ----------
+    res : float or astropy.units.quantity.Quantity
+        Length of each pixel. Unit defaults to `unit` is not an astropy quantity.
+    px : int
+        Number of pixels extent is being calculated for.
+    offset : int or float, default=0
+        Number of pixels from the 0 pixel to the first pixel. Defaults to the first
+        pixel being at 0 length units. For example, in a 1000 pixel wide dataset,
+        setting offset to -500 would place the 0 Mm location at the centre.
+    unit : str, default="Mm"
+        Default unit string to use if `res` is not an astropy quantity.
+
+    Returns
+    -------
+    first : float
+        First extent value.
+    last : float
+        Last extent value.
+    unit : str
+        Unit of extent values.
+    """
+
+    # Ensure a valid spatial and pixel resolution is provided
+    if not isinstance(res, (float, astropy.units.quantity.Quantity)):
+        raise TypeError('`resolution` values must be either floats or astropy quantities'
+                        f', got {type(res)}.')
+    if not isinstance(px, (int, np.integer)):
+        raise TypeError(f'`px` must be an integer, got {type(px)}.')
+    if not isinstance(offset, (float, int, np.integer)):
+        raise TypeError(f'`offset` must be an float or integer, got {type(offset)}.')
+
+    # Update the default unit if a quantity is provided
+    if isinstance(res, astropy.units.quantity.Quantity):
+        unit = res.unit.to_string(astropy.units.format.LatexInline)
+        res = float(res.value)  # Remove the unit
+
+    # Calculate the extent values
+    first = offset * res
+    last = (px + offset) * res
+
+    return first, last, unit
