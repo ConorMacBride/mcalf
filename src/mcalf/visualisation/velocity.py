@@ -1,110 +1,148 @@
+import copy
+
 import numpy as np
+import matplotlib as mpl
 from matplotlib import pyplot as plt
+import astropy.units
+
+from mcalf.utils.misc import calculate_extent
 
 
 __all__ = ['plot_map']
 
 
-def plot_map(velmap, mask=None, umbra_mask=None, figsize=None, vmin=None, vmax=None, extent=None,
-             xticks=(0, 15, 2), yticks=(0, 15, 2), xscale=0.725 * 0.097, yscale=0.725 * 0.097,
-             output=None, dpi=600, fontfamily=None, units="km/s", linewidths=None):
-    """Plot the velocity map
-
-    Plots a velocity map for publication.
+def plot_map(arr, mask=None, umbra_mask=None, resolution=None, offset=(0, 0), vmin=None, vmax=None,
+             unit="km/s", lw=None, show_colorbar=True, ax=None):
+    """Plot a velocity map array.
 
     Parameters
     ----------
-    velmap : ndarray, ndim=2
+    arr : numpy.ndarray of float or astropy.units.quantity.Quantity, ndim=2
         Two-dimensional array of velocities.
-    mask : ndarray of bool, ndim=2, shape `velmap`, optional, default = None
+    mask : numpy.ndarray of bool, ndim=2, shape=arr, optional, default=None
         Mask showing the region where velocities were found for. True is outside the
         velocity region and False is where valid velocities should be found. Specifying
         a mask allows for errors in the velocity calculation to be black and points
         outside the region to be gray. If omitted, all invalid points will be gray.
-    umbra_mask : ndarray of bool, ndim=2, shape `velmap`, optional, default = None
+    umbra_mask : numpy.ndarray of bool, ndim=2, shape=arr, optional, default=None
         A mask of the umbra, True outside, False inside. If given, a contour will
         outline the umbra, or other feature the mask represents.
-    output : str, optional, default = None
-        If present, the filename to save the plot as.
-    figsize : 2-tuple
-        Size of the figure.
-    dpi : int
-        The number of dots per inch. For controlling the quality of the outputted figure.
-    fontfamily : str, optional, default = None
-        If provided, this family string will be added to the 'font' rc params group.
-    vmin : float, optional, default = -max(|`velmap`|)
+    resolution : tuple of float or astropy.units.quantity.Quantity, optional, default=None
+        A 2-tuple (x, y) containing the length of each pixel in the x and y direction respectively.
+        If a value has type :class:`astropy.units.quantity.Quantity`, its axis label will
+        include its attached unit, otherwise the unit will default to Mm.
+        If `resolution` is None, both axes will be ticked with the default pixel value
+        with no axis labels.
+    offset : tuple of float or int, length=2, optional, default=(0, 0)
+        Two offset values (x, y) for the x and y axis respectively.
+        Number of pixels from the 0 pixel to the first pixel. Defaults to the first
+        pixel being at 0 length units. For example, in a 1000 pixel wide dataset,
+        setting offset to -500 would place the 0 Mm location at the centre.
+    vmin : float, optional, default=-max(|arr|)
         Minimum velocity to plot. If not given, will be -vmax, for vmax not None.
-    vmax : float, optional, default = max(|`velmap`|)
+    vmax : float, optional, default=max(|arr|)
         Maximum velocity to plot. If not given, will be -vmin, for vmin not None.
-    extent : 4-tuple, optional, default = (0, n_rows, 0, n_columns)
-        Data range of `velmap`. TODO: Remove (assume one-to-one relationship)
-    xticks : 3-tuple, optional, default = (0, 15, 2)
-        The start, stop and step for the x-axis ticks in Mm.
-    yticks : 3-tuple, optional, default = (0, 15, 2)
-        The start, stop and step for the y-axis ticks in Mm.
-    xscale : float, optional = 0.725 * 0.097
-        Scaling factor between x-axis data coordinate steps and 1 Mm. Mm = data / xscale.
-    yscale : float, optional = 0.725 * 0.097
-        Scaling factor between y-axis data coordinate steps and 1 Mm. Mm = data / xscale.
-    units : str, optional, default = 'km/s'
-        The units of `velmap` data. Printed on colorbar.
-    linewidths : float or sequence of floats, optional, default = None
-        The width of the contours plotted for `umbra_mask`.
+    unit : str, optional, default='km/s'
+        The units of `arr` data. Printed on colorbar.
+    lw : float, optional, default=None
+        The width of the contour plotted for `umbra_mask`.
+    show_colorbar : bool, optional, default=True
+        Whether to draw a colorbar.
+    ax : matplotlib.axes.Axes, optional, default=None
+        Axes into which the velocity map will be plotted.
+        Defaults to the current axis of the current figure.
+
+    Returns
+    -------
+    ax : matplotlib.axes.Axes
+        Axes the lines are drawn on.
     """
-    if fontfamily is not None:
-        plt.rc('font', family=fontfamily)
-    fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+    if ax is None:
+        ax = plt.gca()
 
-    cmap = plt.get_cmap('bwr')
+    # Validate `arr`
+    if not isinstance(arr, np.ndarray) or arr.ndim != 2:
+        raise TypeError('`arr` must be a numpy.ndarray with 2 dimensions.')
+    arr = arr.copy()  # Edit a copy of `arr`
 
-    velmap_cropped = velmap.copy()
+    # Validate `mask` and `umbra_mask`
+    for n, v in (('mask', mask), ('umbra_mask', umbra_mask)):
+        if v is not None:
+            if not isinstance(v, np.ndarray) or v.ndim != 2:
+                raise TypeError(f'`{n}` must be a numpy.ndarray with 2 dimensions.')
+            if v.shape != arr.shape:
+                raise ValueError(f'`{n}` must be the same shape as `arr`')
 
-    if extent is None:
-        extent = (0, len(velmap_cropped), 0, len(velmap_cropped[0]))
+    # Update default unit if unit present in `arr`
+    if isinstance(arr[0, 0], astropy.units.quantity.Quantity):
+        unit = arr.unit.to_string(astropy.units.format.LatexInline)
+        arr = arr.value  # Remove unit
+    # Convert a `unit` parameter that was provided as an astropy unit
+    if isinstance(unit, (astropy.units.UnitBase, astropy.units.quantity.Quantity)):
+        unit = unit.to_string(astropy.units.format.LatexInline)
 
+    # Calculate a specific extent if a resolution is specified
+    extent = None  # Set default value
+    if resolution is not None:
+
+        # Validate relevant parameters
+        for n, v in (('resolution', resolution), ('offset', offset)):
+            if not isinstance(v, tuple) or len(v) != 2:
+                raise TypeError(f'`{n}` must be a tuple of length 2.')
+
+        # Calculate extent values, and extract units
+        ypx, xpx = arr.shape
+        l, r, x_unit = calculate_extent(resolution[0], xpx, offset=offset[0])
+        b, t, y_unit = calculate_extent(resolution[1], ypx, offset=offset[1])
+        extent = (l, r, b, t)
+
+        ax.set_xlabel(f'distance ({x_unit})')
+        ax.set_ylabel(f'distance ({y_unit})')
+
+    # Configure default colormap
+    cmap = copy.copy(mpl.cm.get_cmap('bwr'))
+    cmap.set_bad(color='#999999', alpha=1)
+
+    # Show invalid pixels outside the mask as black, inside as gray
     if mask is not None:
-        # Show invalid pixels outside the mask as black, inside as gray
-        if mask.shape != velmap_cropped.shape:
-            raise ValueError("`mask` must be the same shape as `velmap`")
-        unmasked_section = np.empty_like(mask, dtype=float)
-        unmasked_section[mask] = np.nan
-        unmasked_section[~mask] = 1
-        cmap_mask = plt.get_cmap('gray')
-        cmap_mask.set_bad(color='#999999', alpha=1)
-        ax.imshow(unmasked_section, cmap=cmap_mask, extent=extent, interpolation='nearest')
-        cmap.set_bad(color='#000000', alpha=0)
-        velmap_cropped[mask] = np.nan
-    else:
-        cmap.set_bad(color='#999999', alpha=1)
 
-    # Show the velocities
+        # Create image from mask
+        mask = mask.astype(bool)
+        unmasked_section = np.empty_like(mask, dtype=float)
+        unmasked_section[mask] = np.nan  # Outside mask
+        unmasked_section[~mask] = 1  # Inside mask
+
+        # Configure colormap of mask
+        cmap_mask = copy.copy(mpl.cm.get_cmap('gray'))
+        cmap_mask.set_bad(color='#999999', alpha=1)
+
+        # Show the masked region
+        ax.imshow(unmasked_section, cmap=cmap_mask, origin='lower',
+                  extent=extent, interpolation='nearest')
+
+        arr[mask] = np.nan  # Remove values from `arr` that are outside mask
+        cmap.set_bad(color='#000000', alpha=0)  # Update default colormap
+
+    # Calculate range for symmetric colormap
     if vmin is None and vmax is None:
-        vmax = np.nanmax(np.abs(velmap))
+        vmax = np.nanmax(np.abs(arr))
         vmin = -vmax
     elif vmin is None:
         vmin = -vmax
     elif vmax is None:
         vmax = -vmin
-    im = ax.imshow(velmap_cropped, cmap=cmap, vmin=vmin, vmax=vmax, extent=extent, interpolation='nearest')
 
+    # Show the velocities
+    im = ax.imshow(arr, cmap=cmap, vmin=vmin, vmax=vmax, origin='lower',
+                   extent=extent, interpolation='nearest')
+
+    # Outline the umbra
     if umbra_mask is not None:
-        if umbra_mask.shape != velmap_cropped.shape:
-            raise ValueError("`umbra_mask` must be the same shape as `velmap`")
-        plt.contour(umbra_mask[::-1], cmap='binary', extent=extent, linewidths=linewidths)
+        umbra_mask = umbra_mask.astype(bool)
+        ax.contour(umbra_mask, [0.5], colors='k', origin='lower',
+                   extent=extent, linewidths=lw)
 
-    plt.colorbar(im, ax=ax, label='Doppler velocity ({})'.format(units))
+    if show_colorbar:
+        ax.get_figure().colorbar(im, ax=[ax], label=f'Doppler velocity ({unit})')
 
-    xticks_Mm = np.arange(*xticks)
-    xticks = (xticks_Mm / xscale) + extent[0]
-    plt.xticks(xticks, xticks_Mm)
-    plt.xlabel('Distance (Mm)')
-
-    yticks_Mm = np.arange(*yticks)
-    yticks = (yticks_Mm / yscale) + extent[2]
-    plt.yticks(yticks, yticks_Mm)
-    plt.ylabel('Distance (Mm)')
-
-    plt.show()
-
-    if output is not None and isinstance(output, str):
-        fig.savefig(output, bbox_inches='tight', dpi=dpi)
+    return ax

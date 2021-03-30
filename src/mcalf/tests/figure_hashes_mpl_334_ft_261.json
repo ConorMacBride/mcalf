@@ -30,5 +30,19 @@
   "mcalf.tests.visualisation.test_spec.test_plot_spectrum": "79afa94c229e75646304b14bb388df30f23d6fd06ac82cfa4443ab05fc4c4a4a",
   "mcalf.tests.visualisation.test_spec.test_plot_spectrum_no_smooth": "c4bf62988715825cecaf75e03b66c05231854e5b84962fbd03f11e1c381e1273",
   "mcalf.tests.visualisation.test_spec.test_plot_spectrum_no_norm": "f4a52acdbb2a614e0a775ff7833a95151bf6188126286d1eb87fedef7f324711",
-  "mcalf.tests.visualisation.test_spec.test_plot_spectrum_no_smooth_norm": "96ce04857fe6fdc479c1620e72a0d26c981dd82082da2627e92e9716c46b2182"
+  "mcalf.tests.visualisation.test_spec.test_plot_spectrum_no_smooth_norm": "96ce04857fe6fdc479c1620e72a0d26c981dd82082da2627e92e9716c46b2182",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_basic": "7aafc54666ffd269480caecd10e0606fd0f59b1f43ed180c230421671df8bd63",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_mask": "a8d3af74f08a110ea6404aa782d5cf09820524b0cd9ec43ea22366757a922037",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_umbra_mask": "c8e305a8ab5da653387a585ea21a74d1d53020bb7d43657aecf4b47429b7b813",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_both_masks": "2e3313d66874786275d97589db95a106a75ba5328bcbf6626657722297445708",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_resolution": "62354784ccf0677f4837524f1887f6e15223940f7dca919b628bfcbba4d1d406",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_resolution_offset": "d1b73da96b58912d6e43e49885cfb263a633cd0a61a577ed07881dfde5ac6b5d",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_resolution_offset_masks": "6aa74ae92116d4da2cb201bf59f95a9fda71ebfd0ec847a9c1536248c7e35b9e",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_vmin": "9eb4e837594b4d515fefc5712ba559769c104ba2b390d69f74ddd687e1fc46ab",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_vmax": "9eb4e837594b4d515fefc5712ba559769c104ba2b390d69f74ddd687e1fc46ab",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_unit": "d9301400ee371e5af77f8f0d85e82000834bec0128a8afdfa675328546a3697c",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_unit_astropy": "9673f5206be729915f5843d48d9afecba1cde19c2638536b8fc6dbe9e8641c4f",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_unit_arr_astropy": "9673f5206be729915f5843d48d9afecba1cde19c2638536b8fc6dbe9e8641c4f",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_lw": "98013f267d1517c05f64e4b0d32960dc9b333ad3277152b4a8f33e3a479eb16b",
+  "mcalf.tests.visualisation.test_velocity.test_plot_map_colorbar": "c92b8186ce40312c307b5dceb491d2a47e6b46ce260a190d59fdaceb10970464"
 }
