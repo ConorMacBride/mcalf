@@ -2,7 +2,7 @@ import numpy as np
 import scipy.ndimage
 
 
-__all__ = ['moving_average', 'gaussian_kern_3d', 'smooth_cube']
+__all__ = ['moving_average', 'gaussian_kern_3d', 'smooth_cube', 'average_classification']
 
 
 def moving_average(array, width):
@@ -144,3 +144,39 @@ def smooth_cube(cube, mask, **kwargs):
     cube_[np.isnan(cube)] = np.nan  # Restore NaN values
 
     return cube_
+
+
+def average_classification(class_map, vmin, vmax):
+    """Average a 3D array of classifications.
+
+    Selects the most common classification along the first dimension.
+
+    Parameters
+    ----------
+    class_map : numpy.ndarray[int], ndim=3
+        Array of classifications. First dimension must be time.
+    vmin : int
+        Minimum classification integer to average.
+    vmax : int
+        Maximum classification integer to average.
+
+    Returns
+    -------
+    ave : numpy.ndarray[int], ndim=2
+        `class_map` averaged along the first dimension.
+
+    See Also
+    --------
+    mcalf.visualisation.plot_class_map : Plot a map of the classifications.
+    """
+    c = np.arange(vmin, vmax + 1)  # classes
+    bins = np.arange(vmin - 0.5, vmax + 1)  # len(bins)=len(c)+1
+    ave = np.empty(class_map.shape[1:], dtype=int)
+    for i in range(len(class_map[0])):
+        for j in range(len(class_map[0, 0])):
+            counts = np.histogram(class_map[:, i, j], bins)[0]
+            if counts.max() == 0:
+                ave[i, j] = -1  # no valid classifications
+            else:
+                ave[i, j] = c[counts.argmax()]
+    return ave
