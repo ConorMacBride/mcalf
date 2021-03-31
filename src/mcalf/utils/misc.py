@@ -550,8 +550,10 @@ def calculate_extent(shape, resolution, offset=(0, 0), ax=None, dimension=None, 
                 y_dim = str(dimension[1])
             elif dimension is None:  # default values
                 x_dim, y_dim = 'x-axis', 'y-axis'
-            else:  # single value for both dimensions
+            elif isinstance(dimension, str):  # single value for both dimensions
                 x_dim = y_dim = str(dimension)
+            else:
+                raise TypeError('`dimension` must be a tuple or list of length 2.')
             ax.set_xlabel(f'{x_dim} ({x_unit})')
             ax.set_ylabel(f'{y_dim} ({y_unit})')
 
