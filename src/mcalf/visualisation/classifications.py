@@ -4,8 +4,11 @@ import numpy as np
 from matplotlib import pyplot as plt, colors, cm
 from matplotlib.gridspec import GridSpec
 
+from mcalf.utils.smooth import average_classification
+from mcalf.utils.plot import calculate_extent
 
-__all__ = ['plot_classifications', 'plot_class_map', 'plot_averaged_class_map']
+
+__all__ = ['plot_classifications', 'plot_distribution', 'plot_class_map']
 
 
 def plot_classifications(class_map, spectra, labels, extent=(0, 200, 0, 200), xticks=(0, 15, 3), yticks=(0, 15, 3),
@@ -106,7 +109,7 @@ def plot_classifications(class_map, spectra, labels, extent=(0, 200, 0, 200), xt
         fig.savefig(output, bbox_inches='tight', dpi=dpi)
 
 
-def plot_class_map(class_map, overall_classes=None, classes=None, time_index=None, cadence=None,
+def plot_distribution(class_map, overall_classes=None, classes=None, time_index=None, cadence=None,
                    xticks=(0, 15, 2), yticks=(0, 15, 2), xscale=0.725 * 0.097, yscale=0.725 * 0.097,
                    output=None, file_prefix='classmap_plot_', file_ext='png',
                    figsize=(5 * 3 / 2.5, 3 * 3 / 2.5), dpi=600, fontfamily=None, cache=False):
@@ -250,79 +253,135 @@ def plot_class_map(class_map, overall_classes=None, classes=None, time_index=Non
         fig.savefig(output, bbox_inches='tight', dpi=dpi)
 
 
-def plot_averaged_class_map(class_map, classes=None, continuous=False,
-                            xticks=(0, 15, 2), yticks=(0, 15, 2), xscale=0.725 * 0.097, yscale=0.725 * 0.097,
-                            output=None, figsize=None, dpi=600, fontfamily=None):
-    """Plot an image of the time averaged classifications
+def plot_class_map(class_map, vmin=None, vmax=None, resolution=None, offset=(0, 0),
+                   style='original', cmap=None, show_colorbar=True, label=None, ax=None):
+    """Plot a map of the classifications.
 
     Parameters
     ----------
-    class_map : ndarray, ndim=3
-        Three-dimensional array of classifications, with the times given in the first dimension.
-    classes : ndarray, optional, default = ndarray of [0, 1, 2, 3, 4]
-        Array of all the possible classifications in `class_map`.
-    continuous : bool, optional, default = False
-        Whether to plot the with a continuous color scale or round to the nearest classification.
-    xticks : 3-tuple, optional, default = (0, 15, 2)
-        The start, stop and step for the x-axis ticks in Mm.
-    yticks : 3-tuple, optional, default = (0, 15, 2)
-        The start, stop and step for the y-axis ticks in Mm.
-    xscale : float, optional = 0.725 * 0.097
-        Scaling factor between x-axis data coordinate steps and 1 Mm. Mm = data / xscale.
-    yscale : float, optional = 0.725 * 0.097
-        Scaling factor between y-axis data coordinate steps and 1 Mm. Mm = data / xscale.
-    output : str, optional, default = None
-        If present, the filename to save the plot as. If omitted, the plot will not be saved.
-    figsize : 2-tuple, optional, default = None
-        Size of the figure.
-    dpi : int, optional, default = 600
-        The number of dots per inch. For controlling the quality of the outputted figure.
-    fontfamily : str, optional, default = None
-        If provided, this family string will be added to the 'font' rc params group.
+    class_map : numpy.ndarray[int]
+        Array of classifications. If the array is three-dimensional, it is assumed
+        that the first dimension is time, and a time average classification will be plotted.
+        The time average is the most common positive (valid) classification at each pixel.
+    vmin : int, optional, default=None
+        Minimum classification integer to plot. Must be greater or equal to zero.
+        Defaults to min positive integer in `class_map`.
+    vmax : int, optional, default=None
+        Maximum classification integer to plot. Must be greater than zero.
+        Defaults to max positive integer in `class_map`.
+    resolution : tuple[float] or astropy.units.quantity.Quantity, optional, default=None
+        A 2-tuple (x, y) containing the length of each pixel in the x and y direction respectively.
+        If a value has type :class:`astropy.units.quantity.Quantity`, its axis label will
+        include its attached unit, otherwise the unit will default to Mm.
+        If `resolution` is None, both axes will be ticked with the default pixel value
+        with no axis labels.
+    offset : tuple[float] or int, length=2, optional, default=(0, 0)
+        Two offset values (x, y) for the x and y axis respectively.
+        Number of pixels from the 0 pixel to the first pixel. Defaults to the first
+        pixel being at 0 length units. For example, in a 1000 pixel wide dataset,
+        setting offset to -500 would place the 0 Mm location at the centre.
+    style : str, optional, default='original'
+        The named matplotlib colormap to extract a :class:`~matplotlib.colors.ListedColormap`
+        from. Colours are selected from `vmin` to `vmax` at equidistant values
+        in the range [0, 1]. The :class:`~matplotlib.colors.ListedColormap`
+        produced will also show bad classifications and classifications
+        out of range in grey.
+        The default 'original' is a special case used since early versions
+        of this code. It is a hardcoded list of 5 colours. When the number
+        of classifications exceeds 5, ``style='viridis'`` will be used.
+    cmap : str or matplotlib.colors.Colormap, optional, default=None
+        Parameter to pass to matplotlib.axes.Axes.imshow. This parameter
+        overrides any cmap requested via the `style` parameter.
+    show_colorbar : bool, optional, default=True
+        Whether to draw a colorbar.
+    label : str, optional, default=None
+        Text to label the colorbar with.
+    ax : matplotlib.axes.Axes, optional, default=None
+        Axes into which the velocity map will be plotted.
+        Defaults to the current axis of the current figure.
+
+    Returns
+    -------
+    im : matplotlib.image.AxesImage
+        The object returned by :func:`matplotlib.axes.Axes.imshow` after plotting `class_map`.
+
+    See Also
+    --------
+    mcalf.models.ModelBase.classify_spectra : Classify spectra.
+    mcalf.utils.smooth.average_classification : Average a 3D array of classifications.
+
+    Notes
+    -----
+    Visualisation assumes that all integers between `vmin` and `vmax` are valid
+    classifications, even if they do not appear in `class_map`.
     """
+    if ax is None:
+        ax = plt.gca()
 
-    if classes is None:
-        classes = np.arange(5, dtype=int)
+    # Validate the `class_map` parameter
+    if not isinstance(class_map, np.ndarray):
+        raise TypeError(f'`class_map` must be a numpy.ndarray, got {type(class_map)}.')
+    if class_map.ndim not in (2, 3):
+        raise ValueError(f'`class_map` must have either 2 or 3 dimensions, got {class_map.ndim}.')
+    if class_map.dtype not in (int, np.integer):
+        raise TypeError(f'`class_map` must be an array of integers, got {class_map.dtype}.')
 
-    if class_map.ndim != 3:
-        raise ValueError('`class_map` must have 3 dimensions, got %s' % class_map.ndim)
+    # Validate or set `vmin` and `vmax`
+    if vmax is None:
+        vmax = np.max(class_map[class_map >= 0])
+    elif not isinstance(vmax, (int, np.integer)):
+        raise TypeError(f'`vmax` must be an integer, got {type(vmax)}.')
+    elif vmax < 0:
+        raise ValueError(f'`vmax` must not be less than zero.')
+    if vmin is None:
+        vmin = np.min(class_map[class_map >= 0])
+    elif not isinstance(vmin, (int, np.integer)):
+        raise TypeError(f'`vmin` must be an integer, got {type(vmin)}.')
+    elif vmin < 0:
+        raise ValueError(f'`vmin` must not be less than zero.')
 
-    class_map = np.mean(class_map, axis=0)
+    # Ignore classifications outside of range
+    class_map = class_map.copy()
+    class_map[class_map < vmin] = -1
+    class_map[class_map > vmax] = -1
 
-    if fontfamily is not None:
-        plt.rc('font', family=fontfamily)
+    # If 3D, choose the most common classification along the first dimension
+    if class_map.ndim == 3:
+        class_map = average_classification(class_map, vmin, vmax)
 
-    if continuous:
-        cmap = cm.get_cmap('binary_r')
-        vmin = min(classes)
-        vmax = max(classes)
-    else:
-        cmap_colors = np.array(['#0072b2', '#56b4e9', '#009e73', '#e69f00', '#d55e00'])[:len(classes)]
+    # Create a list of the classifications
+    classes = np.arange(vmin, vmax + 1, dtype=int)
+
+    # Configure the color map
+    if cmap is None:
+        # TODO: Move to mcalf.utils.plot.class_cmap
+        # cmap = class_cmap(style, len(classes))
+        nc = len(classes)
+        if style == 'original' and nc <= 5:  # original colours
+            cmap_colors = np.array(['#0072b2', '#56b4e9', '#009e73', '#e69f00', '#d55e00'])[:nc]
+        else:
+            if style == 'original':
+                style = 'viridis'  # fallback for >5 classifications
+            c = cm.get_cmap(style)  # query in equal intervals from [0, 1]
+            cmap_colors = np.array([c(i / (nc - 1)) for i in range(nc)])
         cmap = colors.ListedColormap(cmap_colors)
-        vmin = min(classes) - 0.5
-        vmax = max(classes) + 0.5
+        cmap.set_over(color='#999999', alpha=1)
+        cmap.set_under(color='#999999', alpha=1)
 
-    extent = (0, len(class_map[0]), 0, len(class_map))
-    cmap.set_bad(color='#999999', alpha=1)
+    # Update range to improve displayed colorbar endpoints
+    vmin -= 0.5
+    vmax += 0.5
 
-    fig, ax = plt.subplots(figsize=figsize, dpi=dpi, constrained_layout=True)
+    # Calculate a specific extent if a resolution is specified
+    # TODO: Allow the `dimension` to be set by the user.
+    extent = calculate_extent(class_map.shape, resolution, offset,
+                              ax=ax, dimension='distance')
 
-    im = ax.imshow(class_map, cmap=cmap, vmin=vmin, vmax=vmax, extent=extent, interpolation='nearest')
-    fig.colorbar(im, ax=ax, ticks=classes, orientation='vertical', label='absorption' + ' ' * 47 + 'emission')
+    # Plot `class_map`
+    im = ax.imshow(class_map, cmap=cmap, vmin=vmin, vmax=vmax,
+                   origin='lower', extent=extent, interpolation='nearest')
 
-    xticks_Mm = np.arange(*xticks)
-    xticks = (xticks_Mm / xscale) + extent[0]
-    ax.set_xticks(xticks)
-    ax.set_xticklabels(xticks_Mm)
-    ax.set_xlabel('Distance (Mm)')
+    if show_colorbar:
+        ax.get_figure().colorbar(im, ax=ax, ticks=classes, orientation='vertical', label=label)
 
-    yticks_Mm = np.arange(*yticks)
-    yticks = (yticks_Mm / yscale) + extent[2]
-    ax.set_yticks(yticks)
-    ax.set_yticklabels(yticks_Mm)
-    ax.set_ylabel('Distance (Mm)')
-
-    plt.show()
-
-    if output is not None and isinstance(output, str):
-        fig.savefig(output, bbox_inches='tight', dpi=dpi)
+    return im
