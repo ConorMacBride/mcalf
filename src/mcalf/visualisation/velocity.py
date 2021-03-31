@@ -5,7 +5,7 @@ import matplotlib as mpl
 from matplotlib import pyplot as plt
 import astropy.units
 
-from mcalf.utils.misc import calculate_extent
+from mcalf.utils.misc import calculate_axis_extent
 
 
 __all__ = ['plot_map']
@@ -97,8 +97,8 @@ def plot_map(arr, mask=None, umbra_mask=None, resolution=None, offset=(0, 0), vm
 
         # Calculate extent values, and extract units
         ypx, xpx = arr.shape
-        l, r, x_unit = calculate_extent(resolution[0], xpx, offset=offset[0])
-        b, t, y_unit = calculate_extent(resolution[1], ypx, offset=offset[1])
+        l, r, x_unit = calculate_axis_extent(resolution[0], xpx, offset=offset[0])
+        b, t, y_unit = calculate_axis_extent(resolution[1], ypx, offset=offset[1])
         extent = (l, r, b, t)
 
         ax.set_xlabel(f'distance ({x_unit})')
