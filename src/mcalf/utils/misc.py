@@ -8,7 +8,8 @@ import astropy.units
 from scipy.io import readsav
 
 
-__all__ = ['make_iter', 'load_parameter', 'merge_results', 'hide_existing_labels', 'calculate_axis_extent']
+__all__ = ['make_iter', 'load_parameter', 'merge_results', 'hide_existing_labels', 'calculate_axis_extent',
+           'calculate_extent']
 
 
 def make_iter(*args):
@@ -484,3 +485,76 @@ def calculate_axis_extent(resolution, px, offset=0, unit="Mm"):
     last = (px + offset) * resolution
 
     return first, last, unit
+
+
+def calculate_extent(shape, resolution, offset=(0, 0), ax=None, dimension=None, **kwargs):
+    """Calculate the extent from a particular data shape and resolution.
+
+    This function assumes a lower origin is being used with matplotlib.
+
+    Parameters
+    ----------
+    shape : tuple[int]
+        Shape (y, x) of the :class:`numpy.ndarray` of the data being plotted.
+        First integer corresponds to the y-axis and the second integer is for the x-axis.
+    resolution : tuple[float] or astropy.units.quantity.Quantity
+        A 2-tuple (x, y) containing the length of each pixel in the x and y direction respectively.
+        If a value has type :class:`astropy.units.quantity.Quantity`, its axis label will
+        include its attached unit, otherwise the unit will default to Mm.
+        The `ax` parameter must be specified to set its labels.
+        If `resolution` is None, this function will immediately return None.
+    offset : tuple[float] or int, length=2, optional, default=(0, 0)
+        Two offset values (x, y) for the x and y axis respectively.
+        Number of pixels from the 0 pixel to the first pixel. Defaults to the first
+        pixel being at 0 length units. For example, in a 1000 pixel wide dataset,
+        setting offset to -500 would place the 0 Mm location at the centre.
+    ax : matplotlib.axes.Axes, optional, default=None
+        Axes into which axis labels will be plotted.
+        Defaults to not printing axis labels.
+    dimension : str or tuple[str] or list[str], length=2, optional, default=None
+        If an `ax` (and `resolution`) is provided, use this string as the `dimension name`
+        that appears before the ``(unit)`` in the axis label.
+        A 2-tuple (x, y) or list [x, y] can instead be given to provide a different name
+        for the x-axis and y-axis respectively.
+        Defaults is equivalent to ``dimension=('x-axis', 'y-axis')``.
+    **kwargs : dict, optional
+        Extra keyword arguments to pass to :func:`calculate_axis_extent`.
+
+    Returns
+    -------
+    extent : tuple[float], length=4
+        The extent value that will be passed to matplotlib functions with a lower origin.
+        Will return None if `resolution` is None.
+    """
+    # Calculate a specific extent if a resolution is specified
+    if resolution is not None:
+
+        # Validate relevant parameters
+        for n, v in (('shape', shape), ('resolution', resolution), ('offset', offset)):
+            if not isinstance(v, tuple) or len(v) != 2:
+                raise TypeError(f'`{n}` must be a tuple of length 2.')
+
+        # Calculate extent values, and extract units
+        ypx, xpx = shape
+        l, r, x_unit = calculate_axis_extent(resolution[0], xpx, offset=offset[0], **kwargs)
+        b, t, y_unit = calculate_axis_extent(resolution[1], ypx, offset=offset[1], **kwargs)
+
+        # Optionally set the axis labels
+        if ax is not None:
+
+            # Extract the dimension name
+            if isinstance(dimension, (tuple, list)):  # different value for each dimension
+                if len(dimension) != 2:
+                    raise TypeError('`dimension` must be a tuple or list of length 2.')
+                x_dim = str(dimension[0])
+                y_dim = str(dimension[1])
+            elif dimension is None:  # default values
+                x_dim, y_dim = 'x-axis', 'y-axis'
+            else:  # single value for both dimensions
+                x_dim = y_dim = str(dimension)
+            ax.set_xlabel(f'{x_dim} ({x_unit})')
+            ax.set_ylabel(f'{y_dim} ({y_unit})')
+
+        return l, r, b, t  # extent
+
+    return None  # default extent
