@@ -131,18 +131,3 @@ def test_plot_map_validate_masks(arr, mask, umbra_mask):
     with pytest.raises(ValueError) as e:
         plot_map(arr, mask, np.vstack([umbra_mask, umbra_mask]))
     assert '`umbra_mask` must be the same shape as `arr`' in str(e.value)
-
-
-def test_plot_map_validate_resolution(arr):
-
-    # Resolution is 2-tuple
-    for a in ((1, 1, 1), np.array([1, 1])):
-        with pytest.raises(TypeError) as e:
-            plot_map(arr, resolution=a, offset=(1, 1))
-        assert '`resolution` must be a tuple of length 2' in str(e.value)
-
-    # Offset is 2-tuple
-    for a in ((1, 1, 1), np.array([1, 1])):
-        with pytest.raises(TypeError) as e:
-            plot_map(arr, resolution=(1, 1), offset=a)
-        assert '`offset` must be a tuple of length 2' in str(e.value)
