@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 import astropy.units
 
-from mcalf.utils.misc import make_iter, load_parameter, merge_results, hide_existing_labels, calculate_axis_extent
+from mcalf.utils.misc import make_iter, load_parameter, merge_results, hide_existing_labels, \
+    calculate_axis_extent, calculate_extent
 
 from ..helpers import data_path_function
 data_path = data_path_function('utils')
@@ -165,3 +166,69 @@ def test_calculate_axis_extent():
     f, l, _ = calculate_axis_extent(2., 2, 1)
     assert 2. == pytest.approx(f)
     assert 6. == pytest.approx(l)
+
+
+def test_calculate_extent():
+
+    # Resolution of None should return None
+    assert calculate_extent((100, 200), None) is None
+
+    # Shape is 2-tuple
+    for a in ((1, 1, 1), np.array([1, 1])):
+        with pytest.raises(TypeError) as e:
+            calculate_extent(a, resolution=(1, 1), offset=(1, 1))
+        assert '`shape` must be a tuple of length 2' in str(e.value)
+
+    # Resolution is 2-tuple
+    for a in ((1, 1, 1), np.array([1, 1])):
+        with pytest.raises(TypeError) as e:
+            calculate_extent((100, 200), resolution=a, offset=(1, 1))
+        assert '`resolution` must be a tuple of length 2' in str(e.value)
+
+    # Offset is 2-tuple
+    for a in ((1, 1, 1), np.array([1, 1])):
+        with pytest.raises(TypeError) as e:
+            calculate_extent((100, 200), resolution=(1, 1), offset=a)
+        assert '`offset` must be a tuple of length 2' in str(e.value)
+
+    # Test good value
+    l, r, b, t = calculate_extent((7, 2), (2., 3.), (1, -3.5))
+    assert 2. == pytest.approx(l)
+    assert 6. == pytest.approx(r)
+    assert -10.5 == pytest.approx(b)
+    assert 10.5 == pytest.approx(t)
+
+
+def plot_helper_calculate_extent(*args, dimension=None):
+    fig, ax = plt.subplots()
+    calculate_extent(*args, ax=ax, dimension=dimension)
+    x, y = ax.get_xlabel(), ax.get_ylabel()
+    plt.close(fig)
+    return x, y
+
+
+def test_calculate_extent_ax():
+
+    # Common args
+    args = ((7, 2), (2., 3.), (1, -3.5))
+
+    # Dimension is 2-tuple or 2-list
+    for d in ((1, 1, 1), np.array([1, 1]), [1, 1, 1]):
+        with pytest.raises(TypeError) as e:
+            plot_helper_calculate_extent(*args, dimension=d)
+        assert '`dimension` must be a tuple or list of length 2' in str(e.value)
+
+    # Different for both
+    x, y = plot_helper_calculate_extent(*args, dimension=('test / one', 'test / two'))
+    assert 'test / one (Mm)' == x
+    assert 'test / two (Mm)' == y
+
+    # Default values
+    x, y = plot_helper_calculate_extent(*args)
+    assert 'x-axis (Mm)' == x
+    assert 'y-axis (Mm)' == y
+
+    # Same for both
+    x, y = plot_helper_calculate_extent(*args, dimension='test / same')
+    assert 'test / same (Mm)' == x
+    assert 'test / same (Mm)' == y
