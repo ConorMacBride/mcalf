@@ -55,8 +55,8 @@ def plot_map(arr, mask=None, umbra_mask=None, resolution=None, offset=(0, 0), vm
 
     Returns
     -------
-    ax : matplotlib.axes.Axes
-        Axes the lines are drawn on.
+    im : matplotlib.image.AxesImage
+        The object returned by :func:`matplotlib.axes.Axes.imshow` after plotting `arr`.
 
     See Also
     --------
@@ -137,4 +137,4 @@ def plot_map(arr, mask=None, umbra_mask=None, resolution=None, offset=(0, 0), vm
     if show_colorbar:
         ax.get_figure().colorbar(im, ax=[ax], label=f'Doppler velocity ({unit})')
 
-    return ax
+    return im
