@@ -8,6 +8,7 @@ This sub-package contains:
   (`mcalf.utils.smooth`).
 * Functions for masking the input data to limit the
   region computed (`mcalf.utils.mask`).
+* Functions for helping with plotting (`mcalf.utils.plot`).
 * Miscellaneous utility functions (`mcalf.utils.misc`).
 
 .. automodapi:: mcalf.utils
@@ -17,5 +18,7 @@ This sub-package contains:
 .. automodapi:: mcalf.utils.smooth
 
 .. automodapi:: mcalf.utils.mask
+
+.. automodapi:: mcalf.utils.plot
 
 .. automodapi:: mcalf.utils.misc

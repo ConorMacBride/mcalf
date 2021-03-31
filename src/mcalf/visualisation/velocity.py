@@ -5,7 +5,7 @@ import matplotlib as mpl
 from matplotlib import pyplot as plt
 import astropy.units
 
-from mcalf.utils.misc import calculate_extent
+from mcalf.utils.plot import calculate_extent
 
 
 __all__ = ['plot_map']
