@@ -102,7 +102,7 @@ def calculate_axis_extent(resolution, px, offset=0, unit="Mm"):
         pixel being at 0 length units. For example, in a 1000 pixel wide dataset,
         setting offset to -500 would place the 0 Mm location at the centre.
     unit : str, default="Mm"
-        Default unit string to use if `res` is not an astropy quantity.
+        Default unit string to use if `resolution` is not an astropy quantity.
 
     Returns
     -------
