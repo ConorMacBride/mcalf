@@ -5,7 +5,7 @@ import matplotlib as mpl
 from matplotlib import pyplot as plt
 import astropy.units
 
-from mcalf.utils.misc import calculate_axis_extent
+from mcalf.utils.misc import calculate_extent
 
 
 __all__ = ['plot_map']
@@ -87,22 +87,9 @@ def plot_map(arr, mask=None, umbra_mask=None, resolution=None, offset=(0, 0), vm
         unit = unit.to_string(astropy.units.format.LatexInline)
 
     # Calculate a specific extent if a resolution is specified
-    extent = None  # Set default value
-    if resolution is not None:
-
-        # Validate relevant parameters
-        for n, v in (('resolution', resolution), ('offset', offset)):
-            if not isinstance(v, tuple) or len(v) != 2:
-                raise TypeError(f'`{n}` must be a tuple of length 2.')
-
-        # Calculate extent values, and extract units
-        ypx, xpx = arr.shape
-        l, r, x_unit = calculate_axis_extent(resolution[0], xpx, offset=offset[0])
-        b, t, y_unit = calculate_axis_extent(resolution[1], ypx, offset=offset[1])
-        extent = (l, r, b, t)
-
-        ax.set_xlabel(f'distance ({x_unit})')
-        ax.set_ylabel(f'distance ({y_unit})')
+    # TODO: Allow the `dimension` to be set by the user.
+    extent = calculate_extent(arr.shape, resolution, offset,
+                              ax=ax, dimension='distance')
 
     # Configure default colormap
     cmap = copy.copy(mpl.cm.get_cmap('bwr'))
