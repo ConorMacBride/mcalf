@@ -1,11 +1,11 @@
 import glob
 
 import numpy as np
-from matplotlib import pyplot as plt, colors, cm
+from matplotlib import pyplot as plt, colors
 from matplotlib.gridspec import GridSpec
 
 from mcalf.utils.smooth import average_classification
-from mcalf.utils.plot import calculate_extent
+from mcalf.utils.plot import calculate_extent, class_cmap
 
 
 __all__ = ['plot_classifications', 'plot_distribution', 'plot_class_map']
@@ -259,7 +259,7 @@ def plot_class_map(class_map, vmin=None, vmax=None, resolution=None, offset=(0, 
 
     Parameters
     ----------
-    class_map : numpy.ndarray[int]
+    class_map : numpy.ndarray[int], ndim=2 or 3
         Array of classifications. If the array is three-dimensional, it is assumed
         that the first dimension is time, and a time average classification will be plotted.
         The time average is the most common positive (valid) classification at each pixel.
@@ -354,19 +354,7 @@ def plot_class_map(class_map, vmin=None, vmax=None, resolution=None, offset=(0, 
 
     # Configure the color map
     if cmap is None:
-        # TODO: Move to mcalf.utils.plot.class_cmap
-        # cmap = class_cmap(style, len(classes))
-        nc = len(classes)
-        if style == 'original' and nc <= 5:  # original colours
-            cmap_colors = np.array(['#0072b2', '#56b4e9', '#009e73', '#e69f00', '#d55e00'])[:nc]
-        else:
-            if style == 'original':
-                style = 'viridis'  # fallback for >5 classifications
-            c = cm.get_cmap(style)  # query in equal intervals from [0, 1]
-            cmap_colors = np.array([c(i / (nc - 1)) for i in range(nc)])
-        cmap = colors.ListedColormap(cmap_colors)
-        cmap.set_over(color='#999999', alpha=1)
-        cmap.set_under(color='#999999', alpha=1)
+        cmap = class_cmap(style, len(classes))
 
     # Update range to improve displayed colorbar endpoints
     vmin -= 0.5
