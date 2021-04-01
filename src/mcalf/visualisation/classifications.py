@@ -356,17 +356,13 @@ def plot_class_map(class_map, vmin=None, vmax=None, resolution=None, offset=(0, 
     if cmap is None:
         cmap = class_cmap(style, len(classes))
 
-    # Update range to improve displayed colorbar endpoints
-    vmin -= 0.5
-    vmax += 0.5
-
     # Calculate a specific extent if a resolution is specified
     # TODO: Allow the `dimension` to be set by the user.
     extent = calculate_extent(class_map.shape, resolution, offset,
                               ax=ax, dimension='distance')
 
-    # Plot `class_map`
-    im = ax.imshow(class_map, cmap=cmap, vmin=vmin, vmax=vmax,
+    # Plot `class_map` (update vmin/vmax to improve displayed colorbar endpoints)
+    im = ax.imshow(class_map, cmap=cmap, vmin=vmin-0.5, vmax=vmax+0.5,
                    origin='lower', extent=extent, interpolation='nearest')
 
     if show_colorbar:
