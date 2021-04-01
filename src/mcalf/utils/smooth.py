@@ -2,7 +2,7 @@ import numpy as np
 import scipy.ndimage
 
 
-__all__ = ['moving_average', 'gaussian_kern_3d', 'smooth_cube', 'average_classification']
+__all__ = ['moving_average', 'gaussian_kern_3d', 'smooth_cube', 'mask_classifications']
 
 
 def moving_average(array, width):
@@ -146,37 +146,87 @@ def smooth_cube(cube, mask, **kwargs):
     return cube_
 
 
-def average_classification(class_map, vmin, vmax):
-    """Average a 3D array of classifications.
+def mask_classifications(class_map, vmin=None, vmax=None, reduce=True):
+    """Mask 2D and 3D arrays of classifications.
 
-    Selects the most common classification along the first dimension.
+    If 3D, also reduces to 2D by selecting the most common classification
+    along the first dimension.
 
     Parameters
     ----------
-    class_map : numpy.ndarray[int], ndim=3
-        Array of classifications. First dimension must be time.
-    vmin : int
-        Minimum classification integer to average.
-    vmax : int
-        Maximum classification integer to average.
+    class_map : numpy.ndarray[int], ndim=2 or 3
+        Array of classifications. If `reduce` is True (default) and the array is
+        three-dimensional, it is assumed that the first dimension is time, and
+        a time average classification will be calculated. The time average is
+        the most common positive (valid) classification at each pixel.
+    vmin : int, optional, default=None
+        Minimum classification integer to include. Must be greater or equal to zero.
+        Defaults to min positive integer in `class_map`. Classifications below this
+        value will be set to -1.
+    vmax : int, optional, default=None
+        Maximum classification integer to include. Must be greater than zero.
+        Defaults to max positive integer in `class_map`. Classifications above this
+        value will be set to -1.
+    reduce : bool, optional, default=True
+        Whether to perform the time average described in `class_map` info.
 
     Returns
     -------
-    ave : numpy.ndarray[int], ndim=2
-        `class_map` averaged along the first dimension.
+    class_map : numpy.ndarray[int], ndim=2
+        `class_map` with values between `vmin` and `vmax`
+        averaged along the first dimension.
+    vmin : int
+        Updated `vmin` value.
+    vmax : int
+        Updated `vmax` value.
 
     See Also
     --------
     mcalf.visualisation.plot_class_map : Plot a map of the classifications.
     """
-    c = np.arange(vmin, vmax + 1)  # classes
-    bins = np.arange(vmin - 0.5, vmax + 1)  # len(bins)=len(c)+1
-    ave = np.empty(class_map.shape[1:], dtype=int)
-    for i in range(len(class_map[0])):
-        for j in range(len(class_map[0, 0])):
-            counts = np.histogram(class_map[:, i, j], bins)[0]
-            if counts.max() == 0:
-                ave[i, j] = -1  # no valid classifications
-            else:
-                ave[i, j] = c[counts.argmax()]
-    return ave
+    # Validate the `class_map` parameter
+    if not isinstance(class_map, np.ndarray):
+        raise TypeError(f'`class_map` must be a numpy.ndarray, got {type(class_map)}.')
+    if class_map.ndim not in (2, 3):
+        raise ValueError(f'`class_map` must have either 2 or 3 dimensions, got {class_map.ndim}.')
+    if class_map.dtype not in (int, np.integer):
+        raise TypeError(f'`class_map` must be an array of integers, got {class_map.dtype}.')
+
+    # Validate or set `vmin` and `vmax`
+    if vmax is None:
+        vmax = np.max(class_map[class_map >= 0])
+    elif not isinstance(vmax, (int, np.integer)):
+        raise TypeError(f'`vmax` must be an integer, got {type(vmax)}.')
+    elif vmax < 0:
+        raise ValueError(f'`vmax` must not be less than zero.')
+    if vmin is None:
+        vmin = np.min(class_map[class_map >= 0])
+    elif not isinstance(vmin, (int, np.integer)):
+        raise TypeError(f'`vmin` must be an integer, got {type(vmin)}.')
+    elif vmin < 0:
+        raise ValueError(f'`vmin` must not be less than zero.')
+
+    # Ignore classifications outside of range
+    class_map = class_map.copy()
+    class_map[class_map < vmin] = -1
+    class_map[class_map > vmax] = -1
+
+    # If 3D, choose the most common classification along the first dimension
+    if reduce and class_map.ndim == 3:
+
+        c = np.arange(vmin, vmax + 1)  # classes
+        bins = np.arange(vmin - 0.5, vmax + 1)  # len(bins)=len(c)+1
+
+        ave = np.empty(class_map.shape[1:], dtype=int)  # init
+
+        for i in range(len(class_map[0])):  # spatial rows
+            for j in range(len(class_map[0, 0])):  # spatial columns
+                counts = np.histogram(class_map[:, i, j], bins)[0]
+                if counts.max() == 0:
+                    ave[i, j] = -1  # no valid classifications
+                else:
+                    ave[i, j] = c[counts.argmax()]
+
+        class_map = ave  # Replace 3D array with 2D average
+
+    return class_map, vmin, vmax

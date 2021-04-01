@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt, colors
 from matplotlib.gridspec import GridSpec
 
-from mcalf.utils.smooth import average_classification
+from mcalf.utils.smooth import mask_classifications
 from mcalf.utils.plot import calculate_extent, class_cmap
 
 
@@ -319,36 +319,8 @@ def plot_class_map(class_map, vmin=None, vmax=None, resolution=None, offset=(0, 
     if ax is None:
         ax = plt.gca()
 
-    # Validate the `class_map` parameter
-    if not isinstance(class_map, np.ndarray):
-        raise TypeError(f'`class_map` must be a numpy.ndarray, got {type(class_map)}.')
-    if class_map.ndim not in (2, 3):
-        raise ValueError(f'`class_map` must have either 2 or 3 dimensions, got {class_map.ndim}.')
-    if class_map.dtype not in (int, np.integer):
-        raise TypeError(f'`class_map` must be an array of integers, got {class_map.dtype}.')
-
-    # Validate or set `vmin` and `vmax`
-    if vmax is None:
-        vmax = np.max(class_map[class_map >= 0])
-    elif not isinstance(vmax, (int, np.integer)):
-        raise TypeError(f'`vmax` must be an integer, got {type(vmax)}.')
-    elif vmax < 0:
-        raise ValueError(f'`vmax` must not be less than zero.')
-    if vmin is None:
-        vmin = np.min(class_map[class_map >= 0])
-    elif not isinstance(vmin, (int, np.integer)):
-        raise TypeError(f'`vmin` must be an integer, got {type(vmin)}.')
-    elif vmin < 0:
-        raise ValueError(f'`vmin` must not be less than zero.')
-
-    # Ignore classifications outside of range
-    class_map = class_map.copy()
-    class_map[class_map < vmin] = -1
-    class_map[class_map > vmax] = -1
-
-    # If 3D, choose the most common classification along the first dimension
-    if class_map.ndim == 3:
-        class_map = average_classification(class_map, vmin, vmax)
+    # Mask and average classification map according to the classification range and shape
+    class_map, vmin, vmax = mask_classifications(class_map, vmin, vmax)
 
     # Create a list of the classifications
     classes = np.arange(vmin, vmax + 1, dtype=int)
