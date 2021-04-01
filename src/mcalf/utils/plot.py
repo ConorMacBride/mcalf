@@ -1,9 +1,10 @@
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import astropy.units
 
 
-__all__ = ['hide_existing_labels', 'calculate_axis_extent', 'calculate_extent']
+__all__ = ['hide_existing_labels', 'calculate_axis_extent', 'calculate_extent', 'class_cmap']
 
 
 def hide_existing_labels(plot_settings, axes=None, fig=None):
@@ -208,3 +209,48 @@ def calculate_extent(shape, resolution, offset=(0, 0), ax=None, dimension=None, 
         return l, r, b, t  # extent
 
     return None  # default extent
+
+
+def class_cmap(style, n):
+    """Create a listed colormap for a specific number of classifications.
+
+    Parameters
+    ----------
+    style : str
+        The named matplotlib colormap to extract a :class:`~matplotlib.colors.ListedColormap`
+        from. Colours are selected from `vmin` to `vmax` at equidistant values
+        in the range [0, 1]. The :class:`~matplotlib.colors.ListedColormap`
+        produced will also show bad classifications and classifications
+        out of range in grey.
+        The 'original' style is a special case used since early versions
+        of this code. It is a hardcoded list of 5 colours. When the number
+        of classifications exceeds 5, ``style='viridis'`` will be used.
+    n : int
+        Number of colours (i.e., number of classifications) to include in
+        the colormap.
+
+    Returns
+    -------
+    cmap : matplotlib.colors.ListedColormap
+        Colormap generated for classifications.
+    """
+
+    # Validate `n`
+    if not isinstance(n, (int, np.integer)):
+        raise TypeError(f'`n` must be an integer, got {type(n)}.')
+
+    # Choose colours
+    if style == 'original' and n <= 5:  # original colours
+        cmap_colors = np.array(['#0072b2', '#56b4e9', '#009e73', '#e69f00', '#d55e00'])[:n]
+    else:
+        if style == 'original':
+            style = 'viridis'  # fallback for >5 classifications
+        c = mpl.cm.get_cmap(style)  # query in equal intervals from [0, 1]
+        cmap_colors = np.array([c(i / (n - 1)) for i in range(n)])
+
+    # Generate colormap
+    cmap = mpl.colors.ListedColormap(cmap_colors)
+    cmap.set_over(color='#999999', alpha=1)
+    cmap.set_under(color='#999999', alpha=1)
+
+    return cmap
