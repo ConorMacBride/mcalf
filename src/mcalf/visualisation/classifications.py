@@ -254,7 +254,7 @@ def plot_distribution(class_map, overall_classes=None, classes=None, time_index=
 
 
 def plot_class_map(class_map, vmin=None, vmax=None, resolution=None, offset=(0, 0),
-                   style='original', cmap=None, show_colorbar=True, label=None, ax=None):
+                   style='original', cmap=None, show_colorbar=True, colorbar_settings=None, ax=None):
     """Plot a map of the classifications.
 
     Parameters
@@ -294,8 +294,9 @@ def plot_class_map(class_map, vmin=None, vmax=None, resolution=None, offset=(0, 
         overrides any cmap requested via the `style` parameter.
     show_colorbar : bool, optional, default=True
         Whether to draw a colorbar.
-    label : str, optional, default=None
-        Text to label the colorbar with.
+    colorbar_settings : dict, optional, default=None
+        Dictionary of keyword arguments to pass to :func:`matplotlib.figure.Figure.colorbar`.
+        Ignored if `show_colorbar` is False.
     ax : matplotlib.axes.Axes, optional, default=None
         Axes into which the velocity map will be plotted.
         Defaults to the current axis of the current figure.
@@ -366,6 +367,9 @@ def plot_class_map(class_map, vmin=None, vmax=None, resolution=None, offset=(0, 
                    origin='lower', extent=extent, interpolation='nearest')
 
     if show_colorbar:
-        ax.get_figure().colorbar(im, ax=ax, ticks=classes, orientation='vertical', label=label)
+        cbar_settings = {'ax': [ax], 'ticks': classes}
+        if colorbar_settings is not None:
+            cbar_settings.update(cbar_settings)
+        ax.get_figure().colorbar(im, **cbar_settings)
 
     return im
