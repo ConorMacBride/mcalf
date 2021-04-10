@@ -1,7 +1,5 @@
-import glob
-
 import numpy as np
-from matplotlib import pyplot as plt, colors
+import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
 from mcalf.utils.smooth import mask_classifications
@@ -11,102 +9,148 @@ from mcalf.utils.plot import calculate_extent, class_cmap
 __all__ = ['plot_classifications', 'bar', 'plot_class_map', 'init_class_data']
 
 
-def plot_classifications(class_map, spectra, labels, extent=(0, 200, 0, 200), xticks=(0, 15, 3), yticks=(0, 15, 3),
-                         xscale=0.725*0.097, yscale=0.725*0.097, output=None, figsize=None, dpi=600, fontfamily=None):
-    """Plot the spectra separated into their classifications along with an example classified map.
-
-    Must be 5 classifications.
+def plot_classifications(spectra, labels, nrows=None, ncols=None, nlines=20, style='original', cmap=None,
+                         show_labels=True, plot_settings={}, fig=None):
+    """Plot spectra grouped by their labelled classification.
 
     Parameters
     ----------
-    class_map : ndarray, ndim=2
-        Two-dimensional array of classifications.
     spectra : ndarray, ndim=2
         Two-dimensional array with dimensions [spectra, wavelengths].
     labels : ndarray, ndim=1, length of `spectra`
         List of classifications for each spectrum in `spectra`.
-    output : str, optional, default = None
-        If present, the filename to save the plot as.
-    figsize : 2-tuple, optional, default = None
-        Size of the figure.
-    dpi : int, optional, default = 600
-        The number of dots per inch. For controlling the quality of the outputted figure.
-    fontfamily : str, optional, default = None
-        If provided, this family string will be added to the 'font' rc params group.
-    vmin : float, optional, default = -max(|`velmap`|)
-        Minimum velocity to plot. If not given, will be -vmax, for vmax not None.
-    vmax : float, optional, default = max(|`velmap`|)
-        Maximum velocity to plot. If not given, will be -vmin, for vmin not None.
-    extent : 4-tuple, optional, default = (0, 200, 0, 200)
-        Region the `velmap` is cropped to.
-    xticks : 3-tuple, optional, default = (0, 15, 2)
-        The start, stop and step for the x-axis ticks in Mm.
-    yticks : 3-tuple, optional, default = (0, 15, 2)
-        The start, stop and step for the y-axis ticks in Mm.
-    xscale : float, optional = 0.725 * 0.097
-        Scaling factor between x-axis data coordinate steps and 1 Mm. Mm = data / xscale.
-    yscale : float, optional = 0.725 * 0.097
-        Scaling factor between y-axis data coordinate steps and 1 Mm. Mm = data / xscale.
+    nrows : int, optional, default=None
+        Number of rows. Defaults to rows of max width 3 axes.
+        Special case: four plots will be in a 2x2 grid.
+        Only one of `nrows` and `ncols` can be specified.
+    ncols : int, optional, default=None
+        Number of columns. Defaults to rows of max width 3 axes.
+        Special case: four plots will be in a 2x2 grid.
+        Only one of `nrows` and `ncols` can be specified.
+    nlines : int, optional, default=20
+        Maximum number of lines per classification plot.
+    style : str, optional, default='original'
+        The named matplotlib colormap to extract a :class:`~matplotlib.colors.ListedColormap`
+        from. Colours are selected from `vmin` to `vmax` at equidistant values
+        in the range [0, 1]. The :class:`~matplotlib.colors.ListedColormap`
+        produced will also show bad classifications and classifications
+        out of range in grey.
+        The default 'original' is a special case used since early versions
+        of this code. It is a hardcoded list of 5 colours. When the number
+        of classifications exceeds 5, ``style='viridis'`` will be used.
+    cmap : callable, optional, default=None
+        Function that returns a colour for each input from zero to num. classifications.
+        This parameter overrides any cmap requested via the `style` parameter.
+        Return value is passed to the `color` parameter of
+        :func:`matplotlib.pyplot.axes.Axes.plot`.
+    show_labels : bool, optional, default=True
+        Whether to label the axes with the corresponding classifications.
+    plot_settings : dict, optional, default={}
+        Dictionary of keyword arguments to pass to :func:`matplotlib.pyplot.axes.Axes.plot`.
+    fig : matplotlib.figure.Figure, optional, default=None
+        Figure into which the classifications will be plotted.
+        Defaults to the current figure.
+
+    Returns
+    -------
+    gs : matplotlib.gridspec.GridSpec
+        The grid layout subplots are placed on within the figure.
     """
+    if fig is None:
+        fig = plt.gcf()
 
-    if fontfamily is not None:
-        plt.rc('font', family=fontfamily)
-    fig = plt.figure(constrained_layout=True, figsize=figsize, dpi=dpi)
+    # Validate parameters
 
-    gs = GridSpec(2, 3, figure=fig, wspace=0)
-    ax1 = fig.add_subplot(gs[0, 0])
-    ax2 = fig.add_subplot(gs[0, 1])
-    ax3 = fig.add_subplot(gs[0, 2])
-    ax4 = fig.add_subplot(gs[1, 0])
-    ax5 = fig.add_subplot(gs[1, 1])
-    map_plot = fig.add_subplot(gs[1, 2])
-    axes = [ax1, ax2, ax3, ax4, ax5, map_plot]
+    for n, v in (('spectra', spectra), ('labels', labels)):
+        if not isinstance(v, np.ndarray):
+            raise TypeError(f'`{n}` must be a numpy.ndarray, got {type(v)}.')
 
-    # Optimised for readers with color blindness
-    cmap = colors.ListedColormap(['#0072b2', '#56b4e9', '#009e73', '#e69f00', '#d55e00'])
+    if not spectra.ndim == 2:
+        raise TypeError('`spectra` must be a 2D array.')
 
-    for classification in range(5):
-        n_plots = 0  # Number plotted for this classification
-        ax = axes[classification]  # Select the axis
-        class_colour = cmap(classification)
-        for j in range(len(labels)):
-            if labels[j] == classification:
-                n_plots += 1
-                ax.plot(spectra[j], linewidth=0.5, color=class_colour)
-                if n_plots >= 20:  # Only plot the first 20 of each classification
-                    break
-        ax.set_xticks([])  # No wavelengths plotted
-        ax.set_yticks([0, 1])  # Only show that intensity is scaled [0, 1]
-        ax.margins(0)
+    if not labels.ndim == 1 or labels.dtype not in (int, np.integer):
+        raise TypeError('`labels` must be a 1D array of integers.')
 
-    ax = axes[-1]  # Classification map will be placed in the last axis
+    if len(spectra) != len(labels):
+        raise ValueError('`spectra` and `labels` must be the same length along the first dimension.')
 
-    cmap.set_bad(color='white')  # Background for masked points
-    class_map_float = np.asarray(class_map, dtype=float)
-    class_map_float[class_map == -1] = np.nan
-    classif_img = ax.imshow(class_map_float[::-1], cmap=cmap, vmin=-0.5, vmax=4.5, interpolation='nearest')
+    if nrows is not None and ncols is not None:
+        raise ValueError('Both `nrows` and `ncols` cannot be given together.')
 
-    ax.set_xlim(*extent[:2]), ax.set_ylim(*extent[2:])
+    for n, v in (('nrows', nrows), ('ncols', ncols)):
+        if v is not None and not isinstance(v, (int, np.integer)):
+            raise TypeError(f'`{n}` must be an integer, got {type(v)}.')
 
-    xticks_Mm = np.arange(*xticks)
-    xticks = (xticks_Mm / xscale) + extent[0]
-    ax.set_xticks(xticks)
-    ax.set_xticklabels(xticks_Mm)
-    ax.set_xlabel('Distance (Mm)')
+    if not isinstance(nlines, (int, np.integer)) or nlines <= 0:
+        raise TypeError('`nlines` must be a positive integer.')
 
-    yticks_Mm = np.arange(*yticks)
-    yticks = (yticks_Mm / yscale) + extent[2]
-    ax.set_yticks(yticks)
-    ax.set_yticklabels(yticks_Mm)
-    ax.set_ylabel('Distance (Mm)')
+    # Find and count unique classifications
+    classifications = np.unique(labels)
+    n = len(classifications)  # number of subplots
+    if n == 0:  # no data, no plot
+        return fig
 
-    cbar = fig.colorbar(classif_img, ax=axes, ticks=[0, 1, 2, 3, 4], orientation='horizontal', shrink=1, pad=0)
-    cbar.ax.set_xticklabels(['0\nabsorption', '1', '2', '3', '4\nemission'])
+    # Set `nrows` and `ncols`
+    if ncols is None and nrows is None:
+        if n == 1:
+            ncols = 1
+        elif n == 2 or n == 4:
+            ncols = 2
+        else:
+            ncols = 3
+        nrows = int(np.ceil(n / ncols))
+    elif ncols is None:
+        ncols = int(np.ceil(n / nrows))
+    elif nrows is None:
+        nrows = int(np.ceil(n / ncols))
 
-    plt.show()
+    # Verify `nrows` and `ncols`
+    if nrows * ncols < n:
+        raise ValueError('`nrows` and `ncols` too small for number of classifications to be plotted.')
+    if (nrows - 1) * ncols >= n:
+        raise ValueError('`nrows` is larger than it needs to be.')
+    if nrows * (ncols - 1) >= n:
+        raise ValueError('`ncols` is larger than it needs to be.')
 
-    if output is not None and isinstance(output, str):
-        fig.savefig(output, bbox_inches='tight', dpi=dpi)
+    gs = GridSpec(nrows, ncols, figure=fig, wspace=0)
+
+    # Configure the color map
+    if cmap is None:
+        cmap = class_cmap(style, n)
+
+    for i in range(n):
+
+        ax = fig.add_subplot(gs[i])
+
+        c = classifications[i]
+        lines = spectra[labels == c]
+        if len(lines) > nlines:  # crop if too big
+            lines = lines[:nlines]
+
+        # Whether to crop the y-axis to [0, 1]
+        limit_y = False
+        if np.nanmin(lines) > -1e-6 and np.nanmax(lines) < 1 + 1e-6:
+            limit_y = True
+
+        color = cmap(i)  # extract the single color from the listed colormap
+        for l in lines:
+            ax.plot(l, color=color, **plot_settings)
+
+        if limit_y:  # if data within range [0, 1]
+            ax.set_ylim(0, 1)
+            ax.set_yticks([0, 1])  # only show that intensity is scaled [0, 1]
+
+        ax.set_xticks([])  # no wavelengths plotted
+        ax.margins(0)  # no "gaps" at line ends
+
+        for loc, spine in ax.spines.items():
+            if loc != 'left':
+                spine.set_color('none')  # don't draw spine
+
+        if show_labels:
+            ax.set_title(f'classification {str(c)}')
+
+    return gs
 
 
 def bar(class_map=None, vmin=None, vmax=None, reduce=True, style='original', cmap=None, ax=None, data=None):
