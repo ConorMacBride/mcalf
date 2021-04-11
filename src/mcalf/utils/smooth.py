@@ -192,6 +192,14 @@ def mask_classifications(class_map, vmin=None, vmax=None, reduce=True):
     if not issubclass(class_map.dtype.type, np.integer):
         raise TypeError(f'`class_map` must be an array of integers, got {class_map.dtype}.')
 
+    # Short-circuit if all classifications negative
+    if len(class_map[class_map >= 0]) == 0:
+        class_map = class_map.copy()
+        if reduce and class_map.ndim == 3:
+            class_map = class_map[0]
+        class_map[:] = -1  # Set all invalid to -1 for consistency with main code
+        return class_map, vmin, vmax
+
     # Validate or set `vmin` and `vmax`
     if vmax is None:
         vmax = np.max(class_map[class_map >= 0])
@@ -205,6 +213,8 @@ def mask_classifications(class_map, vmin=None, vmax=None, reduce=True):
         raise TypeError(f'`vmin` must be an integer, got {type(vmin)}.')
     elif vmin < 0:
         raise ValueError(f'`vmin` must not be less than zero.')
+    if vmin > vmax:
+        raise ValueError(f'`vmin` must be less than `vmax`, got {vmin} to {vmax}.')
 
     # Ignore classifications outside of range
     class_map = class_map.copy()
