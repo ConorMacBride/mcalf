@@ -44,6 +44,7 @@
   "mcalf.tests.visualisation.test_classifications.test_plot_class_map_range": "e1fed8e6f20f1630a7f64d1df8c9f57685bceb7862f8a5f8b11ae554990766ce",
   "mcalf.tests.visualisation.test_classifications.test_plot_class_map_units": "3737733a86ca318cfa6bde65cf922934f269b72cba90c75361971221000fbd27",
   "mcalf.tests.visualisation.test_classifications.test_plot_class_map_allbad": "944e89a497b2e481fe6f61552964d1c183cd39e778113ac366a3ff55dce107a5",
+  "mcalf.tests.visualisation.test_classifications.test_plot_bar_and_class_map": "6a341082b466fb7157b355bd794aa5d9574b5e201b42f0f5735c33a23fb4da91",
   "mcalf.tests.visualisation.test_spec.test_plot_spectrum": "79afa94c229e75646304b14bb388df30f23d6fd06ac82cfa4443ab05fc4c4a4a",
   "mcalf.tests.visualisation.test_spec.test_plot_spectrum_no_smooth": "c4bf62988715825cecaf75e03b66c05231854e5b84962fbd03f11e1c381e1273",
   "mcalf.tests.visualisation.test_spec.test_plot_spectrum_no_norm": "f4a52acdbb2a614e0a775ff7833a95151bf6188126286d1eb87fedef7f324711",
