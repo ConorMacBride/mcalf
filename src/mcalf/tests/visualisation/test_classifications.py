@@ -128,3 +128,40 @@ def test_plot_classifications_not01(pytestconfig):
     s, l = spectra(40, 30, 3, 5)  # 2 plots
     s[l == 4] += 0.5  # classification 4 not in [0, 1]
     plot_classifications(s, l)
+
+
+def test_no_args():
+    # Custom errors as not required if data keyword argument given.
+
+    with pytest.raises(TypeError) as e:
+        bar()
+    assert "bar() missing 1 required positional argument: 'class_map'" == str(e.value)
+
+    with pytest.raises(TypeError) as e:
+        plot_class_map()
+    assert "plot_class_map() missing 1 required positional argument: 'class_map'" == str(e.value)
+
+
+@figure_test
+def test_bar(pytestconfig):
+    m = class_map(30, 10, 20, 8)
+    bar(m)
+
+
+@figure_test
+def test_bar_range(pytestconfig):
+    m = class_map(30, 10, 20, 8)
+    bar(m, vmin=2, vmax=4)
+
+
+@figure_test
+def test_bar_reduce(pytestconfig):
+    m = class_map(30, 10, 20, 8)
+    bar(m, reduce=False)
+
+
+@figure_test
+def test_bar_allbad(pytestconfig):
+    m = class_map(30, 10, 20, 8)
+    m[:] = -1
+    bar(m)
