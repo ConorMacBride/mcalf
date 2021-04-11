@@ -198,6 +198,10 @@ def mask_classifications(class_map, vmin=None, vmax=None, reduce=True):
         if reduce and class_map.ndim == 3:
             class_map = class_map[0]
         class_map[:] = -1  # Set all invalid to -1 for consistency with main code
+        if vmin is None:
+            vmin = 0
+        if vmax is None:
+            vmax = 0
         return class_map, vmin, vmax
 
     # Validate or set `vmin` and `vmax`

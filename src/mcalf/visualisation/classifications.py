@@ -208,7 +208,7 @@ def bar(class_map=None, vmin=None, vmax=None, reduce=True, style='original', cma
 
     if data is None:
         if class_map is None:  # `class_map` must always be provided
-            raise TypeError("plot_class_map() missing 1 required positional argument: 'class_map'")
+            raise TypeError("bar() missing 1 required positional argument: 'class_map'")
         data = init_class_data(class_map, vmin=vmin, vmax=vmax, reduce=reduce, style=style, cmap=cmap)
 
     # Count for each classification
@@ -216,9 +216,10 @@ def bar(class_map=None, vmin=None, vmax=None, reduce=True, style='original', cma
     counts = np.array([len(d[d == i]) for i in data['classes']])
     d = counts / len(d) * 100  # Convert to percentage
 
-    b = ax.bar(data['classes'], d, color=data['cmap'](data['classes']))
+    b = ax.bar(data['classes'], d, color=data['cmap'](np.arange(len(data['classes']))))
 
-    ax.set(xlabel='classification', ylabel='abundance (%)', yscale='log', ylim=(0.01, 100))
+    ax.set(xlabel='classification', ylabel='abundance (%)', yscale='log', ylim=(0.01, 100),
+           xticks=data['classes'], xticklabels=data['classes'])
 
     return b
 
@@ -401,7 +402,7 @@ def init_class_data(class_map, vmin=None, vmax=None, reduce=True, resolution=Non
     # Create and update colorbar settings
     cbar_settings = {'ax': [ax], 'ticks': classes}
     if colorbar_settings is not None:
-        cbar_settings.update(cbar_settings)
+        cbar_settings.update(colorbar_settings)
 
     data = {
         'class_map': class_map,
