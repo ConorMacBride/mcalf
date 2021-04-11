@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import astropy.units
 
-from mcalf.utils.plot import hide_existing_labels, calculate_axis_extent, calculate_extent
+from mcalf.utils.plot import hide_existing_labels, calculate_axis_extent, calculate_extent, class_cmap
+from ..helpers import figure_test
 
 
 def test_hide_existing_labels():
@@ -120,3 +121,34 @@ def test_calculate_extent_ax():
     x, y = plot_helper_calculate_extent(*args, dimension='test / same')
     assert 'test / same (Mm)' == x
     assert 'test / same (Mm)' == y
+
+
+def test_class_cmap():
+
+    # Incorrect `n` type
+    with pytest.raises(TypeError) as e:
+        class_cmap('original', 2.5)
+    assert '`n` must be an integer' in str(e.value)
+
+    # Correct `n` type
+    class_cmap('original', 4)
+
+
+@figure_test
+def test_class_cmap_plot(pytestconfig):
+
+    params = (
+        ('original', 3),
+        ('original', 5),
+        ('original', 6),
+        ('jet', 4),
+    )
+
+    fig, axes = plt.subplots(len(params))
+
+    for ax, (style, n) in zip(axes, params):
+        gradient = np.arange(-1, n + 1)
+        gradient = np.vstack((gradient, gradient))
+        cmap = class_cmap(style, n)
+        ax.imshow(gradient, vmin=-0.5, vmax=n - 0.5, cmap=cmap)
+        ax.set(xticks=[], yticks=[])

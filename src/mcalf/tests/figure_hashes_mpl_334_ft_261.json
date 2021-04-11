@@ -27,6 +27,7 @@
   "mcalf.tests.models.test_ibis.test_ibis8542model_fitresult_plot[i5]": "a96d0ff1a721676fe75af314fadcbfbdcba5336061cdd04c74ce0005d2f66e72",
   "mcalf.tests.models.test_ibis.test_ibis8542model_plot_spectrum": "3089fe8fa8a114151305eb8cf6102b5a20a097060e0341eba04a77a289aa3d9d",
   "mcalf.tests.models.test_ibis.test_ibis8542model_plot_no_intensity": "f0b62e648277140d2ae678df58c280e6cc817c5d4957f9568e960a9ac3c0e3d1",
+  "mcalf.tests.utils.test_plot.test_class_cmap_plot": "9f3010ccfb3db42e712d36b4369b94bff2f662864786d3291d370469bc6394ad",
   "mcalf.tests.visualisation.test_spec.test_plot_spectrum": "79afa94c229e75646304b14bb388df30f23d6fd06ac82cfa4443ab05fc4c4a4a",
   "mcalf.tests.visualisation.test_spec.test_plot_spectrum_no_smooth": "c4bf62988715825cecaf75e03b66c05231854e5b84962fbd03f11e1c381e1273",
   "mcalf.tests.visualisation.test_spec.test_plot_spectrum_no_norm": "f4a52acdbb2a614e0a775ff7833a95151bf6188126286d1eb87fedef7f324711",
