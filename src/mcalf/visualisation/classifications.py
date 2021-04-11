@@ -369,7 +369,7 @@ def init_class_data(class_map, vmin=None, vmax=None, reduce=True, resolution=Non
     colorbar_settings : dict, optional, default=None
         Dictionary of keyword arguments to pass to :func:`matplotlib.figure.Figure.colorbar`.
     ax : matplotlib.axes.Axes, optional, default=None
-        Axes into which the velocity map will be plotted.
+        Axes into which the classification map will be plotted.
         Defaults to the current axis of the current figure.
 
     Returns
