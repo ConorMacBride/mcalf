@@ -1,10 +1,8 @@
 import pytest
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy.io import fits
-import astropy.units
 
-from mcalf.utils.misc import make_iter, load_parameter, merge_results, hide_existing_labels, calculate_extent
+from mcalf.utils.misc import make_iter, load_parameter, merge_results
 
 from ..helpers import data_path_function
 data_path = data_path_function('utils')
@@ -115,53 +113,3 @@ def test_merge_results(tmp_path):
             data_path('test_merge_results_2.fits'),
         ], output_file)
     assert 'nexpected' in str(excinfo.value)  # "Unexpected"
-
-
-def test_hide_existing_labels():
-    plot_settings = {
-        'LineA': {'color': 'r', 'label': 'A'},
-        'LineB': {'color': 'g', 'label': 'B'},
-        'LineC': {'color': 'b', 'label': 'C'},
-    }
-    fig, ax = plt.subplots()
-    ax.plot([0, 1], [0, 1], **plot_settings['LineA'])
-    ax.plot([0, 1], [1, 0], **plot_settings['LineB'])
-    hide_existing_labels(plot_settings)
-    plt.close()
-    ret = [x['label'] for x in plot_settings.values()]
-    assert ret == ['_A', '_B', 'C']
-
-
-def test_calculate_extent():
-    # Invalid `res`
-    with pytest.raises(TypeError) as e:
-        calculate_extent('1 m', 1000)
-    assert '`resolution` values must be' in str(e.value)
-
-    # Invalid `px`
-    with pytest.raises(TypeError) as e:
-        calculate_extent(250.0, 1000.5)
-    assert '`px` must be an integer' in str(e.value)
-
-    # Invalid `offset`
-    with pytest.raises(TypeError) as e:
-        calculate_extent(250.0, 1000, [10])
-    assert '`offset` must be an float or integer' in str(e.value)
-
-    # Default `unit` used
-    _, _, un = calculate_extent(250.0, 1000, 10)
-    assert un == 'Mm'  # Will fail if default value is changed
-    _, _, un = calculate_extent(250.0, 1000, 10, 'testunit')
-    assert un == 'testunit'  # Will fail if default value is changed
-
-    # Unit extracted
-    _, _, un = calculate_extent(250.0 * astropy.units.kg, 1000, 10, 'testunit')
-    assert un == '$\\mathrm{kg}$'
-
-    # Test good values
-    f, l, _ = calculate_extent(3., 7, -3.5)
-    assert -10.5 == pytest.approx(f)
-    assert 10.5 == pytest.approx(l)
-    f, l, _ = calculate_extent(2., 2, 1)
-    assert 2. == pytest.approx(f)
-    assert 6. == pytest.approx(l)

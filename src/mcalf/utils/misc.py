@@ -2,13 +2,11 @@ import os
 from shutil import copyfile
 
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy.io import fits
-import astropy.units
 from scipy.io import readsav
 
 
-__all__ = ['make_iter', 'load_parameter', 'merge_results', 'hide_existing_labels', 'calculate_extent']
+__all__ = ['make_iter', 'load_parameter', 'merge_results']
 
 
 def make_iter(*args):
@@ -355,132 +353,3 @@ def _zero_test(x):
         Whether corresponding index is not 0.
     """
     return x != 0
-
-
-def hide_existing_labels(plot_settings, axes=None, fig=None):
-    """Hides labels for each dictionary provided if label already exists in legend.
-
-    Parameters
-    ----------
-    plot_settings : dict of {str: dict}
-        Dictionary of lines to be plotted. Values must be dictionaries with a 'label'
-        entry that this function my append with a '_' to hide the label.
-    axes : list of matplotlib.axes.Axes, optional, default=None
-        List of axes to extract lines labels from. Extracts axes from `fig` if omitted.
-    fig : matplotlib.figure.Figure, optional, default=None
-        Figure to take line labels from. Uses current figure if omitted.
-
-    Notes
-    -----
-    Only the ``plot_settings[*]['label']`` values are uses to assess if a label has already
-    been used. Other `plot_settings` parameters such as `color` are ignored.
-
-    Examples
-    --------
-
-    Import plotting package:
-
-    >>> import matplotlib.pyplot as plt
-
-    Define various plot settings:
-
-    >>> plot_settings = {
-    ...     'LineA': {'color': 'r', 'label': 'A'},
-    ...     'LineB': {'color': 'g', 'label': 'B'},
-    ...     'LineC': {'color': 'b', 'label': 'C'},
-    ... }
-
-    Create a figure and plot two lines on the first axes:
-
-    >>> fig, axes = plt.subplots(1, 2)
-    >>> axes[0].plot([0, 1], [0, 1], **plot_settings['LineA'])  # doctest: +ELLIPSIS
-    [<matplotlib.lines.Line2D object at 0x...>]
-    >>> axes[0].plot([0, 1], [1, 0], **plot_settings['LineB'])  # doctest: +ELLIPSIS
-    [<matplotlib.lines.Line2D object at 0x...>]
-
-    Set labels already used to be hidden if used again:
-
-    >>> hide_existing_labels(plot_settings)
-
-    Anything already used will have an underscore prepended:
-
-    >>> [x['label'] for x in plot_settings.values()]
-    ['_A', '_B', 'C']
-
-    Plot two lines on the second axes:
-
-    >>> axes[1].plot([0, 1], [0, 1], **plot_settings['LineB'])  # Label hidden  # doctest: +ELLIPSIS
-    [<matplotlib.lines.Line2D object at 0x...>]
-    >>> axes[1].plot([0, 1], [1, 0], **plot_settings['LineC'])  # doctest: +ELLIPSIS
-    [<matplotlib.lines.Line2D object at 0x...>]
-
-    Show the figure with the legend:
-
-    >>> fig.legend(ncol=3, loc='upper center')  # doctest: +ELLIPSIS
-    <matplotlib.legend.Legend object at 0x...>
-    >>> plt.show()
-    >>> plt.close()
-    """
-    # Get axes:
-    if axes is None:
-        if fig is None:
-            fig = plt.gcf()
-        axes = fig.get_axes()
-
-    # Get plotted labels:
-    lines = []
-    for ax in axes:
-        lines.extend(ax.get_lines())
-    existing = [line.get_label() for line in lines]
-
-    # Hide labels already plotted:
-    for name in plot_settings:
-        if plot_settings[name]['label'] in existing:
-            plot_settings[name]['label'] = '_' + plot_settings[name]['label']
-
-
-def calculate_extent(res, px, offset=0, unit="Mm"):
-    """Calculate the extent from a resolution value.
-
-    Parameters
-    ----------
-    res : float or astropy.units.quantity.Quantity
-        Length of each pixel. Unit defaults to `unit` is not an astropy quantity.
-    px : int
-        Number of pixels extent is being calculated for.
-    offset : int or float, default=0
-        Number of pixels from the 0 pixel to the first pixel. Defaults to the first
-        pixel being at 0 length units. For example, in a 1000 pixel wide dataset,
-        setting offset to -500 would place the 0 Mm location at the centre.
-    unit : str, default="Mm"
-        Default unit string to use if `res` is not an astropy quantity.
-
-    Returns
-    -------
-    first : float
-        First extent value.
-    last : float
-        Last extent value.
-    unit : str
-        Unit of extent values.
-    """
-
-    # Ensure a valid spatial and pixel resolution is provided
-    if not isinstance(res, (float, astropy.units.quantity.Quantity)):
-        raise TypeError('`resolution` values must be either floats or astropy quantities'
-                        f', got {type(res)}.')
-    if not isinstance(px, (int, np.integer)):
-        raise TypeError(f'`px` must be an integer, got {type(px)}.')
-    if not isinstance(offset, (float, int, np.integer)):
-        raise TypeError(f'`offset` must be an float or integer, got {type(offset)}.')
-
-    # Update the default unit if a quantity is provided
-    if isinstance(res, astropy.units.quantity.Quantity):
-        unit = res.unit.to_string(astropy.units.format.LatexInline)
-        res = float(res.value)  # Remove the unit
-
-    # Calculate the extent values
-    first = offset * res
-    last = (px + offset) * res
-
-    return first, last, unit

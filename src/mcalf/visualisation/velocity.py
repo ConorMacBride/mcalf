@@ -5,57 +5,62 @@ import matplotlib as mpl
 from matplotlib import pyplot as plt
 import astropy.units
 
-from mcalf.utils.misc import calculate_extent
+from mcalf.utils.plot import calculate_extent
 
 
 __all__ = ['plot_map']
 
 
 def plot_map(arr, mask=None, umbra_mask=None, resolution=None, offset=(0, 0), vmin=None, vmax=None,
-             unit="km/s", lw=None, show_colorbar=True, ax=None):
+             lw=None, show_colorbar=True, unit="km/s", ax=None):
     """Plot a velocity map array.
 
     Parameters
     ----------
-    arr : numpy.ndarray of float or astropy.units.quantity.Quantity, ndim=2
+    arr : numpy.ndarray[float] or astropy.units.quantity.Quantity, ndim=2
         Two-dimensional array of velocities.
-    mask : numpy.ndarray of bool, ndim=2, shape=arr, optional, default=None
+    mask : numpy.ndarray[bool], ndim=2, shape=arr, optional, default=None
         Mask showing the region where velocities were found for. True is outside the
         velocity region and False is where valid velocities should be found. Specifying
         a mask allows for errors in the velocity calculation to be black and points
         outside the region to be gray. If omitted, all invalid points will be gray.
-    umbra_mask : numpy.ndarray of bool, ndim=2, shape=arr, optional, default=None
+    umbra_mask : numpy.ndarray[bool], ndim=2, shape=arr, optional, default=None
         A mask of the umbra, True outside, False inside. If given, a contour will
         outline the umbra, or other feature the mask represents.
-    resolution : tuple of float or astropy.units.quantity.Quantity, optional, default=None
+    resolution : tuple[float] or astropy.units.quantity.Quantity, optional, default=None
         A 2-tuple (x, y) containing the length of each pixel in the x and y direction respectively.
         If a value has type :class:`astropy.units.quantity.Quantity`, its axis label will
         include its attached unit, otherwise the unit will default to Mm.
         If `resolution` is None, both axes will be ticked with the default pixel value
         with no axis labels.
-    offset : tuple of float or int, length=2, optional, default=(0, 0)
+    offset : tuple[float] or int, length=2, optional, default=(0, 0)
         Two offset values (x, y) for the x and y axis respectively.
         Number of pixels from the 0 pixel to the first pixel. Defaults to the first
         pixel being at 0 length units. For example, in a 1000 pixel wide dataset,
         setting offset to -500 would place the 0 Mm location at the centre.
-    vmin : float, optional, default=-max(|arr|)
+    vmin : float, optional, default= ``-max(|arr|)``
         Minimum velocity to plot. If not given, will be -vmax, for vmax not None.
-    vmax : float, optional, default=max(|arr|)
+    vmax : float, optional, default= ``max(|arr|)``
         Maximum velocity to plot. If not given, will be -vmin, for vmin not None.
-    unit : str, optional, default='km/s'
-        The units of `arr` data. Printed on colorbar.
     lw : float, optional, default=None
-        The width of the contour plotted for `umbra_mask`.
+        The line width of the contour line plotted for `umbra_mask`.
+        Passed as `linewidths` to :func:`matplotlib.axes.Axes.contour`.
     show_colorbar : bool, optional, default=True
         Whether to draw a colorbar.
+    unit : str or astropy.units.UnitBase or astropy.units.quantity.Quantity, optional, default='km/s'
+        The units of `arr` data. Printed on colorbar.
     ax : matplotlib.axes.Axes, optional, default=None
         Axes into which the velocity map will be plotted.
         Defaults to the current axis of the current figure.
 
     Returns
     -------
-    ax : matplotlib.axes.Axes
-        Axes the lines are drawn on.
+    im : matplotlib.image.AxesImage
+        The object returned by :func:`matplotlib.axes.Axes.imshow` after plotting `arr`.
+
+    See Also
+    --------
+    mcalf.models.FitResults.velocities : Calculate the Doppler velocities for an array of fits.
     """
     if ax is None:
         ax = plt.gca()
@@ -82,22 +87,9 @@ def plot_map(arr, mask=None, umbra_mask=None, resolution=None, offset=(0, 0), vm
         unit = unit.to_string(astropy.units.format.LatexInline)
 
     # Calculate a specific extent if a resolution is specified
-    extent = None  # Set default value
-    if resolution is not None:
-
-        # Validate relevant parameters
-        for n, v in (('resolution', resolution), ('offset', offset)):
-            if not isinstance(v, tuple) or len(v) != 2:
-                raise TypeError(f'`{n}` must be a tuple of length 2.')
-
-        # Calculate extent values, and extract units
-        ypx, xpx = arr.shape
-        l, r, x_unit = calculate_extent(resolution[0], xpx, offset=offset[0])
-        b, t, y_unit = calculate_extent(resolution[1], ypx, offset=offset[1])
-        extent = (l, r, b, t)
-
-        ax.set_xlabel(f'distance ({x_unit})')
-        ax.set_ylabel(f'distance ({y_unit})')
+    # TODO: Allow the `dimension` to be set by the user.
+    extent = calculate_extent(arr.shape, resolution, offset,
+                              ax=ax, dimension='distance')
 
     # Configure default colormap
     cmap = copy.copy(mpl.cm.get_cmap('bwr'))
@@ -145,4 +137,4 @@ def plot_map(arr, mask=None, umbra_mask=None, resolution=None, offset=(0, 0), vm
     if show_colorbar:
         ax.get_figure().colorbar(im, ax=[ax], label=f'Doppler velocity ({unit})')
 
-    return ax
+    return im

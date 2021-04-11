@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from mcalf.profiles.voigt import double_voigt, voigt
 from mcalf.utils.spec import reinterpolate_spectrum
-from mcalf.utils.misc import hide_existing_labels
+from mcalf.utils.plot import hide_existing_labels
 
 
 __all__ = ['plot_ibis8542', 'plot_spectrum']

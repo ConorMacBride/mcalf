@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
 
-from mcalf.utils.smooth import moving_average, gaussian_kern_3d, smooth_cube
+from mcalf.utils.smooth import moving_average, gaussian_kern_3d, smooth_cube, mask_classifications
+from ..helpers import class_map
 
 
 def test_moving_average():
@@ -118,3 +119,74 @@ def test_smooth_cube():
                        [9.29777733e+00, 2.29946022e+01, 2.27115569e+01, np.nan, 5.81933193e+00],
                        [np.nan, 2.28704008e+01, 3.00036917e+01, 3.39226239e+00, -7.61449514e+00]]])
     assert res == pytest.approx(truth, nan_ok=True)
+
+
+def test_mask_classifications():
+
+    with pytest.raises(TypeError) as e:
+        mask_classifications([[0, 1], [1, 2]])
+    assert '`class_map` must be a numpy.ndarray' in str(e.value)
+
+    c = class_map(4, 5, 3, 5)  # t y x n
+
+    with pytest.raises(ValueError) as e:
+        mask_classifications(c[0, 0])
+    assert '`class_map` must have either 2 or 3 dimensions, got 1' in str(e.value)
+
+    with pytest.raises(TypeError) as e:
+        mask_classifications(c.astype(float))
+    assert '`class_map` must be an array of integers' in str(e.value)
+
+    with pytest.raises(TypeError) as e:
+        mask_classifications(c, vmax=3.5)
+    assert '`vmax` must be an integer' in str(e.value)
+
+    with pytest.raises(ValueError) as e:
+        mask_classifications(c, vmax=-2)
+    assert '`vmax` must not be less than zero' in str(e.value)
+
+    with pytest.raises(TypeError) as e:
+        mask_classifications(c, vmin=3.5)
+    assert '`vmin` must be an integer' in str(e.value)
+
+    with pytest.raises(ValueError) as e:
+        mask_classifications(c, vmin=-2)
+    assert '`vmin` must not be less than zero' in str(e.value)
+
+    # vmin above vmax
+    with pytest.raises(ValueError) as e:
+        mask_classifications(c, vmin=3, vmax=1)
+    assert '`vmin` must be less than `vmax`' in str(e.value)
+
+    # no processing needed: 2D with original range
+    assert np.array_equal(mask_classifications(class_map(1, 5, 3, 5)[0])[0], class_map(1, 5, 3, 5)[0])
+
+    # no processing requested: 3D with original range
+    assert np.array_equal(mask_classifications(class_map(4, 5, 3, 5), reduce=False)[0], class_map(4, 5, 3, 5))
+
+    # test vmin and vmax calculated correctly
+    c = class_map(4, 5, 3, 6)  # t y x n
+    c[c == 0] = -1  # move all classification 0 -> -1
+    assert mask_classifications(c)[1:3] == (1, 5)
+
+    # test vmin and vmax used correctly
+    truth = np.array([[1, -1, 1, -1],
+                      [1, 2, -1, 2],
+                      [2, -1, -1, -1]], dtype=int)
+    res = mask_classifications(class_map(1, 4, 3, 4)[0], vmin=1, vmax=2)[0]
+    assert np.array_equal(res, truth)
+
+    # test average calculated correctly
+    truth = np.array([[1, 2, 0, 3],
+                      [1, 0, 0, 2],
+                      [2, 0, -1, 1]], dtype=int)
+    res = mask_classifications(class_map(3, 4, 3, 4))[0]
+    assert np.array_equal(res, truth)
+
+    # test all negative
+    c = np.full((4, 6), -1, dtype=int)
+    assert np.array_equal(c, mask_classifications(c)[0])
+    c = np.full((3, 4, 6), -1, dtype=int)
+    assert np.array_equal(c[0], mask_classifications(c)[0])
+    c = np.full((3, 4, 6), -1, dtype=int)
+    assert np.array_equal(c, mask_classifications(c, reduce=False)[0])
