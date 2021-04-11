@@ -189,7 +189,7 @@ def mask_classifications(class_map, vmin=None, vmax=None, reduce=True):
         raise TypeError(f'`class_map` must be a numpy.ndarray, got {type(class_map)}.')
     if class_map.ndim not in (2, 3):
         raise ValueError(f'`class_map` must have either 2 or 3 dimensions, got {class_map.ndim}.')
-    if class_map.dtype not in (int, np.integer):
+    if not issubclass(class_map.dtype.type, np.integer):
         raise TypeError(f'`class_map` must be an array of integers, got {class_map.dtype}.')
 
     # Validate or set `vmin` and `vmax`

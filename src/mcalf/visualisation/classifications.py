@@ -68,7 +68,7 @@ def plot_classifications(spectra, labels, nrows=None, ncols=None, nlines=20, sty
     if not spectra.ndim == 2:
         raise TypeError('`spectra` must be a 2D array.')
 
-    if not labels.ndim == 1 or labels.dtype not in (int, np.integer):
+    if not labels.ndim == 1 or not issubclass(labels.dtype.type, np.integer):
         raise TypeError('`labels` must be a 1D array of integers.')
 
     if len(spectra) != len(labels):
