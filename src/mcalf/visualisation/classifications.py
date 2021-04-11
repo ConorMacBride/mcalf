@@ -87,8 +87,8 @@ def plot_classifications(spectra, labels, nrows=None, ncols=None, nlines=20, sty
     # Find and count unique classifications
     classifications = np.unique(labels)
     n = len(classifications)  # number of subplots
-    if n == 0:  # no data, no plot
-        return fig
+    if n == 0:
+        return None
 
     # Set `nrows` and `ncols`
     if ncols is None and nrows is None:
@@ -105,8 +105,6 @@ def plot_classifications(spectra, labels, nrows=None, ncols=None, nlines=20, sty
         nrows = int(np.ceil(n / ncols))
 
     # Verify `nrows` and `ncols`
-    if nrows * ncols < n:
-        raise ValueError('`nrows` and `ncols` too small for number of classifications to be plotted.')
     if (nrows - 1) * ncols >= n:
         raise ValueError('`nrows` is larger than it needs to be.')
     if nrows * (ncols - 1) >= n:
