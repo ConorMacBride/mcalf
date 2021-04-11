@@ -3,12 +3,13 @@ import pkg_resources
 from pathlib import Path
 from functools import wraps
 
+import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pytest
 
 
-__all__ = ['data_path_function', 'get_mpl_ft2_version', 'figure_test']
+__all__ = ['data_path_function', 'get_mpl_ft2_version', 'figure_test', 'class_map']
 
 
 def data_path_function(mod):
@@ -75,3 +76,11 @@ def figure_test(test_function):
             return ret
 
     return test_wrapper
+
+
+def class_map(t=30, x=10, y=20, n=6):
+    """Generate a 3D array (t, y, x) of classifications between -1 and n."""
+    np.random.seed(4321)
+    c = np.random.randint(-1, n, size=(t, y, x))
+    c[:, 2, 2] = -1
+    return c
