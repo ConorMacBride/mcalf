@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import astropy.units as u
 
 from mcalf.visualisation import plot_classifications, bar, plot_class_map, init_class_data
 from ..helpers import figure_test, class_map
@@ -165,3 +166,35 @@ def test_bar_allbad(pytestconfig):
     m = class_map(30, 10, 20, 8)
     m[:] = -1
     bar(m)
+
+
+@figure_test
+def test_plot_class_map(pytestconfig):
+    m = class_map(30, 10, 20, 8)
+    plot_class_map(m)
+
+
+@figure_test
+def test_plot_class_map_nocolorbar(pytestconfig):
+    m = class_map(30, 10, 20, 8)
+    plot_class_map(m, show_colorbar=False)
+
+
+@figure_test
+def test_plot_class_map_range(pytestconfig):
+    m = class_map(30, 10, 20, 8)
+    plot_class_map(m, vmin=2, vmax=4)
+
+
+@figure_test
+def test_plot_class_map_units(pytestconfig):
+    m = class_map(30, 10, 20, 8)
+    plot_class_map(m, resolution=(2.5 * u.m, 3.5 * u.km), offset=(5, 10),
+                   dimension=('dim x', 'dim y'))
+
+
+@figure_test
+def test_plot_class_map_allbad(pytestconfig):
+    m = class_map(30, 10, 20, 8)
+    m[:] = -1
+    plot_class_map(m)
