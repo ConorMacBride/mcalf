@@ -31,6 +31,7 @@ release = get_distribution('mcalf').version
 # -- General configuration ---------------------------------------------------
 
 import sphinx_rtd_theme
+from sphinx_gallery.sorting import FileNameSortKey
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -47,6 +48,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
+    'sphinx_gallery.gen_gallery',
 ]
 numpydoc_show_class_members = False
 nbsphinx_execute = 'never'
@@ -67,6 +69,16 @@ intersphinx_mapping = {
     "numpy": ('https://numpy.org/doc/stable', None),
     "scipy": ('https://docs.scipy.org/doc/scipy/reference', None),
     "sklearn": ('https://scikit-learn.org/stable', None),
+}
+
+# sphinx-gallery configuration
+sphinx_gallery_conf = {
+    # path to your example scripts
+    'examples_dirs': ['../examples/gallery'],
+    # path to where to save gallery generated output
+    'gallery_dirs': ['gallery'],
+    # specify that examples should be ordered according to filename
+    'within_subsection_order': FileNameSortKey,
 }
 
 # -- Options for HTML output -------------------------------------------------
