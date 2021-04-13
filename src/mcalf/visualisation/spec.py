@@ -61,6 +61,10 @@ def plot_ibis8542(wavelengths, spectrum, fit=None, background=0,
     mcalf.models.IBIS8542Model.plot_separate : Plot the fit parameters separately.
     mcalf.models.IBIS8542Model.plot_subtraction : Plot the spectrum with the emission fit subtracted from it.
     mcalf.models.FitResult.plot : Plotting method provided by the fit result.
+
+    Examples
+    --------
+    .. minigallery:: mcalf.visualisation.plot_ibis8542
     """
     if ax is None:
         ax = plt.gca()
