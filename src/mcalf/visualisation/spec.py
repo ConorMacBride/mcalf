@@ -176,6 +176,10 @@ def plot_spectrum(wavelengths, spectrum, normalised=True, smooth=True, ax=None):
     -------
     ax : matplotlib.axes.Axes
         Axes the lines are drawn on.
+
+    Examples
+    --------
+    .. minigallery:: mcalf.visualisation.plot_spectrum
     """
     # Inputted wavelengths and spectrum
     wavelengths_pts = wavelengths.copy()
