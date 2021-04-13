@@ -24,6 +24,10 @@ def genmask(width, height, radius=np.inf, right_shift=0, up_shift=0):
     -------
     array : numpy.ndarray, shape=(height, width)
         The generated mask.
+
+    Examples
+    --------
+    .. minigallery:: mcalf.utils.mask.genmask
     """
     array = radial_distances(width, height) < radius  # Create mask
     array = np.roll(array, [up_shift, right_shift], [0, 1])  # Apply shift

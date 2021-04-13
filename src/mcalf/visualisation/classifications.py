@@ -55,6 +55,10 @@ def plot_classifications(spectra, labels, nrows=None, ncols=None, nlines=20, sty
     -------
     gs : matplotlib.gridspec.GridSpec
         The grid layout subplots are placed on within the figure.
+
+    Examples
+    --------
+    .. minigallery:: mcalf.visualisation.plot_classifications
     """
     if fig is None:
         fig = plt.gcf()
@@ -202,6 +206,10 @@ def bar(class_map=None, vmin=None, vmax=None, reduce=True, style='original', cma
     -----
     Visualisation assumes that all integers between `vmin` and `vmax` are valid
     classifications, even if they do not appear in `class_map`.
+
+    Examples
+    --------
+    .. minigallery:: mcalf.visualisation.bar
     """
     if ax is None:
         ax = plt.gca()
@@ -295,6 +303,10 @@ def plot_class_map(class_map=None, vmin=None, vmax=None, resolution=None, offset
     -----
     Visualisation assumes that all integers between `vmin` and `vmax` are valid
     classifications, even if they do not appear in `class_map`.
+
+    Examples
+    --------
+    .. minigallery:: mcalf.visualisation.plot_class_map
     """
     if ax is None:
         ax = plt.gca()
@@ -384,6 +396,10 @@ def init_class_data(class_map, vmin=None, vmax=None, reduce=True, resolution=Non
     mcalf.utils.smooth.mask_classifications : Mask 2D and 3D arrays of classifications.
     mcalf.utils.plot.calculate_extent : Calculate the extent from a particular data shape and resolution.
     mcalf.utils.plot.class_cmap : Create a listed colormap for a specific number of classifications.
+
+    Examples
+    --------
+    .. minigallery:: mcalf.visualisation.init_class_data
     """
     # Mask and average classification map according to the classification range and shape
     class_map, vmin, vmax = mask_classifications(class_map, vmin, vmax, reduce=reduce)

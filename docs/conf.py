@@ -79,6 +79,10 @@ sphinx_gallery_conf = {
     'gallery_dirs': ['gallery'],
     # specify that examples should be ordered according to filename
     'within_subsection_order': FileNameSortKey,
+    # directory where function/class granular galleries are stored
+    'backreferences_dir': 'gen_modules/backreferences',
+    # Modules for which function/class level galleries are created.
+    'doc_module': ('mcalf',),
 }
 
 # -- Options for HTML output -------------------------------------------------
