@@ -218,7 +218,7 @@ def bar(class_map=None, vmin=None, vmax=None, reduce=True, style='original', cma
 
     b = ax.bar(data['classes'], d, color=data['cmap'](np.arange(len(data['classes']))))
 
-    ax.set(xlabel='classification', ylabel='abundance (%)', yscale='log', ylim=(0.01, 100),
+    ax.set(xlabel='classification', ylabel='abundance (%)',
            xticks=data['classes'], xticklabels=data['classes'])
 
     return b
