@@ -80,3 +80,15 @@ ax[1].set_title('last 2')
 ax[1].set_ylabel('')
 
 plt.show()
+
+#%%
+# Note that ``vmin`` and ``vmax`` are applied before the
+# ``reduce`` value is applied. So setting these ranges
+# can change the calculated abundances for other
+# classifications if ``class_map`` is 3D and
+# ``reduce=True``.
+#
+# The bars do not add up to 100% as a bar for
+# negative, invalid classifications (and therefore
+# classifications out of the ``vmin`` and ``vmax``
+# range) is not shown.
