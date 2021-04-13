@@ -11,14 +11,14 @@ abundance of each classification in a 2D or 3D array of classifications.
 # :meth:`mcalf.models.ModelBase.classify_spectra`
 # to classify an array of spectra.
 
-from mcalf.tests.helpers import class_map
+from mcalf.tests.helpers import class_map as c
 
 t = 3  # Three images
 x = 50  # 50 coordinates along x-axis
 y = 20  # 20 coordinates along y-axis
 n = 5  # Possible classifications [0, 1, 2, 3, 4]
 
-c = class_map(t, x, y, n)  # 3D array of classifications (t, y, x)
+class_map = c(t, x, y, n)  # 3D array of classifications (t, y, x)
 
 #%%
 # Next, we shall import :func:`mcalf.visualisation.bar`.
@@ -33,14 +33,14 @@ from mcalf.visualisation import bar
 # This means the percentage abundances will correspond to the
 # most common classification at each coordinate.
 
-bar(c)
+bar(class_map)
 
 #%%
 # Instead, the percentage abundances can be determined for the whole
 # 3D array of classifications by setting ``reduce=True``.
 # This skips the averaging process.
 
-bar(c, reduce=False)
+bar(class_map, reduce=False)
 
 #%%
 # Alternatively, a 2D array can be passed to the function.
@@ -52,7 +52,7 @@ bar(c, reduce=False)
 # requested with the ``vmin`` and ``vmax`` parameters.
 # To show bars for only classifcations 1, 2, and 3,
 
-bar(c, vmin=1, vmax=3)
+bar(class_map, vmin=1, vmax=3)
 
 #%%
 # An alternative set of colours can be requested.
@@ -61,7 +61,7 @@ bar(c, vmin=1, vmax=3)
 # list of colours for each of the bars.
 # For advanced use, explore the ``cmap`` parameter.
 
-bar(c, style='viridis')
+bar(class_map, style='viridis')
 
 #%%
 # The bar function integrates well with matplotlib, allowing
@@ -71,15 +71,12 @@ import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(1, 2, constrained_layout=True)
 
-bar(c, vmax=2, style='viridis', ax=ax[0])
-bar(c, vmin=3, style='cividis', ax=ax[1])
+bar(class_map, vmax=2, style='viridis', ax=ax[0])
+bar(class_map, vmin=3, style='cividis', ax=ax[1])
 
 ax[0].set_title('first 3')
 ax[1].set_title('last 2')
 
 ax[1].set_ylabel('')
-
-ax[0].set_ylim(10, 100)
-ax[1].set_ylim(1, 50)
 
 plt.show()
