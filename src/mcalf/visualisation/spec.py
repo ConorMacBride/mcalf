@@ -208,5 +208,7 @@ def plot_spectrum(wavelengths, spectrum, normalised=True, smooth=True, ax=None):
     ylabel = 'normalised intensity ($I/I_c$)' if normalised else 'intensity ($I$)'
     ax.set_ylabel(ylabel)
     ax.minorticks_on()
+    for label in ax.xaxis.get_ticklabels()[::2]:
+        label.set_visible(False)
 
     return ax
