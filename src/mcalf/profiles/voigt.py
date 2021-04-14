@@ -20,6 +20,11 @@ try:
 except IndexError:  # File does not exist
     warnings.warn("Could not locate the external C library. Further use of `clib` will fail!")
 
+###
+# readthedocs.org does not support clib (force clib=False)
+import os
+not_on_rtd = os.environ.get('READTHEDOCS') != 'True'
+###
 
 # Parameters for `voigt_approx_nobg` and other approx. Voigt functions
 params = np.array([[-1.2150, -1.3509, -1.2150, -1.3509],
@@ -109,7 +114,7 @@ def voigt_nobg(x, a, b, s, g, clib=True):
     """
     warnings.filterwarnings("ignore", category=IntegrationWarning)
     u = x - b
-    if clib:
+    if clib and not_on_rtd:
         i = [quad(cvoigt, -np.inf, np.inf, args=(v, s, g), epsabs=1.49e-1, epsrel=1.49e-4)[0] for v in u]
     else:
         i = quad_vec(lambda y: np.exp(-y**2 / (2 * s**2)) / (g**2 + (u - y)**2), -np.inf, np.inf)[0]

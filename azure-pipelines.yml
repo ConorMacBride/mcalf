@@ -58,9 +58,9 @@ stages:
         - linux: py38-oldestdeps
           libraries: {}
 
-        - linux: build_docs
-          posargs: " "
-          pytest: false
+#        - linux: build_docs
+#          posargs: " "
+#          pytest: false
 
   - stage: FigureTests
     displayName: Figure Tests

@@ -356,6 +356,10 @@ class IBIS8542Model(ModelBase):
         plot_separate : Plot the fit parameters separately.
         plot_subtraction : Plot the spectrum with the emission fit subtracted from it.
         mcalf.models.FitResult.plot : Plotting method on the fit result.
+
+        Examples
+        --------
+        .. minigallery:: mcalf.visualisation.plot_ibis8542
         """
         if fit.__class__ == FitResult:  # If fit is a `FitResult`
 

@@ -20,6 +20,7 @@ a :any:`Module Index <modindex>` are available.
    :caption: Contents:
 
    guide/index
+   gallery/index
    code_ref/index
    code_of_conduct
    license

@@ -61,6 +61,10 @@ def plot_map(arr, mask=None, umbra_mask=None, resolution=None, offset=(0, 0), vm
     See Also
     --------
     mcalf.models.FitResults.velocities : Calculate the Doppler velocities for an array of fits.
+
+    Examples
+    --------
+    .. minigallery:: mcalf.visualisation.plot_map
     """
     if ax is None:
         ax = plt.gca()
