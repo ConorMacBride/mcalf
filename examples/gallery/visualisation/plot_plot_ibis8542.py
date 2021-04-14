@@ -92,6 +92,25 @@ model.plot_separate(fit, spectrum=spectrum, background=1242)
 model.plot_subtraction(fit, spectrum=spectrum, background=1242)
 
 #%%
+# The same line on multiple plots is only labelled the first time it
+# plotted in the figure. This prevents duplicated entries in
+# legends.
+
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(1, 2)
+
+model.plot(fit, spectrum=spectrum, background=1242,
+           show_legend=False, ax=ax[0])
+model.plot_separate(fit, spectrum=spectrum, background=1242,
+                    show_legend=False, ax=ax[1])
+
+fig.subplots_adjust(top=0.75)  # Create space above for legend
+fig.legend(ncol=2, loc='upper center', bbox_to_anchor=(0.5, 0.97))
+
+plt.show()
+
+#%%
 # The underlying :func:`mcalf.visualisation.plot_ibis8542`
 # function can be used directly. However, it is recommended
 # to plot using the method detailed above as it will do
