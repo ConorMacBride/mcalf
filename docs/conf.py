@@ -83,6 +83,8 @@ sphinx_gallery_conf = {
     'backreferences_dir': 'gen_modules/backreferences',
     # Modules for which function/class level galleries are created.
     'doc_module': ('mcalf',),
+    # don't print e.g. sphinx_gallery_thumbnail_number = 2
+    'remove_config_comments': True,
 }
 
 # -- Options for HTML output -------------------------------------------------

@@ -52,6 +52,7 @@ print(fit)
 #%%
 # The spectrum can now be plotted,
 
+# sphinx_gallery_thumbnail_number = 2
 model.plot(fit, spectrum=spectrum, background=1242)
 
 #%%
