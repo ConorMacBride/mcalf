@@ -153,6 +153,7 @@ used.
 
 .. toctree::
 
+   ../gallery/index
    examples/example1/index
    examples/neural_network/LabellingTutorial
 
