@@ -296,3 +296,13 @@ with fits.open('ibis8542model_demo_fit.fits') as hdul:
 # spectra can be fitted in parallel, see
 # `example1` in the `Getting Started` section
 # of `User Documentation` in the sidebar.
+#
+# .. note::
+#    Due to limitations with the documentation
+#    hosting provider, the examples in the MCALF
+#    documentation are computed using a Python
+#    based implementation of the Voigt profile
+#    instead of the more efficient C version.
+#    When this code is run on your own machine
+#    it should take much less time than the
+#    value reported below.

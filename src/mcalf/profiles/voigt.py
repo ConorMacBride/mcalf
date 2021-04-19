@@ -24,6 +24,9 @@ except IndexError:  # File does not exist
 # readthedocs.org does not support clib (force clib=False)
 import os
 not_on_rtd = os.environ.get('READTHEDOCS') != 'True'
+rtd = {}
+if not not_on_rtd:  # Reduce computation time (and accuracy) of no clib version
+    rtd = {'epsabs': 1.49e-1, 'epsrel': 1.49e-4}
 ###
 
 # Parameters for `voigt_approx_nobg` and other approx. Voigt functions
@@ -117,7 +120,7 @@ def voigt_nobg(x, a, b, s, g, clib=True):
     if clib and not_on_rtd:
         i = [quad(cvoigt, -np.inf, np.inf, args=(v, s, g), epsabs=1.49e-1, epsrel=1.49e-4)[0] for v in u]
     else:
-        i = quad_vec(lambda y: np.exp(-y**2 / (2 * s**2)) / (g**2 + (u - y)**2), -np.inf, np.inf)[0]
+        i = quad_vec(lambda y: np.exp(-y**2 / (2 * s**2)) / (g**2 + (u - y)**2), -np.inf, np.inf, **rtd)[0]
     const = g / (s * np.sqrt(2 * np.pi**3))
     return a * const * np.array(i)
 
