@@ -7,6 +7,12 @@ class, and plot and export the results.
 """
 
 #%%
+# Generate sample data
+# --------------------
+#
+# Create spectral grid
+# ~~~~~~~~~~~~~~~~~~~~
+#
 # First, we shall generate some random sample data to
 # demonstrate the API.
 # The randomly generated spectra are not intended to
@@ -87,6 +93,9 @@ for ax, spec in zip(axes.flat, raw_data.reshape((6, raw_data.shape[-1]))):
 plt.show()
 
 #%%
+# Compute the background intensity
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # `MCALF` does not model a constant background value,
 # i.e., the fitting process assumes the intensity
 # values far out in the spectrum's wings are zero.
@@ -112,6 +121,9 @@ backgrounds = raw_data[:, :, 0]
 print('shape of background intensity grid:', backgrounds.shape)
 
 #%%
+# Define a demo classifier
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # In this example we will not demonstrate how to create
 # a neural network classifier. `MCALF` offers a lot of
 # flexibility when it comes to the classifier. This
@@ -148,6 +160,12 @@ class DemoClassifier:
 
 
 #%%
+# Using ``IBIS8542Model`` with the generated data
+# -----------------------------------------------
+#
+# Initialise the model
+# ~~~~~~~~~~~~~~~~~~~~
+#
 # Everything we have been doing up to this point has been
 # creating the demo data and classifier. Now we can actually
 # create a model and load in the demo data, although the
@@ -166,6 +184,9 @@ model.load_array(raw_data, ['row', 'column', 'wavelength'])
 model.load_background(backgrounds, ['row', 'column'])
 
 #%%
+# Fit the loaded data
+# ~~~~~~~~~~~~~~~~~~~
+#
 # We have now fully initialised the model. We can now
 # call methods to fit the model to the loaded spectra.
 # In the following step we fit all the loaded spectra
@@ -177,6 +198,9 @@ fits = model.fit(row=[0, 1], column=range(3))
 print(fits)
 
 #%%
+# Plot the fitted parameters
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # The individual components of each fit can now be
 # plotted separately,
 
@@ -188,6 +212,9 @@ for ax, fit in zip(axes.flat, fits):
 plt.show()
 
 #%%
+# Extract processed spectra
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # As well as fitting spectra, we can call other methods.
 # In this step we'll extract the array of loaded spectra.
 # However, these spectra have been re-interpolated to a
@@ -209,6 +236,9 @@ for ax, spec in zip(axes.flat, spectra_1d):
 plt.show()
 
 #%%
+# Classify spectra
+# ~~~~~~~~~~~~~~~~
+#
 # We can also classify the loaded spectra and create plots,
 
 classifications = model.classify_spectra(row=[0, 1], column=range(3))
@@ -232,6 +262,9 @@ from mcalf.visualisation import plot_class_map
 plot_class_map(classifications)
 
 #%%
+# Merge output data
+# ~~~~~~~~~~~~~~~~~
+#
 # The :class:`~mcalf.models.FitResult` objects in the
 # ``fits`` 1D list can be merged into a grid.
 # Each of these objects can be appended to a
@@ -257,6 +290,9 @@ print(results.success)
 print(results.parameters)
 
 #%%
+# Calculate velocities
+# ~~~~~~~~~~~~~~~~~~~~
+#
 # And finally, we can calculate Doppler
 # velocities for both the quiescent (absorption)
 # and active (emission) regimes.
@@ -274,6 +310,9 @@ plot_map(active, ax=axes[1])
 plt.show()
 
 #%%
+# Export to FITS file
+# ~~~~~~~~~~~~~~~~~~~
+#
 # The :class:`~mcalf.models.FitResults` object can
 # also be exported to a FITS file,
 
