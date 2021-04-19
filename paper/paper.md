@@ -42,7 +42,7 @@ Using this sample model, as well as the separate base (template) model it is bui
 
 This package is designed to run in parallel over large data cubes, as well as in serial. As each spectrum is processed in isolation, this package scales very well across many processor cores. Numerous functions are provided to plot the results clearly, some of which are showcased in \autoref{fig:example}. The `MCALF` API also contains many useful functions which have the potential of being integrated into other Python packages. Full documentation as well as examples on how to use `MCALF` are provided at [mcalf.macbride.me](https://mcalf.macbride.me).
 
-![An overview of some of the plotting functions that are included in `MCALF`.\label{fig:example}](figure.pdf){ width=93% }
+![An overview of some of the plotting functions that are included in `MCALF`.\label{fig:example}](figure.pdf)
 
 # Acknowledgements
 
