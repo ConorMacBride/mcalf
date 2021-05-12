@@ -333,8 +333,8 @@ with fits.open('ibis8542model_demo_fit.fits') as hdul:
 # fitted and processed at the same time.
 # For more details on running big jobs and how
 # spectra can be fitted in parallel, see
-# `example1` in the `Getting Started` section
-# of `User Documentation` in the sidebar.
+# the `Working with IBIS data` example in the
+# gallery.
 #
 # .. note::
 #    Due to limitations with the documentation
