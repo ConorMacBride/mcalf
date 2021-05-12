@@ -20,7 +20,6 @@ of spectra and visualise the results.
 import requests
 
 path = 'https://raw.githubusercontent.com/ConorMacBride/mcalf/main/examples/data/ibis8542data/'
-path = 'https://raw.githubusercontent.com/ConorMacBride/mcalf/include-ibis-data/examples/data/ibis8542data/'
 
 for file in ('wavelengths.txt', 'spectra.fits',
              'training_data.json', 'results.fits'):
