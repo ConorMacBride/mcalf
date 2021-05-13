@@ -227,12 +227,17 @@ plot_class_map(classifications)
 # reproducibility of results that rely on a neural
 # network's classifications, a `random_state` integer
 # can be passed to :class:`mcalf.models.IBIS8542Model`
-# as we did above. This allows the random seed to be
-# controlled and therefore allows for this
-# randomness to be reproduced exactly.
+# as we did above. When we set this value to an integer,
+# no matter how many times we train the neural network
+# on the same data, it will always give the same
+# results.
 #
-# Also, a trained neural network can be saved to a file
-# and later reloaded.
+# Until better solutions are available to store trained
+# neural networks, a trained neural network can be saved
+# to a Python pickel file and later reloaded. For
+# maximum compatibility, it is recommended to reload
+# into the same version of scikit-learn and its
+# dependencies.
 #
 # The neural network trained above can be saved as follows,
 

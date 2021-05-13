@@ -474,8 +474,7 @@ IBIS8542_DOCS = """
     emission_x_scale : array_like, length=4, optional, default=[1500, 0.2, 0.3, 0.5]
         Characteristic scale for all the emission Voigt profile parameters in order of the function's arguments.
     random_state : int, numpy.random.RandomState, optional, default=None
-        Determines random number generation for weights and bias initialisation and batch sampling
-        of the default `neural_network`.
+        Determines random number generation for weights and bias initialisation of the default `neural_network`.
         Pass an int for reproducible results across multiple function calls."""
 
 # Form the docstring and do the replacements

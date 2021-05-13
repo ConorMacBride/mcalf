@@ -699,7 +699,7 @@ def select_training_set(indices, model):
 
 def test_random_state():
 
-    # Testing that the `random_state` kwarg works as expected, i.e., reproducible results
+    # Testing that the `random_state` kwarg works as expected on the system
 
     # Load the spectra's wavelength points
     wavelengths = np.loadtxt('wavelengths.txt', dtype='>f4')
@@ -722,10 +722,9 @@ def test_random_state():
 
     # Training #1
     model.train(X[::2], y[::2])
-    score = cross_val_score(model.neural_network, X[1::2], y[1::2])
-    assert score == pytest.approx(np.array([0.8, 0.7, 0.85, 0.9, 0.8]))
+    score_a = cross_val_score(model.neural_network, X[1::2], y[1::2])
 
     # Training #2
     model.train(X[::2], y[::2])
-    score = cross_val_score(model.neural_network, X[1::2], y[1::2])
-    assert score == pytest.approx(np.array([0.8, 0.7, 0.85, 0.9, 0.8]))
+    score_b = cross_val_score(model.neural_network, X[1::2], y[1::2])
+    assert score_b == pytest.approx(score_a)
