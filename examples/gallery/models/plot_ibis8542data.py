@@ -1,7 +1,7 @@
 """
 Working with IBIS data
 ======================
-This example show how to initialise the
+This example shows how to initialise the
 :class:`mcalf.models.IBIS8542Model` class with
 real IBIS data, and train a neural network
 classifier. We then proceed to fit the array
@@ -216,7 +216,7 @@ plot_class_map(classifications)
 # -------------------
 #
 # Now that the data have been loaded and the
-# neural network as been trained, we can proceed
+# neural network has been trained, we can proceed
 # to fit the spectra.
 
 #%%
@@ -229,7 +229,7 @@ plot_class_map(classifications)
 # downloaded ``results.fits`` file.
 #
 # The next step of the example loads this file back into
-# Python as through we have just directly calculated it.
+# Python as though we have just directly calculated it.
 # This isn't something you would usually need to do,
 # so do not worry about the contents of the
 # ``load_results()`` function, however, we plan to
@@ -237,6 +237,7 @@ plot_class_map(classifications)
 
 
 def load_results(file):
+
     with fits.open(file) as hdul:
         for hdu in hdul:
             if hdu.name == 'PARAMETERS':
