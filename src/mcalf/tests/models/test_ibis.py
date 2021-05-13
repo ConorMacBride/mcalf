@@ -1,16 +1,27 @@
 import pytest
 import os
+import requests
+import json
 
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
+from sklearn.model_selection import cross_val_score
 from sklearn.exceptions import NotFittedError
 
 from mcalf.models import ModelBase, IBIS8542Model, FitResults
 from mcalf.profiles.voigt import voigt, double_voigt
+from mcalf.utils.spec import normalise_spectrum
 
 from ..helpers import data_path_function, figure_test
 data_path = data_path_function('models')
+
+# Download sample IBIS data
+path = 'https://raw.githubusercontent.com/ConorMacBride/mcalf/main/examples/data/ibis8542data/'
+for file in ('wavelengths.txt', 'spectra.fits', 'training_data.json'):
+    r = requests.get(path + file, allow_redirects=True)
+    with open(file, 'wb') as f:
+        f.write(r.content)
 
 
 class DummyClassifier:
@@ -668,3 +679,53 @@ def test_ibis8542model_save(ibis8542model_results, ibis8542model_resultsobjs, tm
         if not diff.identical:  # If this fails tolerances *may* need to be adjusted
             fits.printdiff(saved, truth, **diff_kwargs)
             raise ValueError(f"{saved.filename()} and {truth.filename()} differ")
+
+
+def select_training_set(indices, model):
+    for c in sorted([int(i) for i in indices.keys()]):
+        i = indices[str(c)]
+        spectra = np.array([normalise_spectrum(
+            model.get_spectra(row=j, column=k)[0, 0, 0],
+            model.constant_wavelengths, model.constant_wavelengths
+        ) for j, k in i])
+        try:
+            _X = np.vstack((_X, spectra))
+            _y = np.hstack((_y, [c] * len(spectra)))
+        except NameError:
+            _X = spectra
+            _y = [c] * len(spectra)
+    return _X, _y
+
+
+def test_random_state():
+
+    # Testing that the `random_state` kwarg works as expected, i.e., reproducible results
+
+    # Load the spectra's wavelength points
+    wavelengths = np.loadtxt('wavelengths.txt', dtype='>f4')
+
+    # Load the array of spectra
+    with fits.open('spectra.fits') as hdul:
+        spectra = hdul[0].data
+    backgrounds = np.mean(spectra[:4], axis=0)
+
+    # Load indices of labelled spectra
+    with open('training_data.json', 'r') as f:
+        data = f.read()
+    training_data = json.loads(data)
+
+    # Initialise model
+    model = IBIS8542Model(original_wavelengths=wavelengths, random_state=0)
+    model.load_background(backgrounds, ['row', 'column'])
+    model.load_array(spectra, ['wavelength', 'row', 'column'])
+    X, y = select_training_set(training_data, model)
+
+    # Training #1
+    model.train(X[::2], y[::2])
+    score = cross_val_score(model.neural_network, X[1::2], y[1::2])
+    assert score == pytest.approx(np.array([0.8, 0.7, 0.85, 0.9, 0.8]))
+
+    # Training #2
+    model.train(X[::2], y[::2])
+    score = cross_val_score(model.neural_network, X[1::2], y[1::2])
+    assert score == pytest.approx(np.array([0.8, 0.7, 0.85, 0.9, 0.8]))
