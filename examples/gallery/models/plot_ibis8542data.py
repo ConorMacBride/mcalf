@@ -16,6 +16,8 @@ of spectra and visualise the results.
 # from the GitHub repository where it is hosted.
 # This will create four new files in the current
 # directory (about 651 KB total).
+# **You may need to install the requests
+# Python package for this step to run.**
 
 import requests
 
