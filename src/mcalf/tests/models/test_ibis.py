@@ -4,6 +4,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
+from sklearn.model_selection import cross_val_score
+from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
 
 from mcalf.models import ModelBase, IBIS8542Model, FitResults
@@ -668,3 +670,28 @@ def test_ibis8542model_save(ibis8542model_results, ibis8542model_resultsobjs, tm
         if not diff.identical:  # If this fails tolerances *may* need to be adjusted
             fits.printdiff(saved, truth, **diff_kwargs)
             raise ValueError(f"{saved.filename()} and {truth.filename()} differ")
+
+
+def test_random_state():
+
+    # Testing that the `random_state` kwarg works as expected on the system
+
+    # Arbitrary wavelength wavelength points
+    wavelengths = np.linspace(8541, 8544, 49)
+
+    # Initialise model
+    model = IBIS8542Model(original_wavelengths=wavelengths, random_state=0)
+
+    # Get sample classifications
+    X, y = make_classification(200, 49, n_classes=5, n_informative=4, random_state=0)
+
+    # Training #1
+    model.train(X[::2], y[::2])
+    score_a = cross_val_score(model.neural_network, X[1::2], y[1::2])
+
+    # Training #2
+    model.train(X[::2], y[::2])
+    score_b = cross_val_score(model.neural_network, X[1::2], y[1::2])
+
+    assert score_b == pytest.approx(score_a)
+    assert score_b == pytest.approx(np.array([0.45, 0.35, 0.45, 0.45, 0.35]))

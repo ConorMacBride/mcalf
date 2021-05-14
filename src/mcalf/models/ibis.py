@@ -43,6 +43,7 @@ class IBIS8542Model(ModelBase):
             'emission_max_bound',
             'absorption_x_scale',
             'emission_x_scale',
+            'random_state',
         ]  # These must match dictionary in STAGE 1 (defined there as stationary_line_core needs to be set)
         base_kwargs = {k: kwargs[k] for k in kwargs.keys() if k not in class_keys}
         super().__init__(**base_kwargs)
@@ -53,12 +54,6 @@ class IBIS8542Model(ModelBase):
             self.stationary_line_core = 8542.099145376844
         # prefilter_response
         self._set_prefilter()  # Update the prefilter using stationary_line_core
-        # neural_network
-        if self.neural_network is None:
-            mlp = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(40,), max_iter=1000)
-            parameter_space = {'alpha': [1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5]}  # Search region
-            # Set GridSearchCV to find best alpha
-            self.neural_network = GridSearchCV(mlp, parameter_space, cv=5, n_jobs=-1)
         # sigma
         if self.sigma is None or (isinstance(self.sigma, bool) and self.sigma):
             self.sigma = [generate_sigma(i, self.constant_wavelengths, self.stationary_line_core) for i in [1, 2]]
@@ -75,13 +70,15 @@ class IBIS8542Model(ModelBase):
             'emission_max_bound': [np.inf, np.inf, 1, 1],
             'absorption_x_scale': [1500, 0.2, 0.3, 0.5],
             'emission_x_scale': [1500, 0.2, 0.3, 0.5],
+            'random_state': None,
         }
         assert defaults.keys() == {k: None for k in class_keys}.keys()  # keys of `defaults` must match `class_keys`
 
         # STAGE 2: Update defaults with any values specified in a config file
         class_defaults = {k: self.config[k] for k in self.config.keys() if k in defaults.keys()}
         for k in class_defaults.keys():
-            if k in ['absorption_x_scale', 'emission_x_scale']:  # These should not need the stationary line core
+            if k in ['absorption_x_scale', 'emission_x_scale', 'random_state']:
+                # These should not need the stationary line core
                 class_defaults[k] = load_parameter(class_defaults[k])
             else:
                 class_defaults[k] = load_parameter(class_defaults[k], wl=self.stationary_line_core)
@@ -105,6 +102,13 @@ class IBIS8542Model(ModelBase):
         # attributes whose default value cannot be changed during initialisation
         self.quiescent_wavelength = 1  # Index of quiescent wavelength in the fitted_parameters
         self.active_wavelength = 5  # Index of active wavelength in the fitted_parameters
+        # neural_network
+        if self.neural_network is None:
+            mlp = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(40,), max_iter=1000,
+                                random_state=defaults['random_state'])
+            parameter_space = {'alpha': [1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5]}  # Search region
+            # Set GridSearchCV to find best alpha
+            self.neural_network = GridSearchCV(mlp, parameter_space, cv=5, n_jobs=-1)
 
         # STAGE 5: Validate the loaded attributes
         self._validate_attributes()
@@ -468,7 +472,10 @@ IBIS8542_DOCS = """
     absorption_x_scale : array_like, length=4, optional, default=[1500, 0.2, 0.3, 0.5]
         Characteristic scale for all the absorption Voigt profile parameters in order of the function's arguments.
     emission_x_scale : array_like, length=4, optional, default=[1500, 0.2, 0.3, 0.5]
-        Characteristic scale for all the emission Voigt profile parameters in order of the function's arguments."""
+        Characteristic scale for all the emission Voigt profile parameters in order of the function's arguments.
+    random_state : int, numpy.random.RandomState, optional, default=None
+        Determines random number generation for weights and bias initialisation of the default `neural_network`.
+        Pass an int for reproducible results across multiple function calls."""
 
 # Form the docstring and do the replacements
 IBIS8542_PARAMETERS_STR = ''.join(IBIS8542_PARAMETERS[i] for i in IBIS8542_PARAMETERS)

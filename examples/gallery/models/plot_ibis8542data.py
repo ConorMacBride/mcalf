@@ -16,6 +16,8 @@ of spectra and visualise the results.
 # from the GitHub repository where it is hosted.
 # This will create four new files in the current
 # directory (about 651 KB total).
+# **You may need to install the requests
+# Python package for this step to run.**
 
 import requests
 
@@ -115,7 +117,7 @@ backgrounds = np.mean(spectra[:4], axis=0)
 
 import mcalf.models
 
-model = mcalf.models.IBIS8542Model(original_wavelengths=wavelengths)
+model = mcalf.models.IBIS8542Model(original_wavelengths=wavelengths, random_state=0)
 
 model.load_background(backgrounds, ['row', 'column'])
 model.load_array(spectra, ['wavelength', 'row', 'column'])
@@ -212,6 +214,60 @@ from mcalf.visualisation import plot_class_map
 plot_class_map(classifications)
 
 #%%
+# Creating a reproducible classifier
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# The neural network classifier introduces a certain amount
+# of randomness when it it fitting based on the training
+# data. This randomness arises in the initial values
+# of the weights and biases that are fitted during the
+# training process, as well as the order in which the
+# training data are used.
+#
+# This means that two neural networks trained on identical
+# data will not produce the same results. To aid the
+# reproducibility of results that rely on a neural
+# network's classifications, a `random_state` integer
+# can be passed to :class:`mcalf.models.IBIS8542Model`
+# as we did above. When we set this value to an integer,
+# no matter how many times we train the neural network
+# on the same data, it will always give the same
+# results.
+#
+# Until better solutions are available to store trained
+# neural networks, a trained neural network can be saved
+# to a Python pickel file and later reloaded. For
+# maximum compatibility, it is recommended to reload
+# into the same version of scikit-learn and its
+# dependencies.
+#
+# The neural network trained above can be saved as follows,
+
+import pickle
+pkl = open('trained_neural_network.pkl', 'wb')
+pickle.dump(model.neural_network, pkl)
+pkl.close()
+
+#%%
+# This trained neural network can then be reloaded at a
+# later date as follows,
+
+import pickle
+pkl = open('trained_neural_network.pkl', 'rb')
+model.neural_network = pickle.load(pkl)  # Overwrite the default untrained model
+
+#%%
+# And you can see that the classifications of spectra are the same,
+
+plot_class_map(model.classify_spectra(row=range(60), column=range(50)))
+
+#%%
+# Please see the
+# `scikit-learn documentation <https://scikit-learn.org/stable/modules/model_persistence.html>`_
+# for more details on model persistence.
+
+
+#%%
 # Fitting the spectra
 # -------------------
 #
@@ -282,15 +338,14 @@ result_list[:4]  # The first four
 # and columns, and set the number of pools
 # based on the specification of your
 # processor.
-#
-# Results may differ as there is a random
-# factor when training the neural network.
+
+# result_list = model.fit(row=range(60), column=range(50), n_pools=6)
+
+#%%
 # The order of the :class:`mcalf.models.FitResult`
 # objects in this list will also differ as
 # the order that spectra finish fitting in
 # each pool is unpredictable.
-
-# result_list = model.fit(row=range(60), column=range(50), n_pools=6)
 
 #%%
 # Merging the FitResult objects
