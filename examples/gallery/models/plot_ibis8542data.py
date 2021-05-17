@@ -236,7 +236,7 @@ plot_class_map(classifications)
 #
 # Until better solutions are available to store trained
 # neural networks, a trained neural network can be saved
-# to a Python pickel file and later reloaded. For
+# to a Python pickle file and later reloaded. For
 # maximum compatibility, it is recommended to reload
 # into the same version of scikit-learn and its
 # dependencies.
