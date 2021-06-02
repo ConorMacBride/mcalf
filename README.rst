@@ -118,7 +118,14 @@ Citation
 If you have used this package in work that leads to a publication, we would
 be very grateful if you could acknowledge your use of this package in the
 main text of the publication.
-Please cite,
+Please cite the following publications,
+
+    MacBride CD, Jess DB. 2021
+    MCALF: Multi-Component Atmospheric Line Fitting.
+    *Journal of Open Source Software*. **6(61)**, 3265.
+    (`doi:10.21105/joss.03265 <https://doi.org/10.21105/joss.03265>`_)
+
+..
 
     MacBride CD, Jess DB, Grant SDT, Khomenko E, Keys PH, Stangalini M. 2020
     Accurately constraining velocity information from spectral imaging
