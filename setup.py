@@ -37,7 +37,7 @@ class CTypes(Extension):
 is_nt = '_nt' if os.name == 'nt' else ''
 
 setup(
-    use_scm_version=True,
+    use_scm_version={'write_to': os.path.join('src', 'mcalf', '_version.py')},
     setup_requires=['setuptools_scm'],
     ext_modules=[CTypes("mcalf.profiles.ext_voigtlib", ["cextern/voigt{}.c".format(is_nt)])],
     cmdclass={'build_ext': build_ext},
