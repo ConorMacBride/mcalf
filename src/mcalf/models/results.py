@@ -2,6 +2,7 @@ import numpy as np
 from astropy.io import fits
 
 from mcalf.utils.misc import make_iter
+from mcalf.version import version
 
 
 __all__ = ['FitResult', 'FitResults']
@@ -236,6 +237,7 @@ class FitResults:
             p[self.profile == p_uniq[i]] = i
 
         header = fits.Header({
+            'VERSION': str(version),
             'NTIME': 1,
             'NROWS': self.classifications.shape[-2],
             'NCOLS': self.classifications.shape[-1],
