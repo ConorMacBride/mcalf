@@ -2,7 +2,7 @@ import collections
 import copy
 
 
-__all__ = ['Parameter']
+__all__ = ['Parameter', 'ParameterDict', 'OrderedParameterDict']
 
 
 class Parameter:
@@ -183,3 +183,98 @@ class Parameter:
 
     def __deepcopy__(self, memodict={}):
         return self.__copy__()
+
+
+class SyncedParameters:
+
+    @property
+    def _tracked(self):
+        if not hasattr(self, '_tracked_objs'):
+            self._tracked_objs = {}
+        return self._tracked_objs
+
+    def _track_object(self, obj):
+
+        if obj.value is not None and self.exists(obj.name):
+
+            # No more than one value should be associated with each name
+            if self.has_value(obj.name) and obj.value is not self.get_parameter(obj.name):
+                raise ValueError(f"'{obj.name}' value {obj.value} does not match "
+                                 f"existing value {self.get_parameter(obj.name)}.")
+
+            # Sync the value
+            self.update_parameter(obj.name, obj.value)
+
+        if self.exists(obj.name):
+            self._tracked[obj.name]['objects'] += [obj]
+        else:
+            self._tracked[obj.name] = {'value': obj.value, 'objects': [obj]}
+
+    def update_parameter(self, name, value):
+        self._tracked[name]['value'] = value
+        for obj in self._tracked[name]['objects']:
+            obj.value = value
+
+    def get_parameter(self, name):
+        return self._tracked[name]['value']
+
+    def has_value(self, name):
+        return False if self.get_parameter(name) is None else True
+
+    def exists(self, name):
+        try:
+            self._tracked[name]
+        except KeyError:
+            return False
+        else:
+            return True
+
+
+class BaseParameterDict(SyncedParameters):
+    """
+    A base class for dictionaries of `Parameter` objects.
+
+    The same parameters existing across multiple dictionary
+    values can be kept in sync with each other.
+    """
+    def __setitem__(self, key, value):
+        if isinstance(value, Parameter):
+            self._track_object(value)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, Parameter):
+                    self._track_object(item)
+        super().__setitem__(key, value)
+
+    def eval(self):
+        edict = self.__class__.__bases__[-1]()
+        for key, value in self.items():
+            if isinstance(value, Parameter):
+                value = value.eval()
+            elif isinstance(value, list):
+                value = []
+                for i, v in enumerate(value):
+                    if isinstance(v, Parameter):
+                        value += [v.eval()]
+                    else:
+                        value += [v]
+            edict[key] = value
+        return edict
+
+
+class ParameterDict(BaseParameterDict, collections.UserDict):
+    """
+    An unordered dictionary of `Parameter` objects.
+
+    The same parameters existing across multiple dictionary
+    values can be kept in sync with each other.
+    """
+
+
+class OrderedParameterDict(BaseParameterDict, collections.OrderedDict):
+    """
+    An ordered dictionary of `Parameter` objects.
+
+    The same parameters existing across multiple dictionary
+    values can be kept in sync with each other.
+    """
