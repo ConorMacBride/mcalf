@@ -1,9 +1,10 @@
 import pytest
 import copy
+import collections
 
 import numpy as np
 
-from mcalf.utils.collections import Parameter
+from mcalf.utils.collections import Parameter, ParameterDict, OrderedParameterDict
 
 
 def test_parameter():
@@ -83,3 +84,80 @@ def test_parameter():
     assert np.array_equal((a + 1).eval(), np.arange(10) + 1)
     with pytest.raises(SyntaxError):
         np.array_equal((a + 2 * np.arange(10)).eval(), 3 * np.arange(10))
+
+
+def verify_synced_parameters(tracked):
+    for p in tracked.values():
+        for obj in p['objects']:
+            assert obj.value is p['value']
+
+
+@pytest.mark.parametrize('cls', [OrderedParameterDict, ParameterDict])
+def test_parameter_dict(cls):
+
+    # Initialise with parameters
+    parameters = [
+        ('aa', Parameter('a', 2) + 1),
+        ('bb', Parameter('b') + 2),
+        ('cc', Parameter('a', 2) + 3),
+        ('dd', Parameter('c') + 4),
+        ('ee', Parameter('b', 3) + 5),
+    ]
+
+    if cls is ParameterDict:
+        parameters = {k: v for k, v in parameters}
+    x = cls(parameters)
+
+    assert len(x._tracked.keys()) == 3
+    assert set(x._tracked.keys()) == {'a', 'b', 'c'}
+
+    verify_synced_parameters(x._tracked)
+    assert x['aa'] == 3
+    assert x['bb'] == 5
+    assert x['cc'] == 5
+    assert x['dd'] == 'c+4'
+    assert x['ee'] == 8
+    assert x.has_value('a')
+    assert not x.has_value('c')
+    assert x.get_parameter('c') is None
+
+    # Update some parameters
+    x.update_parameter('c', 9)
+    x.update_parameter('b', None)
+    x.update_parameter('a', 12)
+
+    verify_synced_parameters(x._tracked)
+    assert x['aa'] == 13
+    assert x['bb'] == 'b+2'
+    assert x['cc'] == 15
+    assert x['dd'] == 13
+    assert x['ee'] == 'b+5'
+
+    # Evaluate all parameters
+    with pytest.raises(ValueError):
+        x.eval()
+    x.update_parameter('b', 1)
+    ex = x.eval()
+    if cls is ParameterDict:
+        assert isinstance(ex, collections.UserDict)
+    elif cls is OrderedParameterDict:
+        assert isinstance(ex, collections.OrderedDict)
+    for k, v in [('aa', 13), ('bb', 3), ('cc', 15), ('dd', 13), ('ee', 6)]:
+        assert ex[k] is v
+        assert not x[k] is v
+
+    assert x.exists('b')
+    assert not x.exists('t')
+
+    # Add parameter later
+    x['tt'] = Parameter('t', 22) + 5
+    assert x.exists('t')
+    assert x['tt'] == 27
+    assert x.get_parameter('t') == 22
+    verify_synced_parameters(x._tracked)
+    assert len(x._tracked.keys()) == 4
+    assert set(x._tracked.keys()) == {'a', 'b', 'c', 't'}
+
+    # Add standard number
+    x['s'] = 10
+    assert x['s'] == 10
