@@ -2,14 +2,14 @@ import collections
 import copy
 
 
-__all__ = ['DefaultParameter']
+__all__ = ['Parameter']
 
 
-class DefaultParameter:
+class Parameter:
     """
-    A named parameter with a optional default value.
+    A named parameter with a optional value.
 
-    The default value can be changed at any time and very basic
+    The value can be changed at any time and very basic
     operations can be queued and evaluated on demand.
 
     Parameters
@@ -37,30 +37,30 @@ class DefaultParameter:
 
     See Also
     --------
-    DefaultParameters : Collection of synced DefaultParameter objects.
+    Parameters : Collection of synced ``Parameter`` objects.
 
     Notes
     -----
     Basic operations can be applied to this object, i.e., ``+``, ``-``, ``*`` and ``/``.
-    The ``DefaultParameter`` object must be the left-most entity in an expression.
+    The ``Parameter`` object must be the left-most entity in an expression.
     Expressions which require parentheses are not supported.
-    The only types that are supported in expressions are ``DefaultParameter``, ``float``
+    The only types that are supported in expressions are ``Parameter``, ``float``
     and ``int``.
-    Any type should work as a value for ``DefaultParameter`` (such as an array), however,
+    Any type should work as a value for ``Parameter`` (such as an array), however,
     only ``float`` and ``int`` are supported.
     See the examples for more details in how it works.
 
     Examples
     --------
-    >>> DefaultParameter('x')
+    >>> Parameter('x')
     'x'
-    >>> DefaultParameter('x', 12)
+    >>> Parameter('x', 12)
     '12'
-    >>> DefaultParameter('x') + 1
+    >>> Parameter('x') + 1
     'x+1'
-    >>> DefaultParameter('x', 1) + 1
+    >>> Parameter('x', 1) + 1
     'x+1'
-    >>> a = DefaultParameter('y', 10)
+    >>> a = Parameter('y', 10)
     >>> a
     '10'
     >>> a == 10
@@ -74,7 +74,7 @@ class DefaultParameter:
     >>> (a + 10) * 2
     Traceback (most recent call last):
      ...
-    NotImplementedError: DefaultParameter equations with brackets are not supported.
+    NotImplementedError: Parameter equations with brackets are not supported.
     """
     def __init__(self, name, value=None):
         self.name = str(name)
@@ -95,7 +95,7 @@ class DefaultParameter:
 
     def apply_operation(self, op, other):
         """
-        Apply an operation to the ``DefaultParameter``.
+        Apply an operation to the ``Parameter``.
 
         Parameters
         ----------
@@ -122,7 +122,7 @@ class DefaultParameter:
 
     def __eq__(self, other):
         # Test equality against the expression's numeric value.
-        # If the parameter doesn't have a default value,
+        # If the parameter doesn't have a value,
         # test equality against the string representation
         # of the unevaluated expression.
         try:
@@ -153,7 +153,7 @@ class DefaultParameter:
             return str(self.value_or_name)
         ret = str(self.name)
         for op, val in self.operations:
-            if isinstance(val, DefaultParameter):
+            if isinstance(val, Parameter):
                 val = val.eval()
             ret += f'{op}{val}'
         return ret
@@ -169,7 +169,7 @@ class DefaultParameter:
                 disable_mul_div = True
             elif op in ('*', '/') and disable_mul_div:
                 raise NotImplementedError(
-                    'DefaultParameter equations with brackets are not supported.'
+                    'Parameter equations with brackets are not supported.'
                 )
 
     def copy(self):

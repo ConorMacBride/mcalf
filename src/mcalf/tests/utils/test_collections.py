@@ -3,15 +3,15 @@ import copy
 
 import numpy as np
 
-from mcalf.utils.collections import DefaultParameter
+from mcalf.utils.collections import Parameter
 
 
-def test_default_parameter():
+def test_parameter():
 
-    apples = DefaultParameter('apples')
-    oranges = DefaultParameter('oranges', 12)
-    DefaultParameter('bananas', value=15)
-    DefaultParameter(name='grapes', value=30)
+    apples = Parameter('apples')
+    oranges = Parameter('oranges', 12)
+    Parameter('bananas', value=15)
+    Parameter(name='grapes', value=30)
 
     # No value set
 
@@ -51,8 +51,8 @@ def test_default_parameter():
     assert str(oranges + 2) == 'oranges+2'
     assert (oranges * 10 + 4).eval() == 124
 
-    assert DefaultParameter('a', 1) == DefaultParameter('b', 1)
-    assert DefaultParameter('a', 1) + 0 == DefaultParameter('b', 1) + 0
+    assert Parameter('a', 1) == Parameter('b', 1)
+    assert Parameter('a', 1) + 0 == Parameter('b', 1) + 0
 
     # Equations that need brackets to work are not supported
     with pytest.raises(NotImplementedError):
@@ -67,7 +67,7 @@ def test_default_parameter():
         2 + oranges * 2
 
     # Copying a parameter
-    a = DefaultParameter('A', value=1)
+    a = Parameter('A', value=1)
     b = a.copy()
     c = copy.copy(a)
     d = copy.deepcopy(a)
@@ -79,7 +79,7 @@ def test_default_parameter():
     assert f == 2
 
     # Very basic array support
-    a = DefaultParameter('a', np.arange(10))
+    a = Parameter('a', np.arange(10))
     assert np.array_equal((a + 1).eval(), np.arange(10) + 1)
     with pytest.raises(SyntaxError):
         np.array_equal((a + 2 * np.arange(10)).eval(), 3 * np.arange(10))
