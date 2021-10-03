@@ -8,7 +8,7 @@ from mcalf.models.results import FitResult
 from mcalf.models.base import *
 from mcalf.profiles.voigt import voigt_nobg, double_voigt_nobg
 from mcalf.utils.spec import generate_sigma
-from mcalf.utils.misc import load_parameter
+from mcalf.utils.misc import load_parameter, update_signature
 from mcalf.utils.collections import OrderedParameterDict, Parameter
 from mcalf.visualisation import plot_ibis8542
 
@@ -489,3 +489,5 @@ IBIS8542Model.__doc__ = IBIS8542Model.__doc__.replace(
     '${ATTRIBUTES_EXTRA}',
     IBIS8542_ATTRIBUTES_STR.lstrip()
 )
+
+update_signature(IBIS8542Model)

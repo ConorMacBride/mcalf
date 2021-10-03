@@ -16,7 +16,7 @@ except ImportError:
     from yaml import Loader
 
 from mcalf.utils.spec import reinterpolate_spectrum
-from mcalf.utils.misc import load_parameter, make_iter
+from mcalf.utils.misc import load_parameter, make_iter, update_signature
 
 
 __all__ = ['ModelBase', 'BASE_PARAMETERS', 'BASE_ATTRIBUTES']
@@ -1118,3 +1118,5 @@ ModelBase.__doc__ = ModelBase.__doc__.replace(
     '${ATTRIBUTES}',
     BASE_ATTRIBUTES_STR.lstrip()
 )
+
+update_signature(ModelBase)
