@@ -9,6 +9,7 @@ from mcalf.models.base import *
 from mcalf.profiles.voigt import voigt_nobg, double_voigt_nobg
 from mcalf.utils.spec import generate_sigma
 from mcalf.utils.misc import load_parameter
+from mcalf.utils.collections import OrderedParameterDict, Parameter
 from mcalf.visualisation import plot_ibis8542
 
 
@@ -31,27 +32,37 @@ class IBIS8542Model(ModelBase):
         The index within the fitted parameters of the emission Voigt line core wavelength.
     ${ATTRIBUTES_EXTRA}
     """
+
+    default_kwargs = default_ibis8542model_kwargs = OrderedParameterDict([
+        ('stationary_line_core', Parameter('stationary_line_core', 8542.099145376844)),
+        ('absorption_guess', [-1000, Parameter('stationary_line_core'), 0.2, 0.1]),
+        ('emission_guess', [1000, Parameter('stationary_line_core'), 0.2, 0.1]),
+        ('absorption_min_bound', [-np.inf, Parameter('stationary_line_core') - 0.15, 1e-6, 1e-6]),
+        ('emission_min_bound', [0, -np.inf, 1e-6, 1e-6]),
+        ('absorption_max_bound', [0, Parameter('stationary_line_core') + 0.15, 1, 1]),
+        ('emission_max_bound', [np.inf, np.inf, 1, 1]),
+        ('absorption_x_scale', [1500, 0.2, 0.3, 0.5]),
+        ('emission_x_scale', [1500, 0.2, 0.3, 0.5]),
+        ('random_state', None),
+    ])
+
     def __init__(self, **kwargs):
 
-        # STAGE 0A: Initialise the parent class `ModelBase`
-        class_keys = [  # Keys that should not be passed to parent class's kwargs
-            'absorption_guess',
-            'emission_guess',
-            'absorption_min_bound',
-            'emission_min_bound',
-            'absorption_max_bound',
-            'emission_max_bound',
-            'absorption_x_scale',
-            'emission_x_scale',
-            'random_state',
-        ]  # These must match dictionary in STAGE 1 (defined there as stationary_line_core needs to be set)
+        # STAGE 1: Define dictionary of default attribute values
+        defaults = copy.deepcopy(self.default_ibis8542model_kwargs)
+
+        # STAGE 1.1: Initialise the parent class `ModelBase`
+        class_keys = set(defaults.keys()) - {'stationary_line_core'}  # Keys that should not be passed to parent class
         base_kwargs = {k: kwargs[k] for k in kwargs.keys() if k not in class_keys}
+        if 'stationary_line_core' not in kwargs.keys():  # Pass the child's default value if not specified
+            base_kwargs['stationary_line_core'] = defaults['stationary_line_core'].eval()
         super().__init__(**base_kwargs)
 
-        # STAGE 0B: Load child default values for parent class attributes
+        # STAGE 1.2: Load child default values for parent class attributes
         # stationary_line_core
-        if self.stationary_line_core is None:
-            self.stationary_line_core = 8542.099145376844
+        defaults.update_parameter('stationary_line_core', self.stationary_line_core)
+        defaults = defaults.eval()  # Fix the 'stationary_line_core' value
+        # TODO: Allow 'stationary_line_core' to affect other parameters dynamically after this point.
         # prefilter_response
         self._set_prefilter()  # Update the prefilter using stationary_line_core
         # sigma
@@ -60,22 +71,8 @@ class IBIS8542Model(ModelBase):
         elif isinstance(self.sigma, bool) and not self.sigma:
             self.sigma = [np.ones(len(self.constant_wavelengths)) for i in [1, 2]]
 
-        # STAGE 1: Define dictionary of default attribute values
-        defaults = {
-            'absorption_guess': [-1000, self.stationary_line_core, 0.2, 0.1],
-            'emission_guess': [1000, self.stationary_line_core, 0.2, 0.1],
-            'absorption_min_bound': [-np.inf, self.stationary_line_core - 0.15, 1e-6, 1e-6],
-            'emission_min_bound': [0, -np.inf, 1e-6, 1e-6],
-            'absorption_max_bound': [0, self.stationary_line_core + 0.15, 1, 1],
-            'emission_max_bound': [np.inf, np.inf, 1, 1],
-            'absorption_x_scale': [1500, 0.2, 0.3, 0.5],
-            'emission_x_scale': [1500, 0.2, 0.3, 0.5],
-            'random_state': None,
-        }
-        assert defaults.keys() == {k: None for k in class_keys}.keys()  # keys of `defaults` must match `class_keys`
-
         # STAGE 2: Update defaults with any values specified in a config file
-        class_defaults = {k: self.config[k] for k in self.config.keys() if k in defaults.keys()}
+        class_defaults = {k: self.config[k] for k in self.config.keys() if k in class_keys}
         for k in class_defaults.keys():
             if k in ['absorption_x_scale', 'emission_x_scale', 'random_state']:
                 # These should not need the stationary line core
@@ -86,7 +83,7 @@ class IBIS8542Model(ModelBase):
         defaults.update(class_defaults)  # Update the defaults with the config file
 
         # STAGE 3: Update defaults with the keyword arguments passed into the class initialisation
-        class_kwargs = {k: kwargs[k] for k in defaults.keys() if k in kwargs.keys()}
+        class_kwargs = {k: kwargs[k] for k in class_keys if k in kwargs.keys()}
         defaults.update(class_kwargs)  # Update the defaults
 
         # STAGE 4: Set the object attributes (with some type enforcing)

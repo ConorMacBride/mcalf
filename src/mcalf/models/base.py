@@ -37,20 +37,23 @@ class ModelBase:
     ----------
     ${ATTRIBUTES}
     """
+
+    default_kwargs = default_modelbase_kwargs = collections.OrderedDict([
+        ('stationary_line_core', None),
+        ('original_wavelengths', None),
+        ('constant_wavelengths', None),
+        ('delta_lambda', 0.05),
+        ('sigma', None),
+        ('prefilter_response', None),
+        ('prefilter_ref_main', None),
+        ('prefilter_ref_wvscl', None),
+        ('output', None),
+    ])
+
     def __init__(self, config=None, **kwargs):
 
         # STAGE 1: Define dictionary of default attribute values
-        defaults = {
-            'stationary_line_core': None,
-            'original_wavelengths': None,
-            'constant_wavelengths': None,
-            'delta_lambda': 0.05,
-            'sigma': None,
-            'prefilter_response': None,
-            'prefilter_ref_main': None,
-            'prefilter_ref_wvscl': None,
-            'output': None,
-        }
+        defaults = copy.deepcopy(self.default_modelbase_kwargs)
 
         # STAGE 2: Update defaults with any values specified in a config file
         self.config = {}  # Dictionary of parameters from the config file
