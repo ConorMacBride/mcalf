@@ -193,7 +193,7 @@ class SyncedParameters:
             self._tracked_objs = {}
         return self._tracked_objs
 
-    def _track_object(self, obj):
+    def track_object(self, obj):
 
 
         if self.exists(obj.name):  # If parameter already registered...
@@ -238,11 +238,11 @@ class BaseParameterDict(SyncedParameters):
     """
     def __setitem__(self, key, value):
         if isinstance(value, Parameter):
-            self._track_object(value)
+            self.track_object(value)
         elif isinstance(value, list):
             for item in value:
                 if isinstance(item, Parameter):
-                    self._track_object(item)
+                    self.track_object(item)
         super().__setitem__(key, value)
 
     def eval(self):
