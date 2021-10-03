@@ -1,12 +1,13 @@
 import os
 from shutil import copyfile
+import inspect
 
 import numpy as np
 from astropy.io import fits
 from scipy.io import readsav
 
 
-__all__ = ['make_iter', 'load_parameter', 'merge_results']
+__all__ = ['make_iter', 'load_parameter', 'merge_results', 'update_signature']
 
 
 def make_iter(*args):
@@ -353,3 +354,87 @@ def _zero_test(x):
         Whether corresponding index is not 0.
     """
     return x != 0
+
+
+def _as_keywords(dictionary):
+    """Converts a (ordered) dictionary of name, default value pairs into a
+    list of KEYWORD_ONLY Parameters."""
+    return [
+        inspect.Parameter(name, inspect.Parameter.KEYWORD_ONLY, default=default)
+        for name, default in dictionary.items()
+    ]
+
+
+def _filter_params(parameters):
+    """Filters a list of Parameters such that all are converted to
+    KEYWORD_ONLY and *args, **kwargs and self are removed."""
+    return [
+        param.replace(kind=inspect.Parameter.KEYWORD_ONLY) for param in parameters
+        if (param.kind not in (
+            inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD
+        )) and (param.name != 'self')
+    ]
+
+
+def _drop_duplicate_names(params: list):
+    """Drops duplicate Parameters from a list."""
+    existing = []
+    drop = []
+    for i in range(len(params)-1, -1, -1):
+        if params[i].name in existing:
+            drop.append(i)
+        else:
+            existing.append(params[i].name)
+    for i in drop[::-1]:
+        params.pop(i)
+
+
+def _update_parameters(params, cls, parse_defaults=True):
+    """Update a list of Parameters.
+
+    Parameters
+    ----------
+    params : list[`inspect.Parameter`]
+        List of Parameters to update (inplace).
+    cls : type
+        Class to extract `__init__` signature from.
+    parse_defaults : bool, optional, default=True
+        Whether to include Parameters from `cls.default_kwargs`.
+
+    Returns
+    -------
+    sig : `inspect.Signature`
+        Signature of `cls.__init__`.
+    """
+    if parse_defaults:
+        params += _as_keywords(cls.default_kwargs)
+    sig = inspect.signature(cls.__init__)
+    params += _filter_params(sig.parameters.values())
+    _drop_duplicate_names(params)
+    return sig
+
+
+def update_signature(cls):
+    """Update the signature of a model class.
+
+    Parameters
+    ----------
+    cls : type
+        The model class to set a `cls.__init__.__signature__` for.
+
+    Notes
+    -----
+    This should be called during import of the model class.
+    This function should be called for every class in the
+    model class hierarchy in order starting from
+    `~mcalf.models.ModelBase`.
+    """
+    params = []
+
+    all_classes = inspect.getmro(cls)
+    if len(all_classes) >= 3:  # ([`cls`, [...,]] `ModelBase`, `object`)
+        _update_parameters(params, all_classes[1], parse_defaults=False)
+
+    sig = _update_parameters(params, cls)
+    new_sig = sig.replace(parameters=params)
+    cls.__init__.__signature__ = new_sig
