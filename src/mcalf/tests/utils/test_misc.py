@@ -1,8 +1,11 @@
+import inspect
+
 import pytest
 import numpy as np
 from astropy.io import fits
 
-from mcalf.utils.misc import make_iter, load_parameter, merge_results
+from mcalf.utils.misc import make_iter, load_parameter, merge_results, update_signature
+from mcalf.utils.collections import OrderedParameterDict, Parameter
 
 from ..helpers import data_path_function
 data_path = data_path_function('utils')
@@ -113,3 +116,32 @@ def test_merge_results(tmp_path):
             data_path('test_merge_results_2.fits'),
         ], output_file)
     assert 'nexpected' in str(excinfo.value)  # "Unexpected"
+
+
+def test_update_signature():
+
+    class A:
+        default_kwargs = OrderedParameterDict([
+            ('c', Parameter('hello', 15)),
+            ('d', [1, Parameter('world'), 3, Parameter('hello')]),
+        ])
+
+        def __init__(self, a=None, **kwargs):
+            pass
+
+    class B(A):
+        default_kwargs = OrderedParameterDict([
+            ('e', Parameter('hello') + 12),
+            ('d', [Parameter('world') * 3, 3, Parameter('hello'), 6.2]),
+        ])
+
+        def __init__(self, b=1, **kwargs):
+            pass
+
+    update_signature(A)
+    assert str(inspect.signature(A.__init__)) == \
+           "(*, c='15', d=[1, 'world', 3, '15'], a=None)"
+
+    update_signature(B)
+    assert str(inspect.signature(B.__init__)) == \
+           "(*, c='15', a=None, e='hello+12', d=['world*3', 3, 'hello', 6.2], b=1)"
