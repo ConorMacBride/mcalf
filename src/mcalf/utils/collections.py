@@ -195,17 +195,16 @@ class SyncedParameters:
 
     def _track_object(self, obj):
 
-        if obj.value is not None and self.exists(obj.name):
 
-            # No more than one value should be associated with each name
-            if self.has_value(obj.name) and obj.value is not self.get_parameter(obj.name):
-                raise ValueError(f"'{obj.name}' value {obj.value} does not match "
-                                 f"existing value {self.get_parameter(obj.name)}.")
-
-            # Sync the value
-            self.update_parameter(obj.name, obj.value)
-
-        if self.exists(obj.name):
+        if self.exists(obj.name):  # If parameter already registered...
+            if obj.value is not None:  # ...copy incoming value to existing.
+                # (No more than one value should be associated with each name.)
+                if self.has_value(obj.name) and obj.value is not self.get_parameter(obj.name):
+                    raise ValueError(f"'{obj.name}' value {obj.value} does not match "
+                                     f"existing value {self.get_parameter(obj.name)}.")
+                self.update_parameter(obj.name, obj.value)
+            elif self.has_value(obj.name):  # ...copy existing value to incoming.
+                obj.value = self.get_parameter(obj.name)
             self._tracked[obj.name]['objects'] += [obj]
         else:
             self._tracked[obj.name] = {'value': obj.value, 'objects': [obj]}
@@ -252,12 +251,13 @@ class BaseParameterDict(SyncedParameters):
             if isinstance(value, Parameter):
                 value = value.eval()
             elif isinstance(value, list):
-                value = []
+                lst = []
                 for i, v in enumerate(value):
                     if isinstance(v, Parameter):
-                        value += [v.eval()]
+                        lst += [v.eval()]
                     else:
-                        value += [v]
+                        lst += [v]
+                value = lst
             edict[key] = value
         return edict
 

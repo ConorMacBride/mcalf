@@ -104,6 +104,7 @@ def test_parameter_dict(cls):
         ('ee', Parameter('b', 3) + 5),
         ('ff', Parameter('f') + 6.25),
         ('gg', Parameter('f', 13.2) + 3.12),
+        ('hh', [Parameter('f') + 1, Parameter('b'), 12]),
     ]
 
     if cls is ParameterDict:
@@ -121,6 +122,7 @@ def test_parameter_dict(cls):
     assert x['ee'] == 8
     assert x['ff'] == 19.45
     assert x['gg'] == 16.32
+    assert isinstance(x['hh'], list) and x['hh'] == [14.2, 3, 12]
     assert x.has_value('a')
     assert not x.has_value('c')
     assert x.get_parameter('c') is None
@@ -139,6 +141,7 @@ def test_parameter_dict(cls):
     assert x['ee'] == 'b+5'
     assert x['ff'] == 12.05
     assert x['gg'] == 8.92
+    assert isinstance(x['hh'], list) and x['hh'] == [6.8, 'b', 12]
 
     # Evaluate all parameters
     with pytest.raises(ValueError):
