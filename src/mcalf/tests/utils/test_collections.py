@@ -102,14 +102,16 @@ def test_parameter_dict(cls):
         ('cc', Parameter('a', 2) + 3),
         ('dd', Parameter('c') + 4),
         ('ee', Parameter('b', 3) + 5),
+        ('ff', Parameter('f') + 6.25),
+        ('gg', Parameter('f', 13.2) + 3.12),
     ]
 
     if cls is ParameterDict:
         parameters = {k: v for k, v in parameters}
     x = cls(parameters)
 
-    assert len(x._tracked.keys()) == 3
-    assert set(x._tracked.keys()) == {'a', 'b', 'c'}
+    assert len(x._tracked.keys()) == 4
+    assert set(x._tracked.keys()) == {'a', 'b', 'c', 'f'}
 
     verify_synced_parameters(x._tracked)
     assert x['aa'] == 3
@@ -117,6 +119,8 @@ def test_parameter_dict(cls):
     assert x['cc'] == 5
     assert x['dd'] == 'c+4'
     assert x['ee'] == 8
+    assert x['ff'] == 19.45
+    assert x['gg'] == 16.32
     assert x.has_value('a')
     assert not x.has_value('c')
     assert x.get_parameter('c') is None
@@ -125,6 +129,7 @@ def test_parameter_dict(cls):
     x.update_parameter('c', 9)
     x.update_parameter('b', None)
     x.update_parameter('a', 12)
+    x.update_parameter('f', 5.8)
 
     verify_synced_parameters(x._tracked)
     assert x['aa'] == 13
@@ -132,6 +137,8 @@ def test_parameter_dict(cls):
     assert x['cc'] == 15
     assert x['dd'] == 13
     assert x['ee'] == 'b+5'
+    assert x['ff'] == 12.05
+    assert x['gg'] == 8.92
 
     # Evaluate all parameters
     with pytest.raises(ValueError):
@@ -142,9 +149,12 @@ def test_parameter_dict(cls):
         assert isinstance(ex, collections.UserDict)
     elif cls is OrderedParameterDict:
         assert isinstance(ex, collections.OrderedDict)
-    for k, v in [('aa', 13), ('bb', 3), ('cc', 15), ('dd', 13), ('ee', 6)]:
-        assert ex[k] is v
-        assert not x[k] is v
+    for k, v in [('aa', 13), ('bb', 3), ('cc', 15), ('dd', 13), ('ee', 6), ('ff', 12.05), ('gg', 8.92)]:
+        if isinstance(v, float):
+            assert isinstance(ex[k], float) and ex[k] == v
+        else:
+            assert ex[k] is v
+            assert not x[k] is v
 
     assert x.exists('b')
     assert not x.exists('t')
@@ -155,8 +165,8 @@ def test_parameter_dict(cls):
     assert x['tt'] == 27
     assert x.get_parameter('t') == 22
     verify_synced_parameters(x._tracked)
-    assert len(x._tracked.keys()) == 4
-    assert set(x._tracked.keys()) == {'a', 'b', 'c', 't'}
+    assert len(x._tracked.keys()) == 5
+    assert set(x._tracked.keys()) == {'a', 'b', 'c', 'f', 't'}
 
     # Add standard number
     x['s'] = 10
