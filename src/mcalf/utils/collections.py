@@ -2,12 +2,12 @@ import collections
 import copy
 
 
-__all__ = ['Parameter', 'ParameterDict', 'OrderedParameterDict']
+__all__ = ['Parameter', 'ParameterDict', 'OrderedParameterDict',
+           'BaseParameterDict', 'SyncedParameters']
 
 
 class Parameter:
-    """
-    A named parameter with a optional value.
+    """A named parameter with a optional value.
 
     The value can be changed at any time and very basic
     operations can be queued and evaluated on demand.
@@ -60,9 +60,10 @@ class Parameter:
     'x+1'
     >>> Parameter('x', 1) + 1
     'x+1'
-    >>> a = Parameter('y', 10)
+    >>> a = Parameter('y') * 2
     >>> a
-    '10'
+    'y*2'
+    >>> a.value = 5
     >>> a == 10
     True
     >>> a.eval()
@@ -70,7 +71,7 @@ class Parameter:
     >>> (a * 10).eval()
     100
     >>> a * 10 + 1.5
-    'y*10+1.5'
+    'y*2*10+1.5'
     >>> (a + 10) * 2
     Traceback (most recent call last):
      ...
@@ -94,8 +95,7 @@ class Parameter:
         return self.apply_operation('/', other)
 
     def apply_operation(self, op, other):
-        """
-        Apply an operation to the ``Parameter``.
+        """Apply an operation to the ``Parameter``.
 
         Parameters
         ----------
@@ -133,6 +133,7 @@ class Parameter:
 
     @property
     def value_or_name(self):
+        """Returns its value if set, otherwise returns its name."""
         if self.value is None:
             return self.name
         else:
@@ -186,16 +187,69 @@ class Parameter:
 
 
 class SyncedParameters:
+    """Database for keeping :class:`Parameter` objects in sync.
 
+    :class:`Parameter` objects with the same name can be linked with this class
+    and kept in sync with each other.
+
+    Examples
+    --------
+    >>> a = Parameter('x') + 1
+    >>> b = Parameter('x', 2) * 3
+    >>> c = Parameter('y')
+
+    Now that :class:`Parameter` objects have been created,
+    we can keep them in sync.
+
+    >>> s = SyncedParameters()
+    >>> s.track_object(a)
+    >>> s.track_object(b)
+    >>> s.track_object(c)
+
+    Notice how the value of `a` has been synced to match the
+    value provided in `b`.
+
+    >>> a == 3
+    True
+
+    The value of a named parameter can be updated and the
+    change is propagated to all :class:`Parameter` objects
+    of that name.
+
+    >>> s.update_parameter('x', 3)
+    >>> a == 4
+    True
+    >>> b == 9
+    True
+    """
     @property
     def _tracked(self):
+        """Dictionary of tracked :class:`Parameters` grouped by name.
+
+        Notes
+        -----
+        Has the form: ``{Parameter.name: {'value': Parameter.value, 'objects': List[Parameter]}}``.
+        All ``Parameter.value`` of the same ``Parameter.name`` are
+        identical in both ``'value'`` and all in ``'objects'``.
+        """
         if not hasattr(self, '_tracked_objs'):
             self._tracked_objs = {}
         return self._tracked_objs
 
     def track_object(self, obj):
+        """Add a new :class:`Parameter` object to keep in sync.
 
+        Parameters
+        ----------
+        obj : :class:`Parameter`
+            The parameter object to keep in sync.
 
+        Notes
+        -----
+        Any objects added must not have a value that contradicts the existing
+        value of the parameter (if set). Objects added which have no value set
+        will inherit the value of the other parameters of the same name.
+        """
         if self.exists(obj.name):  # If parameter already registered...
             if obj.value is not None:  # ...copy incoming value to existing.
                 # (No more than one value should be associated with each name.)
@@ -210,17 +264,42 @@ class SyncedParameters:
             self._tracked[obj.name] = {'value': obj.value, 'objects': [obj]}
 
     def update_parameter(self, name, value):
+        """Update the value of a named parameter.
+
+        All tracked :class:`Parameter` objects of this name will be updated.
+
+        Parameters
+        ----------
+        name : string
+            Name of parameter to update.
+        value : float or int
+            New value of parameter. Other types may work.
+        """
         self._tracked[name]['value'] = value
         for obj in self._tracked[name]['objects']:
             obj.value = value
 
     def get_parameter(self, name):
+        """Get the value of the named parameter.
+
+        Parameters
+        ----------
+        name : str
+            Name of parameter to get value of.
+
+        Returns
+        -------
+        value
+            The current value of the parameter. ``None`` if not set.
+        """
         return self._tracked[name]['value']
 
-    def has_value(self, name):
+    def has_value(self, name: str) -> bool:
+        """Whether the named parameter has a value set."""
         return False if self.get_parameter(name) is None else True
 
-    def exists(self, name):
+    def exists(self, name: str) -> bool:
+        """Whether any parameters of a particular name are tracked."""
         try:
             self._tracked[name]
         except KeyError:
@@ -231,10 +310,13 @@ class SyncedParameters:
 
 class BaseParameterDict(SyncedParameters):
     """
-    A base class for dictionaries of `Parameter` objects.
+    A base class for dictionaries of :class:`Parameter` objects.
 
     The same parameters existing across multiple dictionary
     values can be kept in sync with each other.
+    For a :class:`Parameter` object to be kept in sync it must be
+    located in the dictionary such that ``{key: Parameter}`` or
+    ``{key: List[Parameter]}``.
     """
     def __setitem__(self, key, value):
         if isinstance(value, Parameter):
@@ -246,6 +328,7 @@ class BaseParameterDict(SyncedParameters):
         super().__setitem__(key, value)
 
     def eval(self):
+        """Return a copy of the dictionary with all :class:`Parameter` objects evaluated."""
         edict = self.__class__.__bases__[-1]()
         for key, value in self.items():
             if isinstance(value, Parameter):
@@ -264,17 +347,49 @@ class BaseParameterDict(SyncedParameters):
 
 class ParameterDict(BaseParameterDict, collections.UserDict):
     """
-    An unordered dictionary of `Parameter` objects.
+    An unordered dictionary of :class:`Parameter` objects.
 
     The same parameters existing across multiple dictionary
     values can be kept in sync with each other.
+    For a :class:`Parameter` object to be kept in sync it must be
+    located in the dictionary such that ``{key: Parameter}`` or
+    ``{key: List[Parameter]}``.
+
+    Examples
+    --------
+    >>> d = ParameterDict({
+    ...     'a': Parameter('x') + 1,
+    ...     'b': [2, Parameter('x'), 5],
+    ...     'c': {1, 2, 3},
+    ... })
+    >>> d
+    {'a': 'x+1', 'b': [2, 'x', 5], 'c': {1, 2, 3}}
+    >>> d.update_parameter('x', 1)
+    >>> d.eval()
+    {'a': 2, 'b': [2, 1, 5], 'c': {1, 2, 3}}
     """
 
 
 class OrderedParameterDict(BaseParameterDict, collections.OrderedDict):
     """
-    An ordered dictionary of `Parameter` objects.
+    An ordered dictionary of :class:`Parameter` objects.
 
     The same parameters existing across multiple dictionary
     values can be kept in sync with each other.
+    For a :class:`Parameter` object to be kept in sync it must be
+    located in the dictionary such that ``{key: Parameter}`` or
+    ``{key: List[Parameter]}``.
+
+    Examples
+    --------
+    >>> d = OrderedParameterDict([
+    ...     ('a', Parameter('x') + 1),
+    ...     ('b', [2, Parameter('x'), 5]),
+    ...     ('c', {1, 2, 3}),
+    ... ])
+    >>> d
+    OrderedParameterDict([('a', 'x+1'), ('b', [2, 'x', 5]), ('c', {1, 2, 3})])
+    >>> d.update_parameter('x', 1)
+    >>> d.eval()
+    OrderedDict([('a', 2), ('b', [2, 1, 5]), ('c', {1, 2, 3})])
     """
