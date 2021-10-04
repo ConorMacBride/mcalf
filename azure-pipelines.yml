@@ -3,8 +3,8 @@ resources:
   - repository: OpenAstronomy
     type: github
     endpoint: ConorMacBride
-    name: OpenAstronomy/azure-pipelines-templates
-    ref: master
+    name: ConorMacBride/azure-pipelines-templates
+    ref: include-source-version
 
 trigger:
   branches:
