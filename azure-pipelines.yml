@@ -4,7 +4,7 @@ resources:
     type: github
     endpoint: ConorMacBride
     name: ConorMacBride/azure-pipelines-templates
-    ref: include-source-version
+    ref: upgrade-codecov
 
 trigger:
   branches:
