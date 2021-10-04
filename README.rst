@@ -175,3 +175,4 @@ MCALF is licensed under the terms of the BSD 2-Clause license.
 .. _GitHub repository: https://github.com/ConorMacBride/mcalf
 
 .. _Zenodo DOI: https://doi.org/10.5281/zenodo.3924527
+
