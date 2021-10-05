@@ -1,10 +1,13 @@
+variables:
+  CODECOV_TOKEN: $(CODECOV_TOKEN)
+
 resources:
   repositories:
   - repository: OpenAstronomy
     type: github
     endpoint: ConorMacBride
-    name: ConorMacBride/azure-pipelines-templates
-    ref: upgrade-codecov
+    name: OpenAstronomy/azure-pipelines-templates
+    ref: master
 
 trigger:
   branches:
