@@ -1,5 +1,5 @@
 variables:
-  CODECOV_TOKEN: $(CODECOV_TOKEN)
+  CODECOV_TOKEN: $(codecovToken)
 
 resources:
   repositories:
