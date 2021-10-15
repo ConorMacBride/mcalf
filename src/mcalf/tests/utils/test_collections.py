@@ -50,6 +50,7 @@ def test_parameter():
 
     assert oranges + 2 == 14
     assert str(oranges + 2) == 'oranges+2'
+    assert repr(oranges + 2) == "'oranges+2'"
     assert (oranges * 10 + 4).eval() == 124
 
     assert Parameter('a', 1) == Parameter('b', 1)
@@ -66,6 +67,10 @@ def test_parameter():
         6.0 * oranges
     with pytest.raises(TypeError):
         2 + oranges * 2
+
+    # Parameter + Parameter evaluates RHS parameter
+    # (This functionality should not be considered stable.)
+    assert str(Parameter('a') * 2 + Parameter('b', 6) / 2) == 'a*2+3.0'
 
     # Copying a parameter
     a = Parameter('A', value=1)
@@ -174,3 +179,8 @@ def test_parameter_dict(cls):
     # Add standard number
     x['s'] = 10
     assert x['s'] == 10
+
+    # Add parameter with different value
+    with pytest.raises(ValueError) as e:
+        x['uu'] = Parameter('t', 20) + 7
+    assert 'does not match' in str(e.value)
