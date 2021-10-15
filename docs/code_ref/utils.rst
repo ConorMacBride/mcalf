@@ -9,6 +9,7 @@ This sub-package contains:
 * Functions for masking the input data to limit the
   region computed (`mcalf.utils.mask`).
 * Functions for helping with plotting (`mcalf.utils.plot`).
+* Classes for managing collections of data (`mcalf.utils.collections`).
 * Miscellaneous utility functions (`mcalf.utils.misc`).
 
 .. automodapi:: mcalf.utils
@@ -20,5 +21,7 @@ This sub-package contains:
 .. automodapi:: mcalf.utils.mask
 
 .. automodapi:: mcalf.utils.plot
+
+.. automodapi:: mcalf.utils.collections
 
 .. automodapi:: mcalf.utils.misc
