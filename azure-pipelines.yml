@@ -59,7 +59,7 @@ stages:
           libraries: {}
 
         # Test that the oldest dependency versions with on the latest supported Python version
-        - linux: py39-oldestdeps
+        - linux: py37-oldestdeps
           libraries: {}
 
 #        - linux: build_docs
@@ -106,20 +106,11 @@ stages:
           - windows: py38
 #          - windows: py39
 
-          - linux: py37-oldestdeps
-          - linux: py38-oldestdeps
-#          - linux: py39-oldestdeps
-
+#          - linux: py37-oldestdeps
           - macos: py37-oldestdeps
-          - macos: py38-oldestdeps
-          - macos: py39-oldestdeps
-
           - windows: py37-oldestdeps
-          - windows: py38-oldestdeps
-          - windows: py39-oldestdeps
 
   # Don't build sdist and wheels for PRs
-  # Note: cannot run tests in this job as tests are outside package
   - ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
     - stage: Release
       condition: or(succeeded(), eq(variables['Build.Reason'], 'Manual'))
