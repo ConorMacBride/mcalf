@@ -1,3 +1,7 @@
+variables:
+  CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+  CIBW_MANYLINUX_I686_IMAGE: manylinux2014
+
 resources:
   repositories:
   - repository: OpenAstronomy
@@ -20,12 +24,12 @@ stages:
     jobs:
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
-        default_python: '3.8'
+        default_python: '3.9'
         coverage: codecov
         posargs: -n=4
 
         envs:
-        - linux: py38
+        - linux: py39
 
   - stage: StageTwoTests
     displayName: Detailed Tests
@@ -33,7 +37,7 @@ stages:
     jobs:
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
-        default_python: '3.8'
+        default_python: '3.9'
         coverage: codecov
         posargs: -n=4
 
@@ -43,19 +47,19 @@ stages:
 
         envs:
 
-        - linux: py36
-          libraries: {}
         - linux: py37
           libraries: {}
-
-        - macos: py38
+        - linux: py38
           libraries: {}
 
-        - windows: py38
+        - macos: py39
+          libraries: {}
+
+        - windows: py39
           libraries: {}
 
         # Test that the oldest dependency versions with on the latest supported Python version
-        - linux: py38-oldestdeps
+        - linux: py37-oldestdeps
           libraries: {}
 
 #        - linux: build_docs
@@ -68,13 +72,13 @@ stages:
     jobs:
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
-        default_python: '3.8'
+        default_python: '3.9'
         coverage: codecov
         posargs: -n=4
         envs:
-        - linux: py38-figure
-        - macos: py38-figure
-        - windows: py38-figure
+        - linux: py39-figure
+        - macos: py39-figure
+        - windows: py39-figure
 
   # RELEASING A VERSION: Run more detailed tests if releasing a version (or if triggered manually)
   - ${{ if or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.Reason'], 'Manual')) }}:
@@ -84,38 +88,29 @@ stages:
       jobs:
       - template: run-tox-env.yml@OpenAstronomy
         parameters:
-          default_python: '3.8'
+          default_python: '3.9'
           coverage: codecov
           posargs: -n=4
 
           envs:
 
-#          - linux: py36
 #          - linux: py37
 #          - linux: py38
+#          - linux: py39
 
-          - macos: py36
           - macos: py37
-#          - macos: py38
+          - macos: py38
+#          - macos: py39
 
-          - windows: py36
           - windows: py37
-#          - windows: py38
+          - windows: py38
+#          - windows: py39
 
-          - linux: py36-oldestdeps
-          - linux: py37-oldestdeps
-#          - linux: py38-oldestdeps
-
-          - macos: py36-oldestdeps
+#          - linux: py37-oldestdeps
           - macos: py37-oldestdeps
-          - macos: py38-oldestdeps
-
-          - windows: py36-oldestdeps
           - windows: py37-oldestdeps
-          - windows: py38-oldestdeps
 
   # Don't build sdist and wheels for PRs
-  # Note: cannot run tests in this job as tests are outside package
   - ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
     - stage: Release
       condition: or(succeeded(), eq(variables['Build.Reason'], 'Manual'))
@@ -131,6 +126,6 @@ stages:
           test_command: pytest --pyargs mcalf
           targets:
           - sdist
-          - wheels_cp3[6-8]-macosx_x86_64
-          - wheels_cp3[6-8]-manylinux*
-          - wheels_cp3[6-8]-win_amd64
+          - wheels_cp3[7-9]-macosx_x86_64
+          - wheels_cp3[7-9]-manylinux*
+          - wheels_cp3[7-9]-win_amd64
