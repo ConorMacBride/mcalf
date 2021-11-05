@@ -19,6 +19,19 @@ trigger:
     - 'v*'
 
 stages:
+  - stage: Setup
+    jobs:
+    - job: check_skip_ci
+      steps:
+      - task: Bash@3
+        name: process_commit_message
+        inputs:
+          targetType: 'inline'
+          script: |
+            if [[ $MSG == *"[skip ci]"* ]]; then echo "##vso[task.setvariable variable=skipsecond;isOutput=true]true"; else echo "##vso[task.setvariable variable=skipsecond;isOutput=true]false"; fi
+        env:
+          MSG: $(Build.SourceVersionMessage)
+
   - stage: StageOneTests
     displayName: Basic Tests
     jobs:
@@ -33,7 +46,7 @@ stages:
 
   - stage: StageTwoTests
     displayName: Detailed Tests
-    condition: or(and(succeeded(), not(contains(variables['Build.SourceVersionMessage'], '[skip ci]'))), eq(variables['Build.Reason'], 'Manual'))
+    condition: or(and(succeeded(), eq(dependencies.Setup.outputs['check_skip_ci.process_commit_message.skipsecond'], 'false')), eq(variables['Build.Reason'], 'Manual'))
     jobs:
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
@@ -68,7 +81,7 @@ stages:
 
   - stage: FigureTests
     displayName: Figure Tests
-    condition: or(and(succeeded(), not(contains(variables['Build.SourceVersionMessage'], '[skip ci]'))), eq(variables['Build.Reason'], 'Manual'))
+    condition: or(and(succeeded(), eq(dependencies.Setup.outputs['check_skip_ci.process_commit_message.skipsecond'], 'false')), eq(variables['Build.Reason'], 'Manual'))
     jobs:
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
