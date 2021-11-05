@@ -28,7 +28,8 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            if [[ $MSG == *"[skip ci]"* ]]; then echo "##vso[task.setvariable variable=skipsecond;isOutput=true]true"; else echo "##vso[task.setvariable variable=skipsecond;isOutput=true]false"; fi
+            echo "Searching commit \"$MSG\""
+            if [[ $MSG != *"[skip ci]"* ]]; then echo "##vso[task.setvariable variable=skipsecond;isOutput=true]false"; else echo "##vso[task.setvariable variable=skipsecond;isOutput=true]true"; fi
         env:
           MSG: $(Build.SourceVersionMessage)
 
