@@ -7,8 +7,8 @@ resources:
   - repository: OpenAstronomy
     type: github
     endpoint: ConorMacBride
-    name: OpenAstronomy/azure-pipelines-templates
-    ref: master
+    name: ConorMacBride/azure-pipelines-templates
+    ref: check-skip
 
 trigger:
   branches:
@@ -19,30 +19,31 @@ trigger:
     - 'v*'
 
 stages:
-  - stage: Setup
-    jobs:
-    - job: check_skip_ci
-      steps:
-      - checkout: self
-      - task: Bash@3
-        name: process_commit_message
-        inputs:
-          targetType: 'inline'
-          script: |
-            echo "Commit being tested: \"$MERGE_MSG\""
-            COMMIT_HASH=$(echo $MERGE_MSG | awk '{print $2}')
-            echo "Hash of commit being tested: \"$COMMIT_HASH\""
-            MSG=$(git log --format=%B -n 1 $COMMIT_HASH | head -1)
-            echo "Message being searched for skip commands: \"$MSG\""
-            SET_TRUE="##vso[task.setvariable variable=skipsecond;isOutput=true]true"
-            SET_FALSE="##vso[task.setvariable variable=skipsecond;isOutput=true]false"
-            if [[ $MSG != *"[skip ci]"* ]]; then echo $SET_FALSE; else echo $SET_TRUE; fi
-        env:
-          MERGE_MSG: $(Build.SourceVersionMessage)
+#  - stage: Setup
+#    jobs:
+#    - job: check_skip_ci
+#      steps:
+#      - checkout: self
+#      - task: Bash@3
+#        name: process_commit_message
+#        inputs:
+#          targetType: 'inline'
+#          script: |
+#            echo "Commit being tested: \"$MERGE_MSG\""
+#            COMMIT_HASH=$(echo $MERGE_MSG | awk '{print $2}')
+#            echo "Hash of commit being tested: \"$COMMIT_HASH\""
+#            MSG=$(git log --format=%B -n 1 $COMMIT_HASH | head -1)
+#            echo "Message being searched for skip commands: \"$MSG\""
+#            SET_TRUE="##vso[task.setvariable variable=skipsecond;isOutput=true]true"
+#            SET_FALSE="##vso[task.setvariable variable=skipsecond;isOutput=true]false"
+#            if [[ $MSG != *"[skip ci]"* ]]; then echo $SET_FALSE; else echo $SET_TRUE; fi
+#        env:
+#          MERGE_MSG: $(Build.SourceVersionMessage)
 
   - stage: StageOneTests
     displayName: Basic Tests
     jobs:
+    - template: check-skip.yml@OpenAstronomy
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
         default_python: '3.9'
@@ -54,7 +55,7 @@ stages:
 
   - stage: StageTwoTests
     displayName: Detailed Tests
-    condition: or(and(succeeded(), eq(dependencies.Setup.outputs['check_skip_ci.process_commit_message.skipsecond'], 'false')), eq(variables['Build.Reason'], 'Manual'))
+    condition: or(and(succeeded(), ne(dependencies.StageOneTests.outputs['check_skip.search.found'], 'true')), eq(variables['Build.Reason'], 'Manual'))
     jobs:
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
@@ -89,7 +90,7 @@ stages:
 
   - stage: FigureTests
     displayName: Figure Tests
-    condition: or(and(succeeded(), eq(dependencies.Setup.outputs['check_skip_ci.process_commit_message.skipsecond'], 'false')), eq(variables['Build.Reason'], 'Manual'))
+    condition: or(and(succeeded(), ne(dependencies.StageOneTests.outputs['check_skip.search.found'], 'true')), eq(variables['Build.Reason'], 'Manual'))
     jobs:
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
