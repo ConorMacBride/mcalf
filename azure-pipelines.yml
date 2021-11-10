@@ -84,10 +84,6 @@ stages:
         - linux: py37-oldestdeps
           libraries: {}
 
-#        - linux: build_docs
-#          posargs: " "
-#          pytest: false
-
   - stage: FigureTests
     displayName: Figure Tests
     condition: or(and(succeeded(), ne(dependencies.StageOneTests.outputs['check_skip.search.found'], 'true')), eq(variables['Build.Reason'], 'Manual'))
