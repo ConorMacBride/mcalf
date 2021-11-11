@@ -39,7 +39,6 @@ stages:
 #            if [[ $MSG != *"[skip ci]"* ]]; then echo $SET_FALSE; else echo $SET_TRUE; fi
 #        env:
 #          MERGE_MSG: $(Build.SourceVersionMessage)
-
   - stage: StageOneTests
     displayName: Basic Tests
     jobs:
