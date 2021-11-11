@@ -43,7 +43,18 @@ stages:
   - stage: StageOneTests
     displayName: Basic Tests
     jobs:
-    - template: check-skip.yml@OpenAstronomy
+#    - template: check-skip.yml@OpenAstronomy
+    - job: check_skip
+      steps:
+      - checkout: self
+        path: s/self
+      - checkout: OpenAstronomy
+        path: s/azure-pipelines-templates
+      - bash: $(Pipeline.Workspace)/s/azure-pipelines-templates/check-skip.sh
+        workingDirectory: $(Pipeline.Workspace)/s/self
+        displayName: search
+        env:
+          COMMIT_MESSAGE: $(Build.SourceVersionMessage)
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
         default_python: '3.9'
