@@ -50,7 +50,7 @@ stages:
         path: s/self
       - checkout: OpenAstronomy
         path: s/azure-pipelines-templates
-      - bash: $(Pipeline.Workspace)/s/azure-pipelines-templates/check-skip.sh
+      - bash: bash $(Pipeline.Workspace)/s/azure-pipelines-templates/check-skip.sh
         workingDirectory: $(Pipeline.Workspace)/s/self
         displayName: search
         env:
