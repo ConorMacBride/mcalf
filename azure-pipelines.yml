@@ -50,9 +50,9 @@ stages:
         path: s/self
       - checkout: OpenAstronomy
         path: s/azure-pipelines-templates
-      - bash: bash $(Pipeline.Workspace)/s/azure-pipelines-templates/check-skip.sh
+      - bash: $(Pipeline.Workspace)/s/azure-pipelines-templates/check-skip.sh
         workingDirectory: $(Pipeline.Workspace)/s/self
-        displayName: search
+        name: search
         env:
           COMMIT_MESSAGE: $(Build.SourceVersionMessage)
     - template: run-tox-env.yml@OpenAstronomy
