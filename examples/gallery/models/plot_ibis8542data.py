@@ -102,7 +102,7 @@ plt.show()
 # must be specified for each spectrum.
 #
 # For this small sample dataset, we shall
-# simply use the average of the three leftmost
+# simply use the average of the four leftmost
 # intensity values of each spectrum,
 
 backgrounds = np.mean(spectra[:4], axis=0)
