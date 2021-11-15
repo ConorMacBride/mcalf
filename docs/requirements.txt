@@ -1,9 +1,2 @@
-sphinx==3.1.2
-#sphinx-automodapi==0.12
+# delete requirements.txt and update setup.cfg when merged
 -e git+https://github.com/astropy/sphinx-automodapi.git@refs/pull/121/head#egg=sphinx-automodapi
-ipykernel
-nbsphinx==0.8.5
-sphinx-rtd-theme==0.5.0
-sphinx-gallery
-pytest
-setuptools_scm

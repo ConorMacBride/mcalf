@@ -14,14 +14,14 @@ formats:
   - pdf
   - htmlzip
 
+# Build from requirements.txt to use https://github.com/astropy/sphinx-automodapi/pull/121
 # Optionally set the version of Python and requirements required to build your docs
 python:
-  version: 3.8
+  version: 3.9
   install:
     - requirements: docs/requirements.txt
     - method: pip
       path: .
-# Build from requirements.txt to use https://github.com/astropy/sphinx-automodapi/pull/121
-#      extra_requirements:
-#        - docs
+      extra_requirements:
+        - docs
   system_packages: true
