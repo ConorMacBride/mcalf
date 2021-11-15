@@ -7,8 +7,7 @@ resources:
   - repository: OpenAstronomy
     type: github
     endpoint: ConorMacBride
-    name: ConorMacBride/azure-pipelines-templates
-    ref: check-skip
+    name: OpenAstronomy/azure-pipelines-templates
 
 trigger:
   branches:
@@ -19,27 +18,6 @@ trigger:
     - 'v*'
 
 stages:
-#  - stage: Setup
-#    jobs:
-#    - job: check_skip_ci
-#      steps:
-#      - checkout: self
-#      - task: Bash@3
-#        name: process_commit_message
-#        inputs:
-#          targetType: 'inline'
-#          script: |
-#            echo "Commit being tested: \"$MERGE_MSG\""
-#            COMMIT_HASH=$(echo $MERGE_MSG | awk '{print $2}')
-#            echo "Hash of commit being tested: \"$COMMIT_HASH\""
-#            MSG=$(git log --format=%B -n 1 $COMMIT_HASH | head -1)
-#            echo "Message being searched for skip commands: \"$MSG\""
-#            SET_TRUE="##vso[task.setvariable variable=skipsecond;isOutput=true]true"
-#            SET_FALSE="##vso[task.setvariable variable=skipsecond;isOutput=true]false"
-#            if [[ $MSG != *"[skip ci]"* ]]; then echo $SET_FALSE; else echo $SET_TRUE; fi
-#        env:
-#          MERGE_MSG: $(Build.SourceVersionMessage)
-
   - stage: StageOneTests
     displayName: Basic Tests
     jobs:
