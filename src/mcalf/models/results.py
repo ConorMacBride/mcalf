@@ -223,6 +223,7 @@ class FitResults:
             FITS file to write to. If a file object, must be opened in a writeable mode.
         model : child class of mcalf.models.ModelBase, optional, default=None
             If provided, use this model to calculate and include both quiescent and active Doppler velocities.
+            The stationary line core value will also be added to the `SLC` card in the primary HDU header.
 
         Notes
         -----
@@ -243,6 +244,8 @@ class FitResults:
             'NCOLS': self.classifications.shape[-1],
             'TIME': self.time,
         })
+        if model is not None:
+            header.append(('SLC', model.stationary_line_core))
         primary_hdu = fits.PrimaryHDU([], header)
 
         header = fits.Header({'NPARAMS': self.n_parameters})
