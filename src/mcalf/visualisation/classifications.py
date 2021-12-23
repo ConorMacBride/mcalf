@@ -1,10 +1,9 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.gridspec import GridSpec
 
-from mcalf.utils.smooth import mask_classifications
 from mcalf.utils.plot import calculate_extent, class_cmap
-
+from mcalf.utils.smooth import mask_classifications
 
 __all__ = ['plot_classifications', 'bar', 'plot_class_map', 'init_class_data']
 

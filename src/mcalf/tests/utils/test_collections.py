@@ -1,10 +1,10 @@
-import pytest
 import copy
 import collections
 
 import numpy as np
+import pytest
 
-from mcalf.utils.collections import Parameter, ParameterDict, OrderedParameterDict
+from mcalf.utils.collections import OrderedParameterDict, Parameter, ParameterDict
 
 
 def test_parameter():

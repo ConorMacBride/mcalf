@@ -1,17 +1,18 @@
-import pytest
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pytest
 from astropy.io import fits
-from sklearn.model_selection import cross_val_score
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
+from sklearn.model_selection import cross_val_score
 
-from mcalf.models import ModelBase, IBIS8542Model, FitResults
-from mcalf.profiles.voigt import voigt, double_voigt
+from mcalf.models import FitResults, IBIS8542Model, ModelBase
+from mcalf.profiles.voigt import double_voigt, voigt
 
 from ..helpers import data_path_function, figure_test
+
 data_path = data_path_function('models')
 
 

@@ -1,23 +1,22 @@
 import os
+import copy
 import warnings
 import collections
-import copy
 
 import numpy as np
-from scipy.optimize import curve_fit
 from pathos.multiprocessing import ProcessPool as Pool
+from scipy.optimize import curve_fit
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics import classification_report
-
 from yaml import load
+
 try:
     from yaml import CLoader as Loader
 except ImportError:
     from yaml import Loader
 
-from mcalf.utils.spec import reinterpolate_spectrum
 from mcalf.utils.misc import load_parameter, make_iter, update_signature
-
+from mcalf.utils.spec import reinterpolate_spectrum
 
 __all__ = ['ModelBase', 'BASE_PARAMETERS', 'BASE_ATTRIBUTES']
 

@@ -4,9 +4,9 @@ import numpy as np
 from scipy.integrate import IntegrationWarning, quad, quad_vec
 
 # Load the C library
+import ctypes
 import os.path
 from pathlib import Path
-import ctypes
 # # Commands to manually generate
 # gcc -Wall -fPIC -c voigt.c
 # gcc -shared -o libvoigt.so voigt.o

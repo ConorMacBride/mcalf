@@ -1,10 +1,11 @@
-import pytest
-import numpy as np
-import matplotlib.pyplot as plt
 import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
+import pytest
 
-from mcalf.visualisation import plot_classifications, bar, plot_class_map, init_class_data
-from ..helpers import figure_test, class_map
+from mcalf.visualisation import bar, init_class_data, plot_class_map, plot_classifications
+
+from ..helpers import class_map, figure_test
 
 
 def spectra(n=20, w=10, low=0, high=6):

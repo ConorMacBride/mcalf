@@ -1,7 +1,8 @@
-import pytest
 import numpy as np
+import pytest
 
-from mcalf.models import ModelBase as DummyModel, FitResult, FitResults
+from mcalf.models import FitResult, FitResults
+from mcalf.models import ModelBase as DummyModel
 
 fitted_parameters = [1, 2, 1000.2, 1001.8, 5]
 fit_info = {'chi2': 1.4, 'classification': 2, 'profile': 'abc',

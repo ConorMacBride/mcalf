@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.ndimage
 
-
 __all__ = ['moving_average', 'gaussian_kern_3d', 'smooth_cube', 'mask_classifications']
 
 

@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 from mcalf.profiles.gaussian import single_gaussian
 

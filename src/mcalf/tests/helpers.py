@@ -1,13 +1,12 @@
 import os
-import pkg_resources
 from pathlib import Path
 from functools import wraps
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
+import pkg_resources
 import pytest
-
 
 __all__ = ['data_path_function', 'get_mpl_ft2_version', 'figure_test', 'class_map']
 

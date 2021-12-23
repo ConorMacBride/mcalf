@@ -1,13 +1,14 @@
 import inspect
 
-import pytest
 import numpy as np
+import pytest
 from astropy.io import fits
 
-from mcalf.utils.misc import make_iter, load_parameter, merge_results, update_signature
 from mcalf.utils.collections import OrderedParameterDict, Parameter
+from mcalf.utils.misc import load_parameter, make_iter, merge_results, update_signature
 
 from ..helpers import data_path_function
+
 data_path = data_path_function('utils')
 
 

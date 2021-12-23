@@ -1,6 +1,5 @@
 import numpy as np
 
-
 __all__ = ['genmask', 'radial_distances']
 
 

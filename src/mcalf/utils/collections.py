@@ -1,6 +1,5 @@
-import collections
 import copy
-
+import collections
 
 __all__ = ['Parameter', 'ParameterDict', 'OrderedParameterDict',
            'BaseParameterDict', 'SyncedParameters']

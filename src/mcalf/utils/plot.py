@@ -1,8 +1,7 @@
-import numpy as np
+import astropy.units
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import astropy.units
-
+import numpy as np
 
 __all__ = ['hide_existing_labels', 'calculate_axis_extent', 'calculate_extent', 'class_cmap']
 

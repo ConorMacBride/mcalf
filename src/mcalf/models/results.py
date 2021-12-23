@@ -4,7 +4,6 @@ from astropy.io import fits
 from mcalf.utils.misc import make_iter
 from mcalf.version import version
 
-
 __all__ = ['FitResult', 'FitResults']
 
 

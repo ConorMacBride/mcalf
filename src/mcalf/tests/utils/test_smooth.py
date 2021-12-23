@@ -1,7 +1,8 @@
-import pytest
 import numpy as np
+import pytest
 
-from mcalf.utils.smooth import moving_average, gaussian_kern_3d, smooth_cube, mask_classifications
+from mcalf.utils.smooth import gaussian_kern_3d, mask_classifications, moving_average, smooth_cube
+
 from ..helpers import class_map
 
 

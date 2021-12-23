@@ -4,14 +4,13 @@ import numpy as np
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPClassifier
 
-from mcalf.models.results import FitResult
 from mcalf.models.base import BASE_ATTRIBUTES, BASE_PARAMETERS, ModelBase
-from mcalf.profiles.voigt import voigt_nobg, double_voigt_nobg
-from mcalf.utils.spec import generate_sigma
-from mcalf.utils.misc import load_parameter, update_signature
+from mcalf.models.results import FitResult
+from mcalf.profiles.voigt import double_voigt_nobg, voigt_nobg
 from mcalf.utils.collections import OrderedParameterDict, Parameter
+from mcalf.utils.misc import load_parameter, update_signature
+from mcalf.utils.spec import generate_sigma
 from mcalf.visualisation import plot_ibis8542
-
 
 __all__ = ['IBIS8542Model']
 

@@ -1,11 +1,10 @@
 import os
-from shutil import copyfile
 import inspect
+from shutil import copyfile
 
 import numpy as np
 from astropy.io import fits
 from scipy.io import readsav
-
 
 __all__ = ['make_iter', 'load_parameter', 'merge_results', 'update_signature']
 
