@@ -1044,14 +1044,14 @@ DOCS['constant_wavelengths'] = """
         The desired set of wavelengths that the spectral data should be rescaled to represent. It is assumed
         that these have constant spacing, but that may not be a requirement if you specify your own array.
         The default value is an array from the minimum to the maximum wavelength of `original_wavelengths` in
-        constant steps of `delta_lambda`, overshooting the upper bound if the maximum wavelength has not been 
+        constant steps of `delta_lambda`, overshooting the upper bound if the maximum wavelength has not been
         reached."""
 DOCS['delta_lambda'] = """
     delta_lambda : float, optional, default=0.05
         The step used between each value of `constant_wavelengths` when its default value has to be calculated."""
 DOCS['sigma'] = """
     sigma : optional, default=None
-        Sigma values used to weight the fit. This attribute should be set by a child class of 
+        Sigma values used to weight the fit. This attribute should be set by a child class of
         :class:`~mcalf.models.ModelBase`."""
 DOCS['prefilter_response'] = """
     prefilter_response : array_like, length=n_wavelengths, optional, default= see note
@@ -1074,7 +1074,7 @@ DOCS['config'] = """
         and `config`. Each line of the file should specify a different parameter and be formatted like
         `emission_guess: '[-inf, wl-0.15, 1e-6, 1e-6]'` or `original_wavelengths: 'original.fits'` for example.
         When specifying a string, use 'inf' to represent `np.inf` and 'wl' to represent `stationary_line_core` as shown.
-        If the string matches a file, :func:`mcalf.utils.misc.load_parameter()` is used to load the contents 
+        If the string matches a file, :func:`mcalf.utils.misc.load_parameter()` is used to load the contents
         of the file."""
 DOCS['output'] = """
     output : str, optional, default=None
