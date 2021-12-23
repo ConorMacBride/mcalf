@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.interpolate
-from mcalf.profiles.gaussian import single_gaussian
 
+from mcalf.profiles.gaussian import single_gaussian
 
 __all__ = ['reinterpolate_spectrum', 'normalise_spectrum', 'generate_sigma']
 

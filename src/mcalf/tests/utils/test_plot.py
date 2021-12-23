@@ -1,9 +1,10 @@
-import pytest
-import numpy as np
-import matplotlib.pyplot as plt
 import astropy.units
+import matplotlib.pyplot as plt
+import numpy as np
+import pytest
 
-from mcalf.utils.plot import hide_existing_labels, calculate_axis_extent, calculate_extent, class_cmap
+from mcalf.utils.plot import calculate_axis_extent, calculate_extent, class_cmap, hide_existing_labels
+
 from ..helpers import figure_test
 
 

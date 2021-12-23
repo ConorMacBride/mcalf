@@ -1,8 +1,16 @@
-import pytest
 import numpy as np
+import pytest
 
-from mcalf.profiles.voigt import voigt_approx_nobg, voigt_approx, double_voigt_approx_nobg, double_voigt_approx, \
-    voigt_nobg, voigt, double_voigt_nobg, double_voigt
+from mcalf.profiles.voigt import (
+    double_voigt,
+    double_voigt_approx,
+    double_voigt_approx_nobg,
+    double_voigt_nobg,
+    voigt,
+    voigt_approx,
+    voigt_approx_nobg,
+    voigt_nobg,
+)
 
 pts1 = np.array([-4.245, -0.324, 0.243, 1.163, 1.739, 99.999])
 params1 = [8.242, 0.20, 0.241, 0.129, 5.348, 1.228, 0.152, 0.213, 6.82]

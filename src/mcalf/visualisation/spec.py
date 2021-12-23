@@ -1,10 +1,9 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 from mcalf.profiles.voigt import double_voigt, voigt
-from mcalf.utils.spec import reinterpolate_spectrum
 from mcalf.utils.plot import hide_existing_labels
-
+from mcalf.utils.spec import reinterpolate_spectrum
 
 __all__ = ['plot_ibis8542', 'plot_spectrum']
 

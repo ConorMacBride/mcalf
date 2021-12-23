@@ -4,9 +4,9 @@ import numpy as np
 from scipy.integrate import IntegrationWarning, quad, quad_vec
 
 # Load the C library
+import ctypes
 import os.path
 from pathlib import Path
-import ctypes
 # # Commands to manually generate
 # gcc -Wall -fPIC -c voigt.c
 # gcc -shared -o libvoigt.so voigt.o
@@ -22,7 +22,7 @@ except IndexError:  # File does not exist
 
 ###
 # readthedocs.org does not support clib (force clib=False)
-import os
+import os  # noqa: E402
 not_on_rtd = os.environ.get('READTHEDOCS') != 'True'
 rtd = {}
 if not not_on_rtd:  # Reduce computation time (and accuracy) of no clib version
@@ -259,12 +259,12 @@ def __rm_self(func, items):
 
 def __extra_approx(func):
     """Merge common approx functions sections."""
-    return __returns + __rm_self(func.__name__, __see_also) + __notes_approx
+    return __returns + __rm_self(func.__name__, __see_also) + __notes_approx  # noqa: F821
 
 
 def __extra_std(func):
     """Merge common standard functions sections."""
-    return __returns + __rm_self(func.__name__, __see_also_std) + __notes_std
+    return __returns + __rm_self(func.__name__, __see_also_std) + __notes_std  # noqa: F821
 
 
 for f in [voigt_approx_nobg, voigt_approx, double_voigt_approx_nobg, double_voigt_approx,

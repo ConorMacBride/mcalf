@@ -1,8 +1,9 @@
-import pytest
-import numpy as np
 import astropy.units as u
+import numpy as np
+import pytest
 
 from mcalf.visualisation import plot_map
+
 from ..helpers import figure_test
 
 

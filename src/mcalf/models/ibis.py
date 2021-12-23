@@ -4,21 +4,20 @@ import numpy as np
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPClassifier
 
+from mcalf.models.base import BASE_ATTRIBUTES, BASE_PARAMETERS, ModelBase
 from mcalf.models.results import FitResult
-from mcalf.models.base import *
-from mcalf.profiles.voigt import voigt_nobg, double_voigt_nobg
-from mcalf.utils.spec import generate_sigma
-from mcalf.utils.misc import load_parameter, update_signature
+from mcalf.profiles.voigt import double_voigt_nobg, voigt_nobg
 from mcalf.utils.collections import OrderedParameterDict, Parameter
+from mcalf.utils.misc import load_parameter, update_signature
+from mcalf.utils.spec import generate_sigma
 from mcalf.visualisation import plot_ibis8542
-
 
 __all__ = ['IBIS8542Model']
 
 
 class IBIS8542Model(ModelBase):
     """Class for working with IBIS 8542 Å calcium II spectral imaging observations.
-    
+
     Parameters
     ----------
     ${PARAMETERS}
@@ -442,7 +441,7 @@ for d in [IBIS8542_PARAMETERS, IBIS8542_ATTRIBUTES]:
         A list of different sigma that are used to weight particular wavelengths along the spectra when fitting. The
         fitting method will expect to be able to choose a sigma array from this list at a specific index. It's default
         value is `[generate_sigma(i, constant_wavelengths, stationary_line_core) for i in [1, 2]]`.
-        See :func:`mcalf.utils.spec.generate_sigma` for more information. 
+        See :func:`mcalf.utils.spec.generate_sigma` for more information.
         If bool, True will generate the default sigma value regardless of the value specified in `config`,
         and False will set `sigma` to be all ones, effectively disabling it."""
 IBIS8542_ATTRIBUTES['neural_network'] = """
@@ -453,7 +452,7 @@ IBIS8542_ATTRIBUTES['neural_network'] = """
         for best `alpha` selected from `[1e-5, 2e-5, 3e-5, 4e-5, 5e-5, 6e-5, 7e-5, 8e-5, 9e-5]`."""
 
 # Add documentation for new parameters and attributes
-IBIS8542_DOCS = """        
+IBIS8542_DOCS = """
     absorption_guess : array_like, length=4, optional, default=[-1000, stationary_line_core, 0.2, 0.1]
         Initial guess to take when fitting the absorption Voigt profile.
     emission_guess : array_like, length=4, optional, default=[1000, stationary_line_core, 0.2, 0.1]

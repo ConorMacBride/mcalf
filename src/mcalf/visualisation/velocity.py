@@ -1,12 +1,11 @@
 import copy
 
-import numpy as np
-import matplotlib as mpl
-from matplotlib import pyplot as plt
 import astropy.units
+import matplotlib as mpl
+import numpy as np
+from matplotlib import pyplot as plt
 
 from mcalf.utils.plot import calculate_extent
-
 
 __all__ = ['plot_map']
 

@@ -28,6 +28,7 @@ stages:
         coverage: codecov
         posargs: -n=4
         envs:
+        - linux: codestyle
         - linux: py39
 
   - stage: StageTwoTests

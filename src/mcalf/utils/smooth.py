@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.ndimage
 
-
 __all__ = ['moving_average', 'gaussian_kern_3d', 'smooth_cube', 'mask_classifications']
 
 
@@ -210,13 +209,13 @@ def mask_classifications(class_map, vmin=None, vmax=None, reduce=True):
     elif not isinstance(vmax, (int, np.integer)):
         raise TypeError(f'`vmax` must be an integer, got {type(vmax)}.')
     elif vmax < 0:
-        raise ValueError(f'`vmax` must not be less than zero.')
+        raise ValueError('`vmax` must not be less than zero.')
     if vmin is None:
         vmin = np.min(class_map[class_map >= 0])
     elif not isinstance(vmin, (int, np.integer)):
         raise TypeError(f'`vmin` must be an integer, got {type(vmin)}.')
     elif vmin < 0:
-        raise ValueError(f'`vmin` must not be less than zero.')
+        raise ValueError('`vmin` must not be less than zero.')
     if vmin > vmax:
         raise ValueError(f'`vmin` must be less than `vmax`, got {vmin} to {vmax}.')
 

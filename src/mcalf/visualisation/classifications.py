@@ -1,10 +1,9 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.gridspec import GridSpec
 
-from mcalf.utils.smooth import mask_classifications
 from mcalf.utils.plot import calculate_extent, class_cmap
-
+from mcalf.utils.smooth import mask_classifications
 
 __all__ = ['plot_classifications', 'bar', 'plot_class_map', 'init_class_data']
 
@@ -135,8 +134,8 @@ def plot_classifications(spectra, labels, nrows=None, ncols=None, nlines=20, sty
             limit_y = True
 
         color = cmap(i)  # extract the single color from the listed colormap
-        for l in lines:
-            ax.plot(l, color=color, **plot_settings)
+        for line in lines:
+            ax.plot(line, color=color, **plot_settings)
 
         if limit_y:  # if data within range [0, 1]
             ax.set_ylim(0, 1)
