@@ -34,6 +34,7 @@
   "mcalf.tests.visualisation.test_classifications.test_plot_classifications_1plot": "cf743f96eeefaddae17b6b38bb91330282d725fdd445e19cae6abada8341b7b1",
   "mcalf.tests.visualisation.test_classifications.test_plot_classifications_4x1": "a0423741fff2b53026539c369224f1ddd0d33dd7c1d617961347d0b0fd342775",
   "mcalf.tests.visualisation.test_classifications.test_plot_classifications_3x2": "02b608424712492ebb8bfc348060b75275f8e33e94ec02d9919c41dc7ee349a7",
+  "mcalf.tests.visualisation.test_classifications.test_plot_classifications_3x2_5": "237f98da561f26b7d4d67d3a6f2f89df6ba4a3522e9a995e806bdace65ed7116",
   "mcalf.tests.visualisation.test_classifications.test_plot_classifications_not01": "f0a337d216a30ad643168a59f25337dd935ce1e836feeffa99d2cfbaa33fa2f7",
   "mcalf.tests.visualisation.test_classifications.test_bar": "14b8b6b866e6e79f78422be8a2eddc1dd32ff4c2a8f6186ec6d574c64c096616",
   "mcalf.tests.visualisation.test_classifications.test_bar_range": "4d1275dbe9161dfe2dd7d179d0aed297a051813c5c1cd38cc15441a15e283838",
