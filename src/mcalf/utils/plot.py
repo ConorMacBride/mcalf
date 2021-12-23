@@ -67,7 +67,7 @@ def hide_existing_labels(plot_settings, axes=None, fig=None):
 
     >>> fig.legend(ncol=3, loc='upper center')  # doctest: +ELLIPSIS
     <matplotlib.legend.Legend object at 0x...>
-    >>> plt.show()
+    >>> plt.show()  # doctest: +SKIP
     >>> plt.close()
     """
     # Get axes:
