@@ -16,7 +16,7 @@ class build_ext(build_ext):
         if isinstance(self.ext_map[ext_name], CTypes):
             # Ensure that the extension ends in ".so"
             # Modified version of parent method
-            from distutils.sysconfig import get_config_var
+            from setuptools.command.build_ext import get_config_var
             ext_suffix = get_config_var('EXT_SUFFIX')
             expanded_suffix = ext_suffix.split('.')
             expanded_suffix[-1] = "so"
