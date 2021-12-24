@@ -2,22 +2,18 @@
 
 import os
 from setuptools import setup, Extension
-from distutils.command.build_ext import build_ext
+from setuptools.command.build_ext import build_ext
 
 
 class build_ext(build_ext):
 
-    def build_extension(self, ext):
-        self._ctypes = isinstance(ext, CTypes)
-        return super().build_extension(ext)
-
     def get_export_symbols(self, ext):
-        if self._ctypes:
+        if isinstance(ext, CTypes):
             return ext.export_symbols
         return super().get_export_symbols(ext)
 
     def get_ext_filename(self, ext_name):
-        if self._ctypes:
+        if isinstance(self.ext_map[ext_name], CTypes):
             # Ensure that the extension ends in ".so"
             # Modified version of parent method
             from distutils.sysconfig import get_config_var
