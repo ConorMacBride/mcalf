@@ -687,7 +687,7 @@ class ModelBase:
 
         return spectra
 
-    def _fit(self, spectrum, classification=None, spectrum_index=None):
+    def _fit(self, spectrum, classification=None, spectrum_index=None, **kwargs):
         """Fit a single spectrum for the given profile or classification.
 
         .. warning::
@@ -945,7 +945,7 @@ class ModelBase:
         """
         return self.fit(spectrum=spectrum, **kwargs)
 
-    def _curve_fit(self, model, spectrum, guess, sigma, bounds, x_scale, time=None, row=None, column=None):
+    def _curve_fit(self, model, spectrum, guess, sigma, bounds, x_scale, time=None, row=None, column=None, **kwargs):
         """:func:`scipy.optimize.curve_fit` wrapper with error handling.
 
         Passes a certain set of parameters to the :func:`scipy.optimize.curve_fit` function and catches some typical
@@ -993,14 +993,14 @@ class ModelBase:
         try:  # TODO Investigate if there is a performance gain to setting `check_finite` to False
 
             fitted_parameters = curve_fit(model, self.constant_wavelengths, spectrum,
-                                          p0=guess, sigma=sigma, bounds=bounds, x_scale=x_scale)[0]
+                                          p0=guess, sigma=sigma, bounds=bounds, x_scale=x_scale, **kwargs)[0]
             success = True
 
-        except RuntimeError:
+        except RuntimeError as e:
 
             success = False
             location_text = " at ({}, {}, {})".format(time, row, column) if time is not None else ''
-            warnings.warn("RuntimeError{}".format(location_text))
+            warnings.warn(f"RuntimeError({e}){location_text}")
             fitted_parameters = np.full_like(guess, np.nan)
 
         except ValueError as e:

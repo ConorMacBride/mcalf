@@ -235,7 +235,7 @@ class IBIS8542Model(ModelBase):
             else:
                 return np.asarray(sigma, dtype=np.float64)
 
-    def _fit(self, spectrum, classification=None, spectrum_index=None, profile=None, sigma=None):
+    def _fit(self, spectrum, classification=None, spectrum_index=None, profile=None, sigma=None, **kwargs):
         """Fit a single spectrum for the given profile or classification.
 
         .. warning::
@@ -308,7 +308,7 @@ class IBIS8542Model(ModelBase):
 
         time, row, column = spectrum_index if spectrum_index is not None else [None]*3
         fitted_parameters, success = self._curve_fit(model_with_impl, spectrum, guess, sigma, (min_bound, max_bound),
-                                                     x_scale, time=time, row=row, column=column)
+                                                     x_scale, time=time, row=row, column=column, **kwargs)
 
         chi2 = np.sum(((spectrum - model_with_impl(self.constant_wavelengths, *fitted_parameters)) / sigma) ** 2)
 
