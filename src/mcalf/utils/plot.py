@@ -2,8 +2,16 @@ import astropy.units
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from packaging import version
 
 __all__ = ['hide_existing_labels', 'calculate_axis_extent', 'calculate_extent', 'class_cmap']
+
+
+def _get_mpl_cmap(name):
+    if version.parse(mpl.__version__) >= version.parse("3.5"):
+        return mpl.colormaps[name]
+    else:
+        return mpl.cm.get_cmap(name)
 
 
 def hide_existing_labels(plot_settings, axes=None, fig=None):
@@ -244,7 +252,7 @@ def class_cmap(style, n):
     else:
         if style == 'original':
             style = 'viridis'  # fallback for >5 classifications
-        c = mpl.cm.get_cmap(style)  # query in equal intervals from [0, 1]
+        c = _get_mpl_cmap(style)  # query in equal intervals from [0, 1]
         cmap_colors = np.array([c(i / (n - 1)) for i in range(n)])
 
     # Generate colormap
