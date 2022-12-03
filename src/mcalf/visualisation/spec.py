@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from mcalf.profiles.voigt import double_voigt, voigt
+from mcalf.profiles.voigt import double_voigt, voigt, voigt_integrate
 from mcalf.utils.plot import hide_existing_labels
 from mcalf.utils.spec import reinterpolate_spectrum
 
@@ -10,7 +10,7 @@ __all__ = ['plot_ibis8542', 'plot_spectrum']
 
 def plot_ibis8542(wavelengths, spectrum, fit=None, background=0,
                   sigma=None, sigma_scale=70,
-                  stationary_line_core=None,
+                  stationary_line_core=None, impl=voigt_integrate,
                   subtraction=False, separate=False,
                   show_intensity=True, show_legend=True, ax=None):
     """Plot an :class:`~mcalf.models.IBIS8542Model` fit.
@@ -37,6 +37,8 @@ def plot_ibis8542(wavelengths, spectrum, fit=None, background=0,
         A factor to multiply the error bars to change their prominence.
     stationary_line_core : float, optional, default=None
         If given, will show a dashed line at this wavelength.
+    impl : callable, optional, default=voigt_integrate
+        The Voigt implementation to use.
     subtraction : bool, optional, default=False
         Whether to plot the `spectrum` minus emission fit (if exists) instead.
     separate : bool, optional, default=False
@@ -92,7 +94,7 @@ def plot_ibis8542(wavelengths, spectrum, fit=None, background=0,
             subtraction = separate = False  # not possible, ignore request
 
     if subtraction:
-        spectrum = spectrum - voigt(wavelengths, *fit[4:], 0, clib=False)
+        spectrum = spectrum - voigt(wavelengths, *fit[4:], 0, impl=impl, clib=False)
         plot_settings['obs']['label'] = 'observation - emission'
         show_fit = show_sigma = None
 
@@ -110,19 +112,19 @@ def plot_ibis8542(wavelengths, spectrum, fit=None, background=0,
         if separate:  # Plot each component separately
 
             ax.plot(wavelengths,
-                    double_voigt(wavelengths, *fit, background, clib=False),
+                    double_voigt(wavelengths, *fit, background, impl=impl, clib=False),
                     **plot_settings['fit'])
             ax.plot(wavelengths,
-                    voigt(wavelengths, *fit[:4], background, clib=False),
+                    voigt(wavelengths, *fit[:4], background, impl=impl, clib=False),
                     **plot_settings['abs'])
             ax.plot(wavelengths,
-                    voigt(wavelengths, *fit[4:], 0, clib=False),
+                    voigt(wavelengths, *fit[4:], 0, impl=impl, clib=False),
                     **plot_settings['emi'])
 
         else:  # Plot a combined profile
 
             ax.plot(wavelengths,
-                    fit_function(wavelengths, *fit, background, clib=False),
+                    fit_function(wavelengths, *fit, background, impl=impl, clib=False),
                     **plot_settings['fit'])
 
         # Plot absorption line core

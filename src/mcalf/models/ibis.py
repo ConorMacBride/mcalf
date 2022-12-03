@@ -6,7 +6,7 @@ from sklearn.neural_network import MLPClassifier
 
 from mcalf.models.base import BASE_ATTRIBUTES, BASE_PARAMETERS, ModelBase
 from mcalf.models.results import FitResult
-from mcalf.profiles.voigt import double_voigt_nobg, voigt_nobg
+from mcalf.profiles.voigt import double_voigt_nobg, voigt_integrate, voigt_nobg
 from mcalf.utils.collections import OrderedParameterDict, Parameter
 from mcalf.utils.misc import load_parameter, update_signature
 from mcalf.utils.spec import generate_sigma
@@ -43,6 +43,7 @@ class IBIS8542Model(ModelBase):
         ('absorption_x_scale', [1500, 0.2, 0.3, 0.5]),
         ('emission_x_scale', [1500, 0.2, 0.3, 0.5]),
         ('random_state', None),
+        ('impl', voigt_integrate),
     ])
 
     def __init__(self, **kwargs):
@@ -95,6 +96,7 @@ class IBIS8542Model(ModelBase):
         self.emission_max_bound = list(defaults['emission_max_bound'])
         self.absorption_x_scale = list(defaults['absorption_x_scale'])
         self.emission_x_scale = list(defaults['emission_x_scale'])
+        self.impl = defaults['impl']
         # attributes whose default value cannot be changed during initialisation
         self.quiescent_wavelength = 1  # Index of quiescent wavelength in the fitted_parameters
         self.active_wavelength = 5  # Index of active wavelength in the fitted_parameters
@@ -301,11 +303,14 @@ class IBIS8542Model(ModelBase):
         else:
             raise ValueError("fit profile must be either None, 'absorption', 'emission' or 'both', got %s" % profile)
 
-        time, row, column = spectrum_index if spectrum_index is not None else [None]*3
-        fitted_parameters, success = self._curve_fit(model, spectrum, guess, sigma, (min_bound, max_bound), x_scale,
-                                                     time=time, row=row, column=column)
+        def model_with_impl(*args, **kwargs):
+            return model(*args, **kwargs, impl=self.impl)
 
-        chi2 = np.sum(((spectrum - model(self.constant_wavelengths, *fitted_parameters)) / sigma) ** 2)
+        time, row, column = spectrum_index if spectrum_index is not None else [None]*3
+        fitted_parameters, success = self._curve_fit(model_with_impl, spectrum, guess, sigma, (min_bound, max_bound),
+                                                     x_scale, time=time, row=row, column=column)
+
+        chi2 = np.sum(((spectrum - model_with_impl(self.constant_wavelengths, *fitted_parameters)) / sigma) ** 2)
 
         fit_info = {'chi2': chi2, 'classification': classification, 'profile': profile,
                     'success': success, 'index': spectrum_index}
@@ -471,7 +476,9 @@ IBIS8542_DOCS = """
         Characteristic scale for all the emission Voigt profile parameters in order of the function's arguments.
     random_state : int, numpy.random.RandomState, optional, default=None
         Determines random number generation for weights and bias initialisation of the default `neural_network`.
-        Pass an int for reproducible results across multiple function calls."""
+        Pass an int for reproducible results across multiple function calls.
+    impl : callable, optional, default=voigt_integrate
+        Voigt implementation to use."""
 
 # Form the docstring and do the replacements
 IBIS8542_PARAMETERS_STR = ''.join(IBIS8542_PARAMETERS[i] for i in IBIS8542_PARAMETERS)
