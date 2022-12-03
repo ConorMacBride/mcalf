@@ -24,12 +24,12 @@ stages:
     - template: check-skip.yml@OpenAstronomy
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
-        default_python: '3.9'
+        default_python: '3.11'
         coverage: codecov
         posargs: -n=4
         envs:
         - linux: codestyle
-        - linux: py39
+        - linux: py311
 
   - stage: StageTwoTests
     displayName: Detailed Tests
@@ -37,15 +37,16 @@ stages:
     jobs:
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
-        default_python: '3.9'
+        default_python: '3.11'
         coverage: codecov
         posargs: -n=4
         envs:
-        - linux: py37
         - linux: py38
-        - macos: py39
-        - windows: py39
-        - linux: py37-oldestdeps
+        - linux: py39
+        - linux: py310
+        - macos: py311
+        - windows: py311
+        - linux: py38-oldestdeps
 
   - stage: FigureTests
     displayName: Figure Tests
@@ -53,13 +54,13 @@ stages:
     jobs:
     - template: run-tox-env.yml@OpenAstronomy
       parameters:
-        default_python: '3.9'
+        default_python: '3.11'
         coverage: codecov
         posargs: -n=4
         envs:
-        - linux: py39-figure
-        - macos: py39-figure
-        - windows: py39-figure
+        - linux: py311-figure
+        - macos: py311-figure
+        - windows: py311-figure
 
   # RELEASING A VERSION: Run more detailed tests if releasing a version (or if triggered manually)
   - ${{ if or(startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['Build.Reason'], 'Manual')) }}:
@@ -69,16 +70,18 @@ stages:
       jobs:
       - template: run-tox-env.yml@OpenAstronomy
         parameters:
-          default_python: '3.9'
+          default_python: '3.11'
           coverage: codecov
           posargs: -n=4
           envs:
-          - macos: py37
           - macos: py38
-          - windows: py37
+          - macos: py39
+          - macos: py310
           - windows: py38
-          - macos: py37-oldestdeps
-          - windows: py37-oldestdeps
+          - windows: py39
+          - windows: py310
+          - macos: py38-oldestdeps
+          - windows: py38-oldestdeps
 
   # Don't build sdist and wheels for PRs
   - ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
@@ -96,6 +99,7 @@ stages:
           test_command: pytest --pyargs mcalf
           targets:
           - sdist
-          - wheels_cp3[7-9]-macosx_x86_64
-          - wheels_cp3[7-9]-manylinux*
-          - wheels_cp3[7-9]-win_amd64
+          - wheels_cp3{8,9,10,11}-macosx_x86_64
+          - wheels_cp3{8,9,10,11}-macosx_arm64
+          - wheels_cp3{8,9,10,11}-manylinux*_x86_64
+          - wheels_cp3{8,9,10,11}-win_amd64
