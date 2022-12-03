@@ -1,3 +1,4 @@
+#define Py_LIMITED_API 0x030800f0
 #include <math.h>
 
 __declspec(dllexport) double func(int n, double args[]) {

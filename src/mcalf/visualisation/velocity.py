@@ -1,11 +1,10 @@
 import copy
 
 import astropy.units
-import matplotlib as mpl
 import numpy as np
 from matplotlib import pyplot as plt
 
-from mcalf.utils.plot import calculate_extent
+from mcalf.utils.plot import _get_mpl_cmap, calculate_extent
 
 __all__ = ['plot_map']
 
@@ -95,7 +94,7 @@ def plot_map(arr, mask=None, umbra_mask=None, resolution=None, offset=(0, 0), vm
                               ax=ax, dimension='distance')
 
     # Configure default colormap
-    cmap = copy.copy(mpl.cm.get_cmap('bwr'))
+    cmap = copy.copy(_get_mpl_cmap('bwr'))
     cmap.set_bad(color='#999999', alpha=1)
 
     # Show invalid pixels outside the mask as black, inside as gray
@@ -108,7 +107,7 @@ def plot_map(arr, mask=None, umbra_mask=None, resolution=None, offset=(0, 0), vm
         unmasked_section[~mask] = 1  # Inside mask
 
         # Configure colormap of mask
-        cmap_mask = copy.copy(mpl.cm.get_cmap('gray'))
+        cmap_mask = copy.copy(_get_mpl_cmap('gray'))
         cmap_mask.set_bad(color='#999999', alpha=1)
 
         # Show the masked region

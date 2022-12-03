@@ -106,7 +106,7 @@ fig, ax = plt.subplots(1, 2, constrained_layout=True)
 plot_map(arr[:, :25], vmax=6, ax=ax[0], show_colorbar=False)
 im = plot_map(arr[:, 25:], vmax=6, ax=ax[1], show_colorbar=False)
 
-fig.colorbar(im, ax=[ax], location='bottom', label='velocity (km/s)')
+fig.colorbar(im, ax=ax, location='bottom', label='velocity (km/s)')
 
 ax[0].set_title('first half')
 ax[1].set_title('second half')
