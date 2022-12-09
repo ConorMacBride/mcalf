@@ -100,11 +100,7 @@ stages:
           test_command: pytest --pyargs mcalf
           targets:
           - sdist
-          - wheels_cp3[8-9]-macosx_x86_64
-          - wheels_cp31[0-1]-macosx_x86_64
-          - wheels_cp3[8-9]-macosx_arm64
-          - wheels_cp31[0-1]-macosx_arm64
-          - wheels_cp3[8-9]-manylinux*_x86_64
-          - wheels_cp31[0-1]-manylinux*_x86_64
-          - wheels_cp3[8-9]-win_amd64
-          - wheels_cp31[0-1]-win_amd64
+          - wheels_cp3{8,9,10,11}-macosx_x86_64
+          - wheels_cp3{8,9,10,11}-macosx_arm64
+          - wheels_cp3{8,9,10,11}-manylinux*_x86_64
+          - wheels_cp3{8,9,10,11}-win_amd64
