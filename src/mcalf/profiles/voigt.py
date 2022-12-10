@@ -227,51 +227,37 @@ __background = """
     d : float
         Background."""
 
-# Define "Returns"
-__returns = """
+
+def __see_also(func):
+    """Return the "See Also" section with the current function removed."""
+    see_also = filter(lambda x: f" {func.__name__} " not in x, [
+        '    voigt_nobg : Base Voigt function with no background.',
+        '    voigt : Voigt function with background added.',
+        '    double_voigt_nobg : Two Voigt functions added together.',
+        '    double_voigt : Two Voigt function and a background added together.',
+    ])
+    return """
     Returns
     -------
     result : numpy.ndarray, shape=`x.shape`
         The value of the Voigt function here.
 
-    """
-
-# Define special "See Also" options
-__see_also = [
-    '    voigt_nobg : Base Voigt function with no background.',
-    '    voigt : Voigt function with background added.',
-    '    double_voigt_nobg : Two Voigt functions added together.',
-    '    double_voigt : Two Voigt function and a background added together.',
-]
-# Extract the function name for easy exclusion of item
-__see_also = [(i.split(':')[0].strip(), i) for i in __see_also]
-
-
-def __rm_self(func, items):
-    """Return the "See Also" section with the current function removed."""
-    ret = [i[1] for i in items if i[0] != func]
-    return 'See Also\n    --------\n    ' + '\n'.join(ret).lstrip() + '\n'
-
-
-def __see_also_f(func):
-    """Merge common standard functions sections."""
-    return __returns + __rm_self(func.__name__, __see_also)
+    See Also
+    --------
+    """ + "\n".join(see_also).lstrip()
 
 
 for f in [voigt_nobg, voigt, double_voigt_nobg, double_voigt]:
     f.__doc__ = f.__doc__.replace('${SINGLE_VOIGT}', __single_voigt.lstrip())
     f.__doc__ = f.__doc__.replace('${DOUBLE_VOIGT}', __double_voigt.lstrip())
     f.__doc__ = f.__doc__.replace('${BACKGROUND}', __background.lstrip())
-    f.__doc__ = f.__doc__.replace('${SEE_ALSO}', __see_also_f(f).lstrip())
+    f.__doc__ = f.__doc__.replace('${SEE_ALSO}', __see_also(f).lstrip())
 
 del __input_x
 del __single_voigt
 del __double_voigt
 del __background
-del __returns
 del __see_also
-del __rm_self
-del __see_also_f
 
 
 def voigt_approx_nobg(*args, **kwargs):
