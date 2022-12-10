@@ -2,6 +2,7 @@ import warnings
 
 import numpy as np
 from scipy.integrate import IntegrationWarning, quad, quad_vec
+from scipy.special import voigt_profile
 
 # Load the C library
 import ctypes
@@ -39,71 +40,108 @@ sqrt_pi = np.sqrt(np.pi)
 A, B, C, D = params
 
 
-__all__ = ['voigt_approx_nobg', 'voigt_approx', 'double_voigt_approx_nobg', 'double_voigt_approx',
+__all__ = ['voigt_integrate', 'voigt_faddeeva', 'voigt_mclean',
            'voigt_nobg', 'voigt', 'double_voigt_nobg', 'double_voigt']
 
 
-def voigt_approx_nobg(x, a, b, s, g):
-    """Voigt function (efficient approximation) with no background (Base approx. Voigt function).
+def voigt_integrate(x, s, g, clib=True, **kwargs):
+    """Voigt function implementation (calculated by integrating).
 
-    This is the base for all other approximated Voigt functions. Not implemented in any models yet as initial tests
-    exhibited slow convergence.
+    The default Voigt implementation.
 
     Parameters
     ----------
-    ${SINGLE_VOIGT}
+    x : numpy.ndarray
+        Wavelengths to evaluate Voigt function at.
+    s : float
+        Sigma (for Gaussian).
+    g : float
+        Gamma (for Lorentzian).
+    clib : bool, optional, default=True
+        Whether to use the complied C library or a slower Python version. If using the C library, the accuracy
+        of the integration is reduced to give the code a significant speed boost. Python version can be used when
+        speed is not a priority. Python version will remove deviations that are sometimes present around the wings
+        due to the reduced accuracy.
 
-    ${EXTRA_APPROX}
+    Returns
+    -------
+    result : numpy.ndarray, shape=`x.shape`
+        The value of the Voigt function here.
+
+    Notes
+    -----
+    More information on the Voigt function can be found here: https://en.wikipedia.org/wiki/Voigt_profile
+    """
+    # return a * voigt_profile(x - b, s, g)
+    warnings.filterwarnings("ignore", category=IntegrationWarning)
+    if clib and not_on_rtd:
+        i = [quad(cvoigt, -np.inf, np.inf, args=(v, s, g), epsabs=1.49e-1, epsrel=1.49e-4)[0] for v in x]
+    else:
+        i = quad_vec(lambda y: np.exp(-y**2 / (2 * s**2)) / (g**2 + (x - y)**2), -np.inf, np.inf, **rtd)[0]
+    const = g / (s * np.sqrt(2 * np.pi**3))
+    return const * np.array(i)
+
+
+def voigt_faddeeva(x, s, g, **kwargs):
+    """Voigt function implementation (Faddeeva).
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        Wavelengths to evaluate Voigt function at.
+    s : float
+        Sigma (for Gaussian).
+    g : float
+        Gamma (for Lorentzian).
+
+    Returns
+    -------
+    result : numpy.ndarray, shape=`x.shape`
+        The value of the Voigt function here.
+    """
+    return voigt_profile(x, s, g)
+
+
+def voigt_mclean(x, s, g, **kwargs):
+    """Voigt function implementation (efficient approximation).
+
+    Not implemented in any models yet as initial tests exhibited slow convergence.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        Wavelengths to evaluate Voigt function at.
+    s : float
+        Sigma (for Gaussian).
+    g : float
+        Gamma (for Lorentzian).
+
+    Returns
+    -------
+    result : numpy.ndarray, shape=`x.shape`
+        The value of the Voigt function here.
+
+    Notes
+    -----
+    This algorithm is taken from A. B. McLean et al. [1]_.
+
+    References
+    ----------
+    .. [1] A. B. McLean, C. E. J. Mitchell and D. M. Swanston, "Implementation of an efficient analytical
+      approximation to the Voigt function for photoemission lineshape analysis," Journal of Electron Spectroscopy and
+      Related Phenomena, vol. 69, pp. 125-132, 1994. https://doi.org/10.1016/0368-2048(94)02189-7
     """
     fwhm_g = 2 * s * np.sqrt(2 * np.log(2))
     fwhm_l = 2 * g
-    xx = (x - b) * 2 * sqrt_ln2 / fwhm_g
+    xx = x * 2 * sqrt_ln2 / fwhm_g
     xx = xx[..., np.newaxis]
     yy = fwhm_l * sqrt_ln2 / fwhm_g
     yy = yy[..., np.newaxis]
     v = np.sum((C * (yy - A) + D * (xx - B)) / ((yy - A) ** 2 + (xx - B) ** 2), axis=-1)
-    return fwhm_l * a * sqrt_pi / fwhm_g * v
+    return fwhm_l * sqrt_pi / fwhm_g * v
 
 
-def voigt_approx(x, a, b, s, g, d):
-    """Voigt function (efficient approximation) with background.
-
-    Parameters
-    ----------
-    ${SINGLE_VOIGT}
-    ${BACKGROUND}
-
-    ${EXTRA_APPROX}
-    """
-    return voigt_approx_nobg(x, a, b, s, g) + d
-
-
-def double_voigt_approx_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2):
-    """Double Voigt function (efficient approximation) with no background.
-
-    Parameters
-    ----------
-    ${DOUBLE_VOIGT}
-
-    ${EXTRA_APPROX}
-    """
-    return voigt_approx_nobg(x, a1, b1, s1, g1) + voigt_approx_nobg(x, a2, b2, s2, g2)
-
-
-def double_voigt_approx(x, a1, b1, s1, g1, a2, b2, s2, g2, d):
-    """Double Voigt function (efficient approximation) with background.
-
-    Parameters
-    ----------
-    ${DOUBLE_VOIGT}
-    ${BACKGROUND}
-
-    ${EXTRA_APPROX}
-    """
-    return voigt_approx_nobg(x, a1, b1, s1, g1) + voigt_approx_nobg(x, a2, b2, s2, g2) + d
-
-
-def voigt_nobg(x, a, b, s, g, clib=True):
+def voigt_nobg(x, a, b, s, g, impl=voigt_integrate, **kwargs):
     """Voigt function with no background (Base Voigt function).
 
     This is the base of all the other Voigt functions.
@@ -111,59 +149,48 @@ def voigt_nobg(x, a, b, s, g, clib=True):
     Parameters
     ----------
     ${SINGLE_VOIGT}
-    ${CLIB}
 
-    ${EXTRA_STD}
+    ${SEE_ALSO}
     """
-    warnings.filterwarnings("ignore", category=IntegrationWarning)
-    u = x - b
-    if clib and not_on_rtd:
-        i = [quad(cvoigt, -np.inf, np.inf, args=(v, s, g), epsabs=1.49e-1, epsrel=1.49e-4)[0] for v in u]
-    else:
-        i = quad_vec(lambda y: np.exp(-y**2 / (2 * s**2)) / (g**2 + (u - y)**2), -np.inf, np.inf, **rtd)[0]
-    const = g / (s * np.sqrt(2 * np.pi**3))
-    return a * const * np.array(i)
+    return a * impl(x - b, s, g, **kwargs)
 
 
-def voigt(x, a, b, s, g, d, clib=True):
+def voigt(x, a, b, s, g, d, **kwargs):
     """Voigt function with background.
 
     Parameters
     ----------
     ${SINGLE_VOIGT}
     ${BACKGROUND}
-    ${CLIB}
 
-    ${EXTRA_STD}
+    ${SEE_ALSO}
     """
-    return voigt_nobg(x, a, b, s, g, clib) + d
+    return voigt_nobg(x, a, b, s, g, **kwargs) + d
 
 
-def double_voigt_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2, clib=True):
+def double_voigt_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2, **kwargs):
     """Double Voigt function with no background.
 
     Parameters
     ----------
     ${DOUBLE_VOIGT}
-    ${CLIB}
 
-    ${EXTRA_STD}
+    ${SEE_ALSO}
     """
-    return voigt_nobg(x, a1, b1, s1, g1, clib) + voigt_nobg(x, a2, b2, s2, g2, clib)
+    return voigt_nobg(x, a1, b1, s1, g1, **kwargs) + voigt_nobg(x, a2, b2, s2, g2, **kwargs)
 
 
-def double_voigt(x, a1, b1, s1, g1, a2, b2, s2, g2, d, clib=True):
+def double_voigt(x, a1, b1, s1, g1, a2, b2, s2, g2, d, **kwargs):
     """Double Voigt function with background.
 
     Parameters
     ----------
     ${DOUBLE_VOIGT}
     ${BACKGROUND}
-    ${CLIB}
 
-    ${EXTRA_STD}
+    ${SEE_ALSO}
     """
-    return double_voigt_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2, clib) + d
+    return double_voigt_nobg(x, a1, b1, s1, g1, a2, b2, s2, g2, **kwargs) + d
 
 
 # Define "Parameters" options
@@ -199,94 +226,55 @@ __double_voigt = __input_x + """
 __background = """
     d : float
         Background."""
-__clib = """
-    clib : bool, optional, default=True
-        Whether to use the complied C library or a slower Python version. If using the C library, the accuracy
-        of the integration is reduced to give the code a significant speed boost. Python version can be used when
-        speed is not a priority. Python version will remove deviations that are sometimes present around the wings
-        due to the reduced accuracy."""
 
-# Define "Returns"
-__returns = """
+
+def __see_also(func):
+    """Return the "See Also" section with the current function removed."""
+    see_also = filter(lambda x: f" {func.__name__} " not in x, [
+        '    voigt_nobg : Base Voigt function with no background.',
+        '    voigt : Voigt function with background added.',
+        '    double_voigt_nobg : Two Voigt functions added together.',
+        '    double_voigt : Two Voigt function and a background added together.',
+    ])
+    return """
     Returns
     -------
     result : numpy.ndarray, shape=`x.shape`
         The value of the Voigt function here.
 
-    """
-
-# Define "Notes" (and "References") section
-__notes_approx = """
-    Notes
-    -----
-    This algorithm is taken from A. B. McLean et al. [1]_.
-
-    References
-    ----------
-    .. [1] A. B. McLean, C. E. J. Mitchell and D. M. Swanston, "Implementation of an efficient analytical
-      approximation to the Voigt function for photoemission lineshape analysis," Journal of Electron Spectroscopy and
-      Related Phenomena, vol. 69, pp. 125-132, 1994. https://doi.org/10.1016/0368-2048(94)02189-7"""
-__notes_std = """
-    Notes
-    -----
-    More information on the Voigt function can be found here: https://en.wikipedia.org/wiki/Voigt_profile"""
+    See Also
+    --------
+    """ + "\n".join(see_also).lstrip()
 
 
-# Define special "See Also" options
-__see_also_approx = [
-    '    voigt_approx_nobg : Base approximated Voigt function with no background.',
-    '    voigt_approx : Approximated Voigt function with background added.',
-    '    double_voigt_approx_nobg : Two approximated Voigt functions added together.',
-    '    double_voigt_approx : Two approximated Voigt functions and a background added together.',
-]
-__see_also_std = [
-    '    voigt_nobg : Base Voigt function with no background.',
-    '    voigt : Voigt function with background added.',
-    '    double_voigt_nobg : Two Voigt functions added together.',
-    '    double_voigt : Two Voigt function and a background added together.',
-]
-# Extract the function name for easy exclusion of item
-__see_also_approx = [(i.split(':')[0].strip(), i) for i in __see_also_approx]
-__see_also_std = [(i.split(':')[0].strip(), i) for i in __see_also_std]
-__see_also = __see_also_approx + __see_also_std
-
-
-def __rm_self(func, items):
-    """Return the "See Also" section with the current function removed."""
-    ret = [i[1] for i in items if i[0] != func]
-    return 'See Also\n    --------\n    ' + '\n'.join(ret).lstrip() + '\n'
-
-
-def __extra_approx(func):
-    """Merge common approx functions sections."""
-    return __returns + __rm_self(func.__name__, __see_also) + __notes_approx  # noqa: F821
-
-
-def __extra_std(func):
-    """Merge common standard functions sections."""
-    return __returns + __rm_self(func.__name__, __see_also_std) + __notes_std  # noqa: F821
-
-
-for f in [voigt_approx_nobg, voigt_approx, double_voigt_approx_nobg, double_voigt_approx,
-          voigt_nobg, voigt, double_voigt_nobg, double_voigt]:
+for f in [voigt_nobg, voigt, double_voigt_nobg, double_voigt]:
     f.__doc__ = f.__doc__.replace('${SINGLE_VOIGT}', __single_voigt.lstrip())
     f.__doc__ = f.__doc__.replace('${DOUBLE_VOIGT}', __double_voigt.lstrip())
     f.__doc__ = f.__doc__.replace('${BACKGROUND}', __background.lstrip())
-    f.__doc__ = f.__doc__.replace('${CLIB}', __clib.lstrip())
-    f.__doc__ = f.__doc__.replace('${EXTRA_APPROX}', __extra_approx(f).lstrip())
-    f.__doc__ = f.__doc__.replace('${EXTRA_STD}', __extra_std(f).lstrip())
+    f.__doc__ = f.__doc__.replace('${SEE_ALSO}', __see_also(f).lstrip())
 
 del __input_x
 del __single_voigt
 del __double_voigt
 del __background
-del __clib
-del __returns
-del __notes_approx
-del __notes_std
-del __see_also_approx
-del __see_also_std
 del __see_also
-del __rm_self
-del __extra_approx
-del __extra_std
+
+
+def voigt_approx_nobg(*args, **kwargs):
+    # For backwards compatibility
+    return voigt_nobg(*args, impl=voigt_mclean, **kwargs)
+
+
+def voigt_approx(*args, **kwargs):
+    # For backwards compatibility
+    return voigt(*args, impl=voigt_mclean, **kwargs)
+
+
+def double_voigt_approx_nobg(*args, **kwargs):
+    # For backwards compatibility
+    return double_voigt_nobg(*args, impl=voigt_mclean, **kwargs)
+
+
+def double_voigt_approx(*args, **kwargs):
+    # For backwards compatibility
+    return double_voigt(*args, impl=voigt_mclean, **kwargs)
