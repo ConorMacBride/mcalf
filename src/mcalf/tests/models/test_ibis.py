@@ -696,3 +696,32 @@ def test_random_state():
 
     assert score_b == pytest.approx(score_a)
     assert score_b == pytest.approx(np.array([0.45, 0.35, 0.45, 0.45, 0.35]))
+
+
+def test_voigt_impl():
+
+    # Testing that the `impl` kwarg works as expected
+
+    # Initialise model
+    import mcalf.profiles.voigt
+    original_wavelengths = np.linspace(8541.5, 8542.6, 30)
+    model = IBIS8542Model(
+        original_wavelengths=original_wavelengths,
+        delta_lambda=0.09,
+        impl=mcalf.profiles.voigt.voigt_faddeeva,
+    )
+    assert model.impl is mcalf.profiles.voigt.voigt_faddeeva
+
+    model.get_spectra(spectrum=mcalf.profiles.voigt.voigt_faddeeva(original_wavelengths - 8542, 0.2, 0.2))
+
+    spectrum = -1000 * mcalf.profiles.voigt.voigt_faddeeva(original_wavelengths - 8542, 0.2, 0.2)
+    np.testing.assert_array_almost_equal(
+        spectrum[:6],
+        [-313.43205388, -361.18283187, -415.56342341, -476.43382313, -543.16950581, -614.56515795],
+    )
+
+    fit = model.fit_spectrum(spectrum, classifications=0)
+    assert fit.parameters[0] == pytest.approx(-1000.2087777465979)
+    assert fit.parameters[1] == pytest.approx(8542.)
+    assert fit.parameters[2] == pytest.approx(0.19986737018417303)
+    assert fit.parameters[3] == pytest.approx(0.20019316920526792)
