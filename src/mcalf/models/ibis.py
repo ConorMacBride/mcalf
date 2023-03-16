@@ -6,7 +6,7 @@ from sklearn.neural_network import MLPClassifier
 
 from mcalf.models.base import BASE_ATTRIBUTES, BASE_PARAMETERS, ModelBase
 from mcalf.models.results import FitResult
-from mcalf.profiles.voigt import double_voigt_nobg, voigt_integrate, voigt_nobg
+from mcalf.profiles.voigt import double_voigt_nobg, voigt_faddeeva, voigt_nobg
 from mcalf.utils.collections import OrderedParameterDict, Parameter
 from mcalf.utils.misc import load_parameter, update_signature
 from mcalf.utils.spec import generate_sigma
@@ -43,7 +43,7 @@ class IBIS8542Model(ModelBase):
         ('absorption_x_scale', [1500, 0.2, 0.3, 0.5]),
         ('emission_x_scale', [1500, 0.2, 0.3, 0.5]),
         ('random_state', None),
-        ('impl', voigt_integrate),
+        ('impl', voigt_faddeeva),
     ])
 
     def __init__(self, **kwargs):
@@ -477,7 +477,7 @@ IBIS8542_DOCS = """
     random_state : int, numpy.random.RandomState, optional, default=None
         Determines random number generation for weights and bias initialisation of the default `neural_network`.
         Pass an int for reproducible results across multiple function calls.
-    impl : callable, optional, default=voigt_integrate
+    impl : callable, optional, default=voigt_faddeeva
         Voigt implementation to use."""
 
 # Form the docstring and do the replacements

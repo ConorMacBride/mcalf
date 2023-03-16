@@ -132,7 +132,7 @@ def voigt_mclean(x, s, g, **kwargs):
     return fwhm_l * sqrt_pi / fwhm_g * v
 
 
-def voigt_nobg(x, a, b, s, g, impl=voigt_integrate, **kwargs):
+def voigt_nobg(x, a, b, s, g, impl=voigt_faddeeva, **kwargs):
     """Voigt function with no background (Base Voigt function).
 
     This is the base of all the other Voigt functions.
