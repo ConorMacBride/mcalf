@@ -757,7 +757,7 @@ class ModelBase:
             If few spectra are being fitted, performance may decrease due to the overhead associated with splitting
             the evaluation over separate processes. If `n_pools` is not an integer greater than zero, it will fit
             the spectrum with a for loop.
-        **kwargs : dict, optional
+        **kwargs
             Extra keyword arguments to pass to :meth:`~mcalf.models.ModelBase._fit`.
 
         Returns
@@ -906,7 +906,7 @@ class ModelBase:
         ----------
         spectrum : numpy.ndarray, ndim=1
             The explicit spectrum.
-        **kwargs : dict, optional
+        **kwargs
             Extra keyword arguments to pass to :meth:`~mcalf.models.ModelBase.fit`.
 
         Returns

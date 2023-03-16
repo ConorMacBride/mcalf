@@ -114,7 +114,7 @@ def smooth_cube(cube, mask, **kwargs):
         Cube of velocities with dimensions [time, row, column].
     mask : numpy.ndarray, ndim=2
         The mask to apply to the [row, column] at every time. Points that are 0 or false will be removed.
-    **kwargs : dict, optional
+    **kwargs
         Keyword arguments to pass to :func:`gaussian_kern_3d`.
 
     Returns

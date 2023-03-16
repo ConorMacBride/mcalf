@@ -348,7 +348,7 @@ class IBIS8542Model(ModelBase):
             Explicit sigma index or profile. See :meth:`~mcalf.models.IBIS8542Model._get_sigma` for details.
         stationary_line_core : float, optional, default=`stationary_line_core`
             The stationary line core wavelength to mark on the plot.
-        **kwargs : dict
+        **kwargs
             Other parameters used to adjust the plotting.
             See :func:`mcalf.visualisation.plot_ibis8542` for full details.
 
