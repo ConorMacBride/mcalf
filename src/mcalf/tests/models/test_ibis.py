@@ -58,6 +58,8 @@ def test_default_parameters(model):
 
 
 def test_ibis8542model_basic():
+    if os.getenv("MCALF_NO_EXTENSIONS"):
+        pytest.skip("C extensions are disabled")
     # Will break if default parameters are changes in mcalf.models.IBIS8542Model
     wl = 1000.97
     x_orig = np.linspace(999.81, 1002.13, num=25)
@@ -446,6 +448,8 @@ def ibis8542model_spectra(ibis8542model_init):
 
 @pytest.fixture(scope='module')
 def ibis8542model_results(ibis8542model_spectra):
+    if os.getenv("MCALF_NO_EXTENSIONS"):
+        pytest.skip("C extensions are disabled")
 
     # Load model with random spectra loaded
     m, classifications = ibis8542model_spectra

@@ -104,3 +104,19 @@ stages:
           - wheels_cp3{8,9,10,11}-macosx_arm64
           - wheels_cp3{8,9,10,11}-manylinux*_x86_64
           - wheels_cp3{8,9,10,11}-win_amd64
+    - stage: ReleasePure
+      condition: or(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+      variables:
+        MCALF_NO_EXTENSIONS: "1"
+      jobs:
+        - template: publish.yml@OpenAstronomy
+          parameters:
+            ${{ if startsWith(variables['Build.SourceBranch'], 'refs/tags/v') }}:
+              pypi_connection_name: 'pypi_endpoint'
+              pypi_endpoint_name: 'mcalf'
+            libraries:
+              - libfftw3-dev
+            test_extras: "tests"
+            test_command: pytest --pyargs mcalf
+            targets:
+              - wheels_universal
