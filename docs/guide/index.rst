@@ -89,7 +89,7 @@ Using MCALF with pip
 ====================
 
 To run the tests you need a number of extra packages installed. If you
-installed MCALF using pip, you can run ``pip install mcalf[tests]`` to
+installed MCALF using pip, you can run ``pip install "mcalf[tests]"`` to
 install the additional testing dependencies (and MCALF if it's not
 already installed).
 
@@ -104,7 +104,7 @@ testing dependencies using the following command.
 
 .. code:: bash
 
-    $ conda install pytest pytest-cov tox
+    $ conda install pytest pytest-cov pytest-mpl tox
 
 Running Tests
 ~~~~~~~~~~~~~
@@ -131,7 +131,7 @@ is available in their `documentation`_. You can mostly replace
 
 .. code:: bash
 
-    $ pip install -e .[tests,docs]
+    $ pip install -e ".[tests,docs]"
 
 After making changes to the MCALF source, run the MCALF test suite with
 the following command (while in the same directory as ``setup.py``),
@@ -148,17 +148,12 @@ Getting Started
 The following examples provide the key details on how to use this package.
 For more details on how to use the particular classes and function,
 please consult the `Code Reference <../code_ref/index.html>`_.
-We plan to expand this section with more examples of this package being
-used.
 
 .. toctree::
 
    ../gallery/index
    examples/example1/index
    examples/neural_network/LabellingTutorial
-
-If you are interested in using this package in your research and would
-like advice on how to use this package, please contact `Conor MacBride`_.
 
 Contributing
 ------------
@@ -172,11 +167,8 @@ Types of ways you can contribute include, expanding the documentation with
 more use cases and examples, reporting bugs through the GitHub issue tracker,
 reviewing pull requests and the existing code, fixing bugs and implementing new
 features in the code.
-
 You are encouraged to submit any `bug reports`_ and `pull requests`_ directly
 to the `GitHub repository`_.
-If you have any questions regarding contributing to this package please
-contact `Conor MacBride`_.
 
 Please note that this project is released with a Contributor Code of Conduct.
 By participating in this project you agree to abide by its terms.
@@ -237,8 +229,6 @@ MCALF is licensed under the terms of the BSD 2-Clause license.
 .. _new conda environment: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
 .. _setup.cfg: https://github.com/ConorMacBride/mcalf/blob/main/setup.cfg
 .. _documentation: https://docs.sunpy.org/en/latest/dev_guide/contents/newcomers.html#setting-up-a-development-environment
-
-.. _Conor MacBride: https://macbride.me/
 
 .. _bug reports: https://github.com/ConorMacBride/mcalf/issues
 .. _pull requests: https://github.com/ConorMacBride/mcalf/pulls
