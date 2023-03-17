@@ -88,8 +88,6 @@ Getting Started
 
 Documentation is `available here <https://mcalf.macbride.me/>`_.
 Some examples are included `here <examples/>`_.
-If you are interested in using this package in your research and would
-like advice on how to use this package, please contact `Conor MacBride`_.
 
 Contributing
 ------------
@@ -103,11 +101,8 @@ Types of ways you can contribute include, expanding the documentation with
 more use cases and examples, reporting bugs through the GitHub issue tracker,
 reviewing pull requests and the existing code, fixing bugs and implementing new
 features in the code.
-
 You are encouraged to submit any `bug reports`_ and `pull requests`_ directly
 to the `GitHub repository`_.
-If you have any questions regarding contributing to this package please
-contact `Conor MacBride`_.
 
 Please note that this project is released with a Contributor Code of Conduct.
 By participating in this project you agree to abide by its terms.
@@ -167,8 +162,6 @@ MCALF is licensed under the terms of the BSD 2-Clause license.
 .. _Miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _new conda environment: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
 .. _documentation: https://mcalf.macbride.me/en/latest/guide/index.html#testing
-
-.. _Conor MacBride: https://macbride.me/
 
 .. _bug reports: https://github.com/ConorMacBride/mcalf/issues
 .. _pull requests: https://github.com/ConorMacBride/mcalf/pulls
