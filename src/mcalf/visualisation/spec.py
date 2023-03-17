@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from mcalf.profiles.voigt import double_voigt, voigt, voigt_integrate
+from mcalf.profiles.voigt import double_voigt, voigt, voigt_faddeeva
 from mcalf.utils.plot import hide_existing_labels
 from mcalf.utils.spec import reinterpolate_spectrum
 
@@ -10,7 +10,7 @@ __all__ = ['plot_ibis8542', 'plot_spectrum']
 
 def plot_ibis8542(wavelengths, spectrum, fit=None, background=0,
                   sigma=None, sigma_scale=70,
-                  stationary_line_core=None, impl=voigt_integrate,
+                  stationary_line_core=None, impl=voigt_faddeeva,
                   subtraction=False, separate=False,
                   show_intensity=True, show_legend=True, ax=None):
     """Plot an :class:`~mcalf.models.IBIS8542Model` fit.
@@ -37,7 +37,7 @@ def plot_ibis8542(wavelengths, spectrum, fit=None, background=0,
         A factor to multiply the error bars to change their prominence.
     stationary_line_core : float, optional, default=None
         If given, will show a dashed line at this wavelength.
-    impl : callable, optional, default=voigt_integrate
+    impl : callable, optional, default=voigt_faddeeva
         The Voigt implementation to use.
     subtraction : bool, optional, default=False
         Whether to plot the `spectrum` minus emission fit (if exists) instead.

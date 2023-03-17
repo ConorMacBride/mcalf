@@ -6,29 +6,20 @@ from scipy.special import voigt_profile
 
 # Load the C library
 import ctypes
-import os.path
 from pathlib import Path
 # # Commands to manually generate
 # gcc -Wall -fPIC -c voigt.c
 # gcc -shared -o libvoigt.so voigt.o
-dllabspath = Path(os.path.dirname(os.path.abspath(__file__)))  # Path to libraries directory
+dllabspath = Path(__file__).absolute().parent  # Path to libraries directory
 try:
     libfile = [str(i) for i in dllabspath.glob('ext_voigtlib.*.so')][0]  # Select first (and only) library
     lib = ctypes.CDLL(libfile)  # Load the library
     lib.func.restype = ctypes.c_double  # Specify the expected result type
     lib.func.argtypes = (ctypes.c_int, ctypes.c_double)  # Specify the type of the input parameters
     cvoigt = lib.func  # Create alias for the specific function used in functions below
+    CLIB_INSTALLED = True
 except IndexError:  # File does not exist
-    warnings.warn("Could not locate the external C library. Further use of `clib` will fail!")
-
-###
-# readthedocs.org does not support clib (force clib=False)
-import os  # noqa: E402
-not_on_rtd = os.environ.get('READTHEDOCS') != 'True'
-rtd = {}
-if not not_on_rtd:  # Reduce computation time (and accuracy) of no clib version
-    rtd = {'epsabs': 1.49e-1, 'epsrel': 1.49e-4}
-###
+    CLIB_INSTALLED = False
 
 # Parameters for `voigt_approx_nobg` and other approx. Voigt functions
 params = np.array([[-1.2150, -1.3509, -1.2150, -1.3509],
@@ -44,7 +35,7 @@ __all__ = ['voigt_integrate', 'voigt_faddeeva', 'voigt_mclean',
            'voigt_nobg', 'voigt', 'double_voigt_nobg', 'double_voigt']
 
 
-def voigt_integrate(x, s, g, clib=True, **kwargs):
+def voigt_integrate(x, s, g, clib=CLIB_INSTALLED, **kwargs):
     """Voigt function implementation (calculated by integrating).
 
     The default Voigt implementation.
@@ -61,7 +52,7 @@ def voigt_integrate(x, s, g, clib=True, **kwargs):
         Whether to use the complied C library or a slower Python version. If using the C library, the accuracy
         of the integration is reduced to give the code a significant speed boost. Python version can be used when
         speed is not a priority. Python version will remove deviations that are sometimes present around the wings
-        due to the reduced accuracy.
+        due to the reduced accuracy. If the C extensions is not installed, will default to false.
 
     Returns
     -------
@@ -74,10 +65,10 @@ def voigt_integrate(x, s, g, clib=True, **kwargs):
     """
     # return a * voigt_profile(x - b, s, g)
     warnings.filterwarnings("ignore", category=IntegrationWarning)
-    if clib and not_on_rtd:
+    if clib:
         i = [quad(cvoigt, -np.inf, np.inf, args=(v, s, g), epsabs=1.49e-1, epsrel=1.49e-4)[0] for v in x]
     else:
-        i = quad_vec(lambda y: np.exp(-y**2 / (2 * s**2)) / (g**2 + (x - y)**2), -np.inf, np.inf, **rtd)[0]
+        i = quad_vec(lambda y: np.exp(-y**2 / (2 * s**2)) / (g**2 + (x - y)**2), -np.inf, np.inf)[0]
     const = g / (s * np.sqrt(2 * np.pi**3))
     return const * np.array(i)
 
@@ -141,7 +132,7 @@ def voigt_mclean(x, s, g, **kwargs):
     return fwhm_l * sqrt_pi / fwhm_g * v
 
 
-def voigt_nobg(x, a, b, s, g, impl=voigt_integrate, **kwargs):
+def voigt_nobg(x, a, b, s, g, impl=voigt_faddeeva, **kwargs):
     """Voigt function with no background (Base Voigt function).
 
     This is the base of all the other Voigt functions.

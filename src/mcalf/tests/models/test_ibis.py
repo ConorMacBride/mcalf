@@ -9,7 +9,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import cross_val_score
 
 from mcalf.models import FitResults, IBIS8542Model, ModelBase
-from mcalf.profiles.voigt import double_voigt, voigt
+from mcalf.profiles.voigt import double_voigt, voigt, voigt_integrate
 
 from ..helpers import data_path_function, figure_test
 
@@ -64,10 +64,10 @@ def test_ibis8542model_basic():
     prefilter_main = 1 - np.abs(x_orig - wl) * 0.1
     prefilter_wvscl = x_orig - wl
     m = IBIS8542Model(stationary_line_core=wl, original_wavelengths=x_orig,
-                      prefilter_ref_main=prefilter_main, prefilter_ref_wvscl=prefilter_wvscl)
-
+                      prefilter_ref_main=prefilter_main, prefilter_ref_wvscl=prefilter_wvscl,
+                      impl=voigt_integrate)
     bg = 1327.243
-    arr = voigt(x_orig, -231.42, wl+0.05, 0.2, 0.21, bg)
+    arr = voigt(x_orig, -231.42, wl+0.05, 0.2, 0.21, bg, impl=voigt_integrate)
 
     m.load_array(np.array([arr, arr]), names=['row', 'wavelength'])
     m.load_background(np.array([bg, bg]), names=['row'])
@@ -363,7 +363,7 @@ def ibis8542model_init():
     x_orig = np.loadtxt("ibis8542model_wavelengths_original.csv")
 
     m = IBIS8542Model(config="ibis8542model_init_config.yml", constant_wavelengths=x_orig, original_wavelengths=x_orig,
-                      prefilter_response=np.ones(25))
+                      prefilter_response=np.ones(25), impl=voigt_integrate)
 
     m.neural_network = DummyClassifier(trained=True, n_features=25)
 
@@ -423,17 +423,20 @@ def ibis8542model_spectra(ibis8542model_init):
                 if np.isnan(a1_array[i, j, k]):
                     classifications[i, j, k] = 4
                     spectra[i, j, k] = voigt(m.original_wavelengths, a2_array[i, j, k], b2_array[i, j, k],
-                                             s2_array[i, j, k], g2_array[i, j, k], d_array[i, j, k])
+                                             s2_array[i, j, k], g2_array[i, j, k], d_array[i, j, k],
+                                             impl=voigt_integrate)
                 elif np.isnan(a2_array[i, j, k]):
                     classifications[i, j, k] = 0
                     spectra[i, j, k] = voigt(m.original_wavelengths, a1_array[i, j, k], b1_array[i, j, k],
-                                             s1_array[i, j, k], g1_array[i, j, k], d_array[i, j, k])
+                                             s1_array[i, j, k], g1_array[i, j, k], d_array[i, j, k],
+                                             impl=voigt_integrate)
                 else:
                     classifications[i, j, k] = 1
                     spectra[i, j, k] = double_voigt(m.original_wavelengths, a1_array[i, j, k], a2_array[i, j, k],
                                                     b1_array[i, j, k], b2_array[i, j, k],
                                                     s1_array[i, j, k], s2_array[i, j, k],
-                                                    g1_array[i, j, k], g2_array[i, j, k], d_array[i, j, k])
+                                                    g1_array[i, j, k], g2_array[i, j, k], d_array[i, j, k],
+                                                    impl=voigt_integrate)
 
     m.load_array(spectra, names=['time', 'row', 'column', 'wavelength'])
     m.load_background(d_array, names=['time', 'row', 'column'])
@@ -698,18 +701,21 @@ def test_random_state():
     assert score_b == pytest.approx(np.array([0.45, 0.35, 0.45, 0.45, 0.35]))
 
 
-def test_voigt_impl():
+@pytest.mark.parametrize("set_impl", (True, False))
+def test_voigt_impl(set_impl):
 
     # Testing that the `impl` kwarg works as expected
 
     # Initialise model
     import mcalf.profiles.voigt
     original_wavelengths = np.linspace(8541.5, 8542.6, 30)
-    model = IBIS8542Model(
-        original_wavelengths=original_wavelengths,
-        delta_lambda=0.09,
-        impl=mcalf.profiles.voigt.voigt_faddeeva,
-    )
+    kwargs = {
+        "original_wavelengths": original_wavelengths,
+        "delta_lambda": 0.09,
+    }
+    if set_impl:  # this should be the default regardless
+        kwargs["impl"] = mcalf.profiles.voigt.voigt_faddeeva
+    model = IBIS8542Model(**kwargs)
     assert model.impl is mcalf.profiles.voigt.voigt_faddeeva
 
     model.get_spectra(spectrum=mcalf.profiles.voigt.voigt_faddeeva(original_wavelengths - 8542, 0.2, 0.2))

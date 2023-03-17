@@ -173,7 +173,7 @@ def calculate_extent(shape, resolution, offset=(0, 0), ax=None, dimension=None, 
         A 2-tuple (x, y) or list [x, y] can instead be given to provide a different name
         for the x-axis and y-axis respectively.
         Defaults is equivalent to ``dimension=('x-axis', 'y-axis')``.
-    **kwargs : dict, optional
+    **kwargs
         Extra keyword arguments to pass to :func:`calculate_axis_extent`.
 
     Returns

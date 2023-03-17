@@ -61,7 +61,7 @@ class FitResult:
         ----------
         model : child class of :class:`~mcalf.models.ModelBase`
             The model object to plot with.
-        **kwargs : dict
+        **kwargs
             See the `model.plot` method for more details.
         """
         model.plot(self, **kwargs)
